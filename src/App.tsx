@@ -7,9 +7,13 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
-import Transactions from "./pages/Transactions";
-import Customers from "./pages/Customers";
+import Products from "./pages/Products";
+import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
+import ZReport from "./pages/ZReport";
+import CustomerLedger from "./pages/CustomerLedger";
+import UsersPage from "./pages/UsersPage";
+import SettingsPage from "./pages/SettingsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,9 +29,13 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/pos" element={<POS />} />
             <Route path="/inventory" element={<Inventory />} />
-            <Route path="/transactions" element={<Transactions />} />
-            <Route path="/customers" element={<Customers />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/sales" element={<Sales />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/z-report" element={<ZReport />} />
+            <Route path="/customer-ledger" element={<CustomerLedger />} />
+            <Route path="/users" element={<UsersPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

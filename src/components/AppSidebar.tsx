@@ -1,12 +1,14 @@
 import {
-  LayoutDashboard,
+  LayoutGrid,
   ShoppingCart,
-  Package,
-  History,
-  Users,
-  BarChart3,
-  Settings,
+  Globe,
   Smartphone,
+  DollarSign,
+  BarChart3,
+  ClipboardList,
+  BookOpen,
+  Users as UsersIcon,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
@@ -14,7 +16,6 @@ import {
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -22,17 +23,16 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 
-const mainNav = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+const navItems = [
+  { title: "Dashboard", url: "/", icon: LayoutGrid },
   { title: "Point of Sale", url: "/pos", icon: ShoppingCart },
-  { title: "Inventory", url: "/inventory", icon: Package },
-  { title: "Transactions", url: "/transactions", icon: History },
-  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Inventory", url: "/inventory", icon: Globe },
+  { title: "Products", url: "/products", icon: Smartphone },
+  { title: "Sales", url: "/sales", icon: DollarSign },
   { title: "Reports", url: "/reports", icon: BarChart3 },
-];
-
-const secondaryNav = [
-  { title: "IMEI Tracker", url: "/imei", icon: Smartphone },
+  { title: "Z-Report", url: "/z-report", icon: ClipboardList },
+  { title: "Customer Ledger", url: "/customer-ledger", icon: BookOpen },
+  { title: "Users", url: "/users", icon: UsersIcon },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
@@ -53,45 +53,18 @@ export function AppSidebar() {
 
       <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/60 font-medium mb-1 px-3">
-            Main
-          </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.map((item) => (
+            <SidebarMenu className="space-y-0.5">
+              {navItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
-                      activeClassName="glass-subtle text-foreground"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
+                      activeClassName="bg-primary/10 text-primary border border-primary/25"
                     >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/60 font-medium mb-1 px-3">
-            Tools
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {secondaryNav.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
-                      activeClassName="glass-subtle text-foreground"
-                    >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" />
+                      <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
