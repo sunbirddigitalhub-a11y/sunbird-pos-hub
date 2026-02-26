@@ -7,8 +7,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
 } from "recharts";
 
 const salesData = [
@@ -47,23 +45,25 @@ const formatUGX = (value: number) => `${(value / 1000000).toFixed(1)}M`;
 
 const Dashboard = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in max-w-7xl">
       <div>
-        <h1 className="text-2xl font-display font-bold">Dashboard</h1>
-        <p className="text-muted-foreground text-sm mt-1">Welcome back. Here's your business overview.</p>
+        <h1 className="text-[28px] font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground text-[14px] mt-1">Welcome back. Here's your business overview.</p>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((stat) => (
-          <div key={stat.label} className="stat-card">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-muted-foreground text-sm">{stat.label}</span>
-              <stat.icon className="h-4 w-4 text-primary" />
+        {stats.map((stat, i) => (
+          <div key={stat.label} className="stat-card" style={{ animationDelay: `${i * 80}ms` }}>
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-muted-foreground text-[13px]">{stat.label}</span>
+              <div className="w-8 h-8 rounded-xl bg-secondary/80 flex items-center justify-center">
+                <stat.icon className="h-4 w-4 text-primary" />
+              </div>
             </div>
             <div className="flex items-end gap-2">
-              <span className="text-2xl font-bold">{stat.value}</span>
-              <span className={`text-xs font-medium flex items-center gap-0.5 mb-1 ${stat.up ? "text-success" : "text-destructive"}`}>
+              <span className="text-[24px] font-semibold tracking-tight">{stat.value}</span>
+              <span className={`text-[12px] font-medium flex items-center gap-0.5 mb-1 ${stat.up ? "text-success" : "text-destructive"}`}>
                 {stat.up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                 {stat.change}
               </span>
@@ -72,27 +72,30 @@ const Dashboard = () => {
         ))}
       </div>
 
-      {/* Charts Row */}
+      {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass-card p-5">
-          <h3 className="font-display font-semibold text-base mb-4">Weekly Revenue</h3>
-          <ResponsiveContainer width="100%" height={260}>
+        <div className="lg:col-span-2 glass-card p-6">
+          <h3 className="font-semibold text-[15px] mb-5 tracking-tight">Weekly Revenue</h3>
+          <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={salesData}>
               <defs>
                 <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 18%)" />
-              <XAxis dataKey="name" stroke="hsl(220, 10%, 55%)" fontSize={12} />
-              <YAxis stroke="hsl(220, 10%, 55%)" fontSize={12} tickFormatter={formatUGX} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 14%)" vertical={false} />
+              <XAxis dataKey="name" stroke="hsl(220, 5%, 40%)" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(220, 5%, 40%)" fontSize={12} tickFormatter={formatUGX} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(220, 14%, 11%)",
-                  border: "1px solid hsl(220, 12%, 18%)",
-                  borderRadius: "8px",
-                  color: "hsl(40, 20%, 92%)",
+                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
+                  border: "1px solid hsl(220, 8%, 18%)",
+                  borderRadius: "12px",
+                  color: "hsl(0, 0%, 98%)",
+                  backdropFilter: "blur(20px)",
+                  fontSize: "13px",
+                  padding: "10px 14px",
                 }}
                 formatter={(value: number) => [`UGX ${value.toLocaleString()}`, "Sales"]}
               />
@@ -101,17 +104,17 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
-          <h3 className="font-display font-semibold text-base mb-4">Top Products</h3>
-          <div className="space-y-3">
+        <div className="glass-card p-6">
+          <h3 className="font-semibold text-[15px] mb-5 tracking-tight">Top Products</h3>
+          <div className="space-y-4">
             {topProducts.map((product, i) => (
               <div key={product.name} className="flex items-center gap-3">
-                <span className="text-xs font-bold text-primary w-5">{i + 1}</span>
+                <span className="text-[12px] font-bold text-primary/70 w-5 text-right">{i + 1}</span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">{product.units} units</p>
+                  <p className="text-[13px] font-medium truncate">{product.name}</p>
+                  <p className="text-[11px] text-muted-foreground">{product.units} units</p>
                 </div>
-                <span className="text-sm font-medium text-primary">
+                <span className="text-[13px] font-semibold text-primary">
                   {(product.revenue / 1000000).toFixed(1)}M
                 </span>
               </div>
@@ -120,31 +123,33 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Recent Sales */}
-      <div className="glass-card p-5">
-        <h3 className="font-display font-semibold text-base mb-4">Recent Transactions</h3>
+      {/* Recent */}
+      <div className="glass-card overflow-hidden">
+        <div className="px-6 py-4 border-b border-border/30">
+          <h3 className="font-semibold text-[15px] tracking-tight">Recent Transactions</h3>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border/50">
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 pr-4">ID</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 pr-4">Customer</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 pr-4">Item</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 pr-4">Amount</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 pr-4">Time</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3">Status</th>
+              <tr className="border-b border-border/20">
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">ID</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Customer</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Item</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Amount</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Time</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Status</th>
               </tr>
             </thead>
             <tbody>
               {recentSales.map((sale) => (
-                <tr key={sale.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/30 transition-colors">
-                  <td className="py-3 pr-4 text-sm font-mono text-muted-foreground">{sale.id}</td>
-                  <td className="py-3 pr-4 text-sm font-medium">{sale.customer}</td>
-                  <td className="py-3 pr-4 text-sm">{sale.item}</td>
-                  <td className="py-3 pr-4 text-sm font-medium text-primary">{sale.amount}</td>
-                  <td className="py-3 pr-4 text-sm text-muted-foreground">{sale.time}</td>
-                  <td className="py-3">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                <tr key={sale.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/20 transition-colors duration-200">
+                  <td className="py-3.5 px-6 text-[13px] font-mono text-muted-foreground">{sale.id}</td>
+                  <td className="py-3.5 px-6 text-[13px] font-medium">{sale.customer}</td>
+                  <td className="py-3.5 px-6 text-[13px] text-secondary-foreground">{sale.item}</td>
+                  <td className="py-3.5 px-6 text-[13px] font-medium text-primary">{sale.amount}</td>
+                  <td className="py-3.5 px-6 text-[13px] text-muted-foreground">{sale.time}</td>
+                  <td className="py-3.5 px-6">
+                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${
                       sale.status === "completed"
                         ? "bg-success/10 text-success"
                         : "bg-warning/10 text-warning"

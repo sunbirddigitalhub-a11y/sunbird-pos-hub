@@ -29,13 +29,13 @@ const Transactions = () => {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold">Transactions</h1>
-          <p className="text-muted-foreground text-sm mt-1">Search by date, customer, phone, or IMEI</p>
+          <h1 className="text-[28px] font-bold tracking-tight">Transactions</h1>
+          <p className="text-muted-foreground text-[14px] mt-1">Search by date, customer, phone, or IMEI</p>
         </div>
-        <Button variant="outline" className="gap-2 border-border/50">
+        <Button variant="outline" className="gap-2 border-border/30 rounded-xl h-10 text-[13px]">
           <Download className="h-4 w-4" />
           Export
         </Button>
@@ -43,15 +43,15 @@ const Transactions = () => {
 
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search transactions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary border-border/50"
+            className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
           />
         </div>
-        <Button variant="outline" size="icon" className="border-border/50">
+        <Button variant="outline" size="icon" className="border-border/30 rounded-xl h-11 w-11">
           <Calendar className="h-4 w-4" />
         </Button>
       </div>
@@ -60,32 +60,27 @@ const Transactions = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border/50 bg-secondary/30">
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Transaction ID</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Date</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Customer</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Item</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">IMEI</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Amount</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Payment</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
+              <tr className="border-b border-border/20">
+                {["ID", "Date", "Customer", "Item", "IMEI", "Amount", "Payment", "Status"].map((h) => (
+                  <th key={h} className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map((t) => (
-                <tr key={t.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
-                  <td className="py-3 px-4 text-sm font-mono text-muted-foreground">{t.id}</td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">{t.date}</td>
-                  <td className="py-3 px-4">
-                    <p className="text-sm font-medium">{t.customer}</p>
-                    <p className="text-xs text-muted-foreground">{t.phone}</p>
+                <tr key={t.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/15 transition-colors duration-200">
+                  <td className="py-3.5 px-5 text-[13px] font-mono text-muted-foreground">{t.id}</td>
+                  <td className="py-3.5 px-5 text-[13px] text-muted-foreground">{t.date}</td>
+                  <td className="py-3.5 px-5">
+                    <p className="text-[13px] font-medium">{t.customer}</p>
+                    <p className="text-[11px] text-muted-foreground">{t.phone}</p>
                   </td>
-                  <td className="py-3 px-4 text-sm">{t.item}</td>
-                  <td className="py-3 px-4 text-sm font-mono text-muted-foreground">{t.imei}</td>
-                  <td className="py-3 px-4 text-sm font-medium text-primary">UGX {t.amount.toLocaleString()}</td>
-                  <td className="py-3 px-4 text-sm">{t.payment}</td>
-                  <td className="py-3 px-4">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusStyles[t.status] || ""}`}>
+                  <td className="py-3.5 px-5 text-[13px]">{t.item}</td>
+                  <td className="py-3.5 px-5 text-[13px] font-mono text-muted-foreground">{t.imei}</td>
+                  <td className="py-3.5 px-5 text-[13px] font-semibold text-primary">UGX {t.amount.toLocaleString()}</td>
+                  <td className="py-3.5 px-5 text-[13px]">{t.payment}</td>
+                  <td className="py-3.5 px-5">
+                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${statusStyles[t.status] || ""}`}>
                       {t.status}
                     </span>
                   </td>

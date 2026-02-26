@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,65 +6,58 @@
 
 @layer base {
   :root {
-    --background: 220 15% 8%;
-    --foreground: 40 20% 92%;
+    --background: 220 10% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 220 14% 11%;
-    --card-foreground: 40 20% 92%;
+    --card: 220 10% 9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 220 14% 11%;
-    --popover-foreground: 40 20% 92%;
+    --popover: 220 10% 9%;
+    --popover-foreground: 0 0% 98%;
 
     --primary: 43 72% 55%;
-    --primary-foreground: 220 15% 8%;
+    --primary-foreground: 220 10% 6%;
 
-    --secondary: 220 12% 16%;
-    --secondary-foreground: 40 20% 85%;
+    --secondary: 220 8% 13%;
+    --secondary-foreground: 0 0% 80%;
 
-    --muted: 220 12% 14%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 220 8% 15%;
+    --muted-foreground: 220 5% 50%;
 
-    --accent: 43 72% 55%;
-    --accent-foreground: 220 15% 8%;
+    --accent: 43 50% 50%;
+    --accent-foreground: 220 10% 6%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
+    --success: 142 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 220 15% 8%;
+    --warning: 38 90% 50%;
+    --warning-foreground: 220 10% 6%;
 
-    --border: 220 12% 18%;
-    --input: 220 12% 18%;
+    --border: 220 8% 14%;
+    --input: 220 8% 14%;
     --ring: 43 72% 55%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --sidebar-background: 220 16% 6%;
-    --sidebar-foreground: 40 20% 85%;
+    --sidebar-background: 220 10% 5%;
+    --sidebar-foreground: 0 0% 75%;
     --sidebar-primary: 43 72% 55%;
-    --sidebar-primary-foreground: 220 15% 8%;
-    --sidebar-accent: 220 12% 14%;
-    --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 220 12% 14%;
+    --sidebar-primary-foreground: 220 10% 6%;
+    --sidebar-accent: 220 8% 11%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 220 8% 12%;
     --sidebar-ring: 43 72% 55%;
 
     --chart-1: 43 72% 55%;
-    --chart-2: 142 71% 45%;
-    --chart-3: 199 89% 48%;
-    --chart-4: 280 65% 60%;
+    --chart-2: 142 60% 45%;
+    --chart-3: 211 80% 55%;
+    --chart-4: 280 55% 60%;
     --chart-5: 0 72% 51%;
 
-    --gold-gradient: linear-gradient(135deg, hsl(43, 72%, 55%), hsl(38, 80%, 45%));
-    --card-gradient: linear-gradient(145deg, hsl(220, 14%, 13%), hsl(220, 14%, 9%));
-
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-
-  .dark {
-    /* Same as root - this is a dark-first design */
+    font-family: -apple-system, 'Inter', BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   }
 }
 
@@ -75,34 +68,49 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-  }
-
-  h1, h2, h3 {
-    font-family: 'Playfair Display', serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 
 @layer utilities {
-  .gold-text {
-    @apply text-primary;
-  }
-
   .gold-gradient-text {
-    background: linear-gradient(135deg, hsl(43, 72%, 55%), hsl(48, 85%, 65%));
+    background: linear-gradient(135deg, hsl(43, 72%, 58%), hsl(48, 80%, 68%));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glass-card {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-xl;
+    @apply rounded-2xl border border-border/40;
+    background: hsla(220, 10%, 10%, 0.65);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
   }
 
-  .gold-glow {
-    box-shadow: 0 0 20px -5px hsl(43, 72%, 55%, 0.3);
+  .glass-subtle {
+    background: hsla(220, 10%, 12%, 0.5);
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
   }
 
   .stat-card {
-    @apply glass-card p-5 transition-all duration-300 hover:border-primary/30 hover:gold-glow;
+    @apply glass-card p-5 transition-all duration-500 ease-out;
+  }
+
+  .stat-card:hover {
+    border-color: hsl(43, 72%, 55%, 0.2);
+    box-shadow: 0 8px 40px -12px hsl(43, 72%, 55%, 0.12);
+    transform: translateY(-1px);
+  }
+
+  .apple-shadow {
+    box-shadow: 0 2px 8px -2px hsla(0, 0%, 0%, 0.4),
+                0 8px 24px -4px hsla(0, 0%, 0%, 0.3);
+  }
+
+  .apple-ring:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px hsl(43, 72%, 55%, 0.25);
   }
 }
