@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Minus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2 } from "lucide-react";
+import { Search, Plus, Minus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -467,28 +467,62 @@ const POS = () => {
           </DialogHeader>
           {lastSale && (
             <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-[12px] text-muted-foreground font-mono">{lastSale.saleNumber}</p>
-                <p className="text-[24px] font-bold text-primary mt-1">{formatPrice(lastSale.total)}</p>
-                <p className="text-[13px] text-muted-foreground mt-0.5">{lastSale.customer} · {lastSale.payment}</p>
-              </div>
-              <div className="border-t border-border/20 pt-3 space-y-2">
+              <div id="pos-receipt-content">
+                <div style={{ textAlign: "center" }}>
+                  <p style={{ fontWeight: "bold", fontSize: "14px" }}>Sunbird Online Stores</p>
+                  <p style={{ fontSize: "11px", color: "#888" }}>Receipt</p>
+                </div>
+                <div style={{ borderTop: "1px dashed #ccc", margin: "8px 0" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span>Sale #:</span><span>{lastSale.saleNumber}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span>Date:</span><span>{new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span>Customer:</span><span>{lastSale.customer}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px" }}>
+                  <span>Payment:</span><span>{lastSale.payment}</span>
+                </div>
+                <div style={{ borderTop: "1px dashed #ccc", margin: "8px 0" }} />
                 {lastSale.items.map((item) => (
-                  <div key={item.imei} className="flex justify-between text-[13px]">
+                  <div key={item.imei} style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", marginBottom: "4px" }}>
                     <div>
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-[11px] text-muted-foreground font-mono">{item.imei}</p>
+                      <div>{item.product_name}</div>
+                      <div style={{ fontSize: "10px", color: "#888" }}>{item.imei}</div>
                     </div>
-                    <span className="text-primary font-semibold">{formatPrice(item.price)}</span>
+                    <span style={{ fontWeight: "bold" }}>{formatPrice(item.price)}</span>
                   </div>
                 ))}
+                <div style={{ borderTop: "1px dashed #ccc", margin: "8px 0" }} />
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "14px", fontWeight: "bold" }}>
+                  <span>TOTAL</span><span>{formatPrice(lastSale.total)}</span>
+                </div>
+                <div style={{ textAlign: "center", fontSize: "10px", color: "#888", marginTop: "10px" }}>
+                  Thank you for shopping at Sunbird Online Stores!
+                </div>
               </div>
-              <div className="text-center pt-2">
-                <p className="text-[11px] text-muted-foreground">Thank you for shopping at Sunbird Online Stores!</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2 border-border/30"
+                  onClick={() => {
+                    const el = document.getElementById("pos-receipt-content");
+                    if (!el) return;
+                    const w = window.open("", "_blank", "width=400,height=600");
+                    if (!w) return;
+                    w.document.write(`<html><head><title>Receipt</title><style>body{font-family:'Courier New',monospace;font-size:12px;padding:10px;max-width:300px;margin:0 auto;}</style></head><body>${el.innerHTML}</body></html>`);
+                    w.document.close();
+                    w.print();
+                  }}
+                >
+                  <Printer className="h-4 w-4" /> Print
+                </Button>
+                <Button className="flex-1 rounded-xl bg-primary text-primary-foreground" onClick={() => setShowReceipt(false)}>
+                  New Sale
+                </Button>
               </div>
-              <Button className="w-full rounded-xl bg-primary text-primary-foreground" onClick={() => setShowReceipt(false)}>
-                New Sale
-              </Button>
             </div>
           )}
         </DialogContent>

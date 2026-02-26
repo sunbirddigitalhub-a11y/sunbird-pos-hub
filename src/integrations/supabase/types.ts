@@ -258,6 +258,69 @@ export type Database = {
           },
         ]
       }
+      z_reports: {
+        Row: {
+          bank_sales: number
+          bank_transactions: number
+          cash_difference: number | null
+          cash_sales: number
+          cash_transactions: number
+          closed_at: string | null
+          created_at: string
+          id: string
+          mobile_money_sales: number
+          mobile_money_transactions: number
+          notes: string | null
+          physical_cash: number | null
+          report_date: string
+          split_sales: number
+          split_transactions: number
+          status: string
+          total_sales: number
+          total_transactions: number
+        }
+        Insert: {
+          bank_sales?: number
+          bank_transactions?: number
+          cash_difference?: number | null
+          cash_sales?: number
+          cash_transactions?: number
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          mobile_money_sales?: number
+          mobile_money_transactions?: number
+          notes?: string | null
+          physical_cash?: number | null
+          report_date: string
+          split_sales?: number
+          split_transactions?: number
+          status?: string
+          total_sales?: number
+          total_transactions?: number
+        }
+        Update: {
+          bank_sales?: number
+          bank_transactions?: number
+          cash_difference?: number | null
+          cash_sales?: number
+          cash_transactions?: number
+          closed_at?: string | null
+          created_at?: string
+          id?: string
+          mobile_money_sales?: number
+          mobile_money_transactions?: number
+          notes?: string | null
+          physical_cash?: number | null
+          report_date?: string
+          split_sales?: number
+          split_transactions?: number
+          status?: string
+          total_sales?: number
+          total_transactions?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
