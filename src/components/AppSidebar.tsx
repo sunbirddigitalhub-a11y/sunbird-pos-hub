@@ -38,22 +38,22 @@ const secondaryNav = [
 
 export function AppSidebar() {
   return (
-    <Sidebar className="border-r border-border/50">
-      <SidebarHeader className="p-5 border-b border-border/50">
+    <Sidebar className="border-r border-border/30">
+      <SidebarHeader className="p-5 pb-6">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold text-sm">SG</span>
+          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center apple-shadow">
+            <span className="text-primary-foreground font-semibold text-sm tracking-tight">SG</span>
           </div>
           <div>
-            <h2 className="font-display text-base font-bold gold-gradient-text">Sunbird</h2>
-            <p className="text-xs text-muted-foreground">Online Stores</p>
+            <h2 className="text-[15px] font-semibold tracking-tight gold-gradient-text">Sunbird</h2>
+            <p className="text-[11px] text-muted-foreground tracking-wide">Online Stores</p>
           </div>
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 mb-2">
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/60 font-medium mb-1 px-3">
             Main
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -64,10 +64,10 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/"}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                      activeClassName="bg-primary/10 text-primary border border-primary/20"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
+                      activeClassName="glass-subtle text-foreground"
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-[18px] w-[18px] shrink-0" />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -77,8 +77,8 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-4">
-          <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70 mb-2">
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-[11px] uppercase tracking-[0.08em] text-muted-foreground/60 font-medium mb-1 px-3">
             Tools
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -88,10 +88,10 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to={item.url}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-                      activeClassName="bg-primary/10 text-primary border border-primary/20"
+                      className="flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
+                      activeClassName="glass-subtle text-foreground"
                     >
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="h-[18px] w-[18px] shrink-0" />
                       <span>{item.title}</span>
                     </NavLink>
                   </SidebarMenuButton>
@@ -102,14 +102,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border/50">
+      <SidebarFooter className="p-4 border-t border-border/20">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center">
-            <span className="text-xs font-medium text-secondary-foreground">AD</span>
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-primary/40 flex items-center justify-center">
+            <span className="text-[11px] font-semibold text-primary-foreground">AD</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Admin</p>
-            <p className="text-xs text-muted-foreground truncate">admin@sunbird.ug</p>
+            <p className="text-[13px] font-medium truncate">Admin</p>
+            <p className="text-[11px] text-muted-foreground truncate">admin@sunbird.ug</p>
           </div>
         </div>
       </SidebarFooter>

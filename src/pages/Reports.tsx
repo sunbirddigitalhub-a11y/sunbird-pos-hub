@@ -31,100 +31,99 @@ const paymentMix = [
 
 const COLORS = [
   "hsl(43, 72%, 55%)",
-  "hsl(142, 71%, 45%)",
-  "hsl(199, 89%, 48%)",
-  "hsl(280, 65%, 60%)",
+  "hsl(142, 60%, 45%)",
+  "hsl(211, 80%, 55%)",
+  "hsl(280, 55%, 60%)",
 ];
 
 const formatM = (v: number) => `${(v / 1000000).toFixed(0)}M`;
 
 const Reports = () => {
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-8 animate-fade-in max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold">Reports</h1>
-          <p className="text-muted-foreground text-sm mt-1">Business analytics & daily accountability</p>
+          <h1 className="text-[28px] font-bold tracking-tight">Reports</h1>
+          <p className="text-muted-foreground text-[14px] mt-1">Business analytics & daily accountability</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="gap-2 border-border/50">
+          <Button variant="outline" className="gap-2 border-border/30 rounded-xl h-10 text-[13px]">
             <FileText className="h-4 w-4" />
             Z-Report
           </Button>
-          <Button className="gap-2 bg-success text-success-foreground hover:bg-success/90">
+          <Button className="gap-2 bg-success text-success-foreground hover:bg-success/90 rounded-xl h-10 text-[13px] font-semibold">
             <MessageSquare className="h-4 w-4" />
             WhatsApp Summary
           </Button>
         </div>
       </div>
 
-      {/* P&L Summary */}
+      {/* P&L */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">Today's P&L</p>
-          <p className="text-2xl font-bold text-success mt-1">UGX 2.56M</p>
-          <p className="text-xs text-muted-foreground mt-1">Revenue: UGX 12.8M</p>
-        </div>
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">This Week</p>
-          <p className="text-2xl font-bold text-success mt-1">UGX 14.2M</p>
-          <p className="text-xs text-muted-foreground mt-1">Revenue: UGX 71M</p>
-        </div>
-        <div className="stat-card">
-          <p className="text-sm text-muted-foreground">This Month</p>
-          <p className="text-2xl font-bold text-success mt-1">UGX 12.4M</p>
-          <p className="text-xs text-muted-foreground mt-1">Revenue: UGX 62M</p>
-        </div>
+        {[
+          { label: "Today's P&L", value: "UGX 2.56M", sub: "Revenue: UGX 12.8M" },
+          { label: "This Week", value: "UGX 14.2M", sub: "Revenue: UGX 71M" },
+          { label: "This Month", value: "UGX 12.4M", sub: "Revenue: UGX 62M" },
+        ].map((s) => (
+          <div key={s.label} className="stat-card">
+            <p className="text-[13px] text-muted-foreground">{s.label}</p>
+            <p className="text-[24px] font-semibold text-success tracking-tight mt-1">{s.value}</p>
+            <p className="text-[12px] text-muted-foreground mt-1">{s.sub}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2 glass-card p-5">
-          <h3 className="font-display font-semibold text-base mb-4">6-Month Revenue vs Profit</h3>
-          <ResponsiveContainer width="100%" height={280}>
+        <div className="lg:col-span-2 glass-card p-6">
+          <h3 className="font-semibold text-[15px] mb-5 tracking-tight">6-Month Revenue vs Profit</h3>
+          <ResponsiveContainer width="100%" height={260}>
             <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 12%, 18%)" />
-              <XAxis dataKey="month" stroke="hsl(220, 10%, 55%)" fontSize={12} />
-              <YAxis stroke="hsl(220, 10%, 55%)" fontSize={12} tickFormatter={formatM} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 14%)" vertical={false} />
+              <XAxis dataKey="month" stroke="hsl(220, 5%, 40%)" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(220, 5%, 40%)" fontSize={12} tickFormatter={formatM} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(220, 14%, 11%)",
-                  border: "1px solid hsl(220, 12%, 18%)",
-                  borderRadius: "8px",
-                  color: "hsl(40, 20%, 92%)",
+                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
+                  border: "1px solid hsl(220, 8%, 18%)",
+                  borderRadius: "12px",
+                  color: "hsl(0, 0%, 98%)",
+                  fontSize: "13px",
+                  padding: "10px 14px",
                 }}
                 formatter={(v: number) => [`UGX ${v.toLocaleString()}`, ""]}
               />
-              <Bar dataKey="revenue" fill="hsl(43, 72%, 55%)" radius={[4, 4, 0, 0]} name="Revenue" />
-              <Bar dataKey="profit" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} name="Profit" />
+              <Bar dataKey="revenue" fill="hsl(43, 72%, 55%)" radius={[6, 6, 0, 0]} name="Revenue" />
+              <Bar dataKey="profit" fill="hsl(142, 60%, 45%)" radius={[6, 6, 0, 0]} name="Profit" />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
-        <div className="glass-card p-5">
-          <h3 className="font-display font-semibold text-base mb-4">Payment Methods</h3>
-          <ResponsiveContainer width="100%" height={200}>
+        <div className="glass-card p-6">
+          <h3 className="font-semibold text-[15px] mb-5 tracking-tight">Payment Methods</h3>
+          <ResponsiveContainer width="100%" height={180}>
             <PieChart>
-              <Pie data={paymentMix} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={4} dataKey="value">
+              <Pie data={paymentMix} cx="50%" cy="50%" innerRadius={48} outerRadius={75} paddingAngle={4} dataKey="value" strokeWidth={0}>
                 {paymentMix.map((_, i) => (
                   <Cell key={i} fill={COLORS[i]} />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsl(220, 14%, 11%)",
-                  border: "1px solid hsl(220, 12%, 18%)",
-                  borderRadius: "8px",
-                  color: "hsl(40, 20%, 92%)",
+                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
+                  border: "1px solid hsl(220, 8%, 18%)",
+                  borderRadius: "12px",
+                  color: "hsl(0, 0%, 98%)",
+                  fontSize: "13px",
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
-          <div className="space-y-2 mt-2">
+          <div className="space-y-2.5 mt-3">
             {paymentMix.map((p, i) => (
-              <div key={p.name} className="flex items-center gap-2 text-sm">
-                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[i] }} />
+              <div key={p.name} className="flex items-center gap-2.5 text-[13px]">
+                <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: COLORS[i] }} />
                 <span className="text-muted-foreground flex-1">{p.name}</span>
-                <span className="font-medium">{p.value}%</span>
+                <span className="font-semibold">{p.value}%</span>
               </div>
             ))}
           </div>

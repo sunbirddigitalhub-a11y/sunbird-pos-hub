@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Search, Plus, Filter, Smartphone, Laptop, MoreVertical } from "lucide-react";
+import { Search, Plus, Filter, Smartphone, Laptop, Tablet, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 
 const inventoryData = [
   { id: 1, name: "iPhone 15 Pro Max 256GB", category: "Smartphone", imei: "356938035643809", status: "In Stock", cost: "UGX 3,200,000", price: "UGX 4,200,000", supplier: "Dubai" },
@@ -17,9 +16,14 @@ const inventoryData = [
 
 const statusStyles: Record<string, string> = {
   "In Stock": "bg-success/10 text-success",
-  "Sold": "bg-muted text-muted-foreground",
+  Sold: "bg-muted text-muted-foreground",
   "In Transit": "bg-warning/10 text-warning",
-  "Dubai Purchase": "bg-chart-3/10 text-chart-3",
+};
+
+const categoryIcon = (cat: string) => {
+  if (cat === "Laptop") return Laptop;
+  if (cat === "Tablet") return Tablet;
+  return Smartphone;
 };
 
 const Inventory = () => {
@@ -31,13 +35,13 @@ const Inventory = () => {
   );
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-display font-bold">Inventory</h1>
-          <p className="text-muted-foreground text-sm mt-1">{inventoryData.length} items tracked with IMEI</p>
+          <h1 className="text-[28px] font-bold tracking-tight">Inventory</h1>
+          <p className="text-muted-foreground text-[14px] mt-1">{inventoryData.length} items tracked with IMEI</p>
         </div>
-        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
+        <Button className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-10 rounded-xl text-[13px] font-semibold transition-all active:scale-[0.97]">
           <Plus className="h-4 w-4" />
           Add Product
         </Button>
@@ -45,15 +49,15 @@ const Inventory = () => {
 
       <div className="flex gap-3">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search by name or IMEI..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 bg-secondary border-border/50"
+            className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
           />
         </div>
-        <Button variant="outline" size="icon" className="border-border/50">
+        <Button variant="outline" size="icon" className="border-border/30 rounded-xl h-11 w-11">
           <Filter className="h-4 w-4" />
         </Button>
       </div>
@@ -62,48 +66,47 @@ const Inventory = () => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border/50 bg-secondary/30">
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Product</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">IMEI/Serial</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Status</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Selling Price</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4">Origin</th>
-                <th className="text-left text-xs font-medium text-muted-foreground py-3 px-4"></th>
+              <tr className="border-b border-border/20">
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Product</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">IMEI/Serial</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Status</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Price</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Origin</th>
+                <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5"></th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
-                <tr key={item.id} className="border-b border-border/30 last:border-0 hover:bg-secondary/20 transition-colors">
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-                        {item.category === "Laptop" ? (
-                          <Laptop className="h-4 w-4 text-primary" />
-                        ) : (
-                          <Smartphone className="h-4 w-4 text-primary" />
-                        )}
+              {filtered.map((item) => {
+                const Icon = categoryIcon(item.category);
+                return (
+                  <tr key={item.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/15 transition-colors duration-200">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-secondary/60 flex items-center justify-center shrink-0">
+                          <Icon className="h-4 w-4 text-primary/80" />
+                        </div>
+                        <div>
+                          <p className="text-[13px] font-medium">{item.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{item.category}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-medium">{item.name}</p>
-                        <p className="text-xs text-muted-foreground">{item.category}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 text-sm font-mono text-muted-foreground">{item.imei}</td>
-                  <td className="py-3 px-4">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusStyles[item.status] || ""}`}>
-                      {item.status}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm font-medium text-primary">{item.price}</td>
-                  <td className="py-3 px-4 text-sm text-muted-foreground">{item.supplier}</td>
-                  <td className="py-3 px-4">
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="py-3.5 px-5 text-[13px] font-mono text-muted-foreground">{item.imei}</td>
+                    <td className="py-3.5 px-5">
+                      <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${statusStyles[item.status] || ""}`}>
+                        {item.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-5 text-[13px] font-semibold text-primary">{item.price}</td>
+                    <td className="py-3.5 px-5 text-[13px] text-muted-foreground">{item.supplier}</td>
+                    <td className="py-3.5 px-5">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg">
+                        <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
