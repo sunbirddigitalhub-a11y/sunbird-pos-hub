@@ -41,9 +41,7 @@ export function AppSidebar() {
     <Sidebar className="border-r border-border/30">
       <SidebarHeader className="p-5 pb-6">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center apple-shadow">
-            <span className="text-primary-foreground font-semibold text-sm tracking-tight">SG</span>
-          </div>
+          <img src="/images/sunbird-logo.png" alt="Sunbird Logo" className="w-9 h-9 rounded-xl apple-shadow object-cover" />
           <div>
             <h2 className="text-[15px] font-semibold tracking-tight gold-gradient-text">Sunbird</h2>
             <p className="text-[11px] text-muted-foreground tracking-wide">Online Stores</p>

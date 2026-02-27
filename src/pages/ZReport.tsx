@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2, Calendar, Eye } from "lucide-react";
+import { FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2, Calendar, Eye, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -323,14 +323,27 @@ const ZReport = () => {
                 </div>
               </div>
             </div>
-            <Button
-              onClick={handleCloseDay}
-              disabled={closing || totalTxns === 0}
-              className="mt-4 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-11 text-[13px] font-semibold"
-            >
-              {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
-              Close Day & Save Report
-            </Button>
+            <div className="flex gap-2 mt-4">
+              <Button
+                onClick={handleCloseDay}
+                disabled={closing || totalTxns === 0}
+                className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-11 text-[13px] font-semibold"
+              >
+                {closing ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                Close Day & Save Report
+              </Button>
+              <Button
+                variant="outline"
+                disabled={totalTxns === 0}
+                className="gap-2 rounded-xl h-11 text-[13px] border-primary/30 text-primary"
+                onClick={() => {
+                  const text = `*SUNBIRD ONLINE STORES*\n*Z-REPORT — ${format(new Date(), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(totalSales)}\nTransactions: ${totalTxns}\n\n${breakdown.map(b => `${b.method}: ${formatPrice(b.amount)} (${b.count} txns)`).join("\n")}\n\nSystem Cash: ${formatPrice(systemCash)}${physicalCash ? `\nPhysical Cash: ${formatPrice(Number(physicalCash))}\nDifference: ${formatPrice(Math.abs(diff))} ${diff > 0 ? "(over)" : diff < 0 ? "(short)" : "(balanced)"}` : ""}`;
+                  window.open(`https://wa.me/256704811097?text=${encodeURIComponent(text)}`, "_blank");
+                }}
+              >
+                <MessageCircle className="h-4 w-4" /> WhatsApp
+              </Button>
+            </div>
           </div>
         </TabsContent>
 
@@ -513,9 +526,23 @@ const ZReport = () => {
                 </div>
               )}
 
-              <Button className="w-full rounded-xl gap-2 bg-primary text-primary-foreground" onClick={handlePrintZReport}>
-                <Printer className="h-4 w-4" /> Print Z-Report
-              </Button>
+              <div className="flex gap-2">
+                <Button className="flex-1 rounded-xl gap-2 bg-primary text-primary-foreground" onClick={handlePrintZReport}>
+                  <Printer className="h-4 w-4" /> Print
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
+                  onClick={() => {
+                    if (!selectedReport) return;
+                    const r = selectedReport;
+                    const text = `*SUNBIRD ONLINE STORES*\n*Z-REPORT — ${format(new Date(r.report_date), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(r.total_sales)}\nTransactions: ${r.total_transactions}\n\nCash: ${formatPrice(r.cash_sales)} (${r.cash_transactions} txns)\nMobile Money: ${formatPrice(r.mobile_money_sales)} (${r.mobile_money_transactions} txns)\nBank: ${formatPrice(r.bank_sales)} (${r.bank_transactions} txns)\nSplit: ${formatPrice(r.split_sales)} (${r.split_transactions} txns)${r.physical_cash !== null ? `\n\nPhysical Cash: ${formatPrice(r.physical_cash)}\nDifference: ${formatPrice(Math.abs(r.cash_difference))} ${r.cash_difference > 0 ? "(over)" : r.cash_difference < 0 ? "(short)" : "(balanced)"}` : ""}`;
+                    window.open(`https://wa.me/256704811097?text=${encodeURIComponent(text)}`, "_blank");
+                  }}
+                >
+                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
