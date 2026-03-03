@@ -20,27 +20,33 @@ export type Database = {
           created_at: string
           details: Json | null
           id: string
+          ip_address: string | null
           performed_by: string | null
           record_id: string | null
           table_name: string
+          user_role: string | null
         }
         Insert: {
           action: string
           created_at?: string
           details?: Json | null
           id?: string
+          ip_address?: string | null
           performed_by?: string | null
           record_id?: string | null
           table_name: string
+          user_role?: string | null
         }
         Update: {
           action?: string
           created_at?: string
           details?: Json | null
           id?: string
+          ip_address?: string | null
           performed_by?: string | null
           record_id?: string | null
           table_name?: string
+          user_role?: string | null
         }
         Relationships: []
       }
@@ -157,6 +163,39 @@ export type Database = {
           supplier?: string | null
           updated_at?: string
           variants?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          phone: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -282,6 +321,24 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       z_reports: {
         Row: {
           bank_sales: number
@@ -350,10 +407,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin_or_supervisor: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "master_admin" | "supervisor" | "staff"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -480,6 +548,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["master_admin", "supervisor", "staff"],
+    },
   },
 } as const
