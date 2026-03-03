@@ -2,8 +2,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { AppLayout } from "@/components/AppLayout";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
+import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import Inventory from "./pages/Inventory";
@@ -18,27 +21,84 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function AppRoutes() {
+  const { user, role, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user) {
+    return (
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  }
+
+  // Staff defaults to POS
+  const defaultRoute = role === "staff" ? "/pos" : "/";
+
+  return (
+    <AppLayout>
+      <Routes>
+        <Route path="/login" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/pos" element={<POS />} />
+        <Route path="/inventory" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <Inventory />
+          </ProtectedRoute>
+        } />
+        <Route path="/products" element={<Products />} />
+        <Route path="/sales" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <Sales />
+          </ProtectedRoute>
+        } />
+        <Route path="/reports" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <Reports />
+          </ProtectedRoute>
+        } />
+        <Route path="/z-report" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <ZReport />
+          </ProtectedRoute>
+        } />
+        <Route path="/customer-ledger" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <CustomerLedger />
+          </ProtectedRoute>
+        } />
+        <Route path="/users" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <UsersPage />
+          </ProtectedRoute>
+        } />
+        <Route path="/settings" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <SettingsPage />
+          </ProtectedRoute>
+        } />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </AppLayout>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/pos" element={<POS />} />
-            <Route path="/inventory" element={<Inventory />} />
-            <Route path="/products" element={<Products />} />
-            <Route path="/sales" element={<Sales />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/z-report" element={<ZReport />} />
-            <Route path="/customer-ledger" element={<CustomerLedger />} />
-            <Route path="/users" element={<UsersPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AppLayout>
+        <AuthProvider>
+          <AppRoutes />
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
