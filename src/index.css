@@ -5,7 +5,8 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  .dark {
     --background: 220 10% 6%;
     --foreground: 0 0% 98%;
 
@@ -59,6 +60,61 @@
 
     font-family: -apple-system, 'Inter', BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
   }
+
+  .light {
+    --background: 0 0% 98%;
+    --foreground: 220 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 15% 15%;
+
+    --primary: 43 72% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 10% 94%;
+    --secondary-foreground: 220 10% 35%;
+
+    --muted: 220 10% 94%;
+    --muted-foreground: 220 5% 45%;
+
+    --accent: 43 50% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 60% 40%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 90% 50%;
+    --warning-foreground: 220 10% 10%;
+
+    --border: 220 10% 88%;
+    --input: 220 10% 88%;
+    --ring: 43 72% 50%;
+
+    --radius: 1rem;
+
+    --sidebar-background: 0 0% 97%;
+    --sidebar-foreground: 220 10% 40%;
+    --sidebar-primary: 43 72% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 94%;
+    --sidebar-accent-foreground: 220 15% 15%;
+    --sidebar-border: 220 10% 90%;
+    --sidebar-ring: 43 72% 50%;
+
+    --chart-1: 43 72% 50%;
+    --chart-2: 142 60% 40%;
+    --chart-3: 211 80% 50%;
+    --chart-4: 280 55% 55%;
+    --chart-5: 0 72% 51%;
+
+    font-family: -apple-system, 'Inter', BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
+  }
 }
 
 @layer base {
@@ -81,6 +137,13 @@
     background-clip: text;
   }
 
+  .light .gold-gradient-text {
+    background: linear-gradient(135deg, hsl(43, 72%, 42%), hsl(48, 80%, 50%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
   .glass-card {
     @apply rounded-2xl border border-border/40;
     background: hsla(220, 10%, 10%, 0.65);
@@ -88,10 +151,19 @@
     -webkit-backdrop-filter: blur(40px) saturate(180%);
   }
 
+  .light .glass-card {
+    background: hsla(0, 0%, 100%, 0.75);
+    box-shadow: 0 1px 3px hsla(0, 0%, 0%, 0.06), 0 4px 16px hsla(0, 0%, 0%, 0.04);
+  }
+
   .glass-subtle {
     background: hsla(220, 10%, 12%, 0.5);
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
+  }
+
+  .light .glass-subtle {
+    background: hsla(0, 0%, 100%, 0.6);
   }
 
   .stat-card {
@@ -104,9 +176,19 @@
     transform: translateY(-1px);
   }
 
+  .light .stat-card:hover {
+    border-color: hsl(43, 72%, 50%, 0.3);
+    box-shadow: 0 8px 40px -12px hsl(43, 72%, 50%, 0.1);
+  }
+
   .apple-shadow {
     box-shadow: 0 2px 8px -2px hsla(0, 0%, 0%, 0.4),
                 0 8px 24px -4px hsla(0, 0%, 0%, 0.3);
+  }
+
+  .light .apple-shadow {
+    box-shadow: 0 2px 8px -2px hsla(0, 0%, 0%, 0.08),
+                0 8px 24px -4px hsla(0, 0%, 0%, 0.06);
   }
 
   .apple-ring:focus-visible {
