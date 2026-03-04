@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Store, Globe, Receipt, Bell, Shield, Palette, Database, Save, Loader2 } from "lucide-react";
+import { Store, Globe, Receipt, Bell, Shield, Palette, Database, Save, Loader2, Sun, Moon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useTheme } from "@/hooks/useTheme";
 
 const sections = [
   { id: "general", label: "General", icon: Store },
@@ -36,6 +37,44 @@ const defaultSettings: Record<string, string> = {
   require_zreport: "true",
   auto_backup: "true",
   keep_deleted_history: "true",
+};
+
+const AppearanceSection = () => {
+  const { theme, setTheme } = useTheme();
+  return (
+    <>
+      <h3 className="font-semibold text-[15px] tracking-tight">Appearance</h3>
+      <div className="space-y-4">
+        <p className="text-[13px] text-muted-foreground">Choose your preferred theme</p>
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setTheme("light")}
+            className={`flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
+              theme === "light"
+                ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                : "border-border/30 hover:border-border/60 bg-secondary/30"
+            }`}
+          >
+            <Sun className="h-8 w-8 text-warning" strokeWidth={1.5} />
+            <span className="text-[13px] font-medium">Light</span>
+            <span className="text-[11px] text-muted-foreground">Clean & bright</span>
+          </button>
+          <button
+            onClick={() => setTheme("dark")}
+            className={`flex flex-col items-center gap-3 p-5 rounded-xl border transition-all duration-200 ${
+              theme === "dark"
+                ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                : "border-border/30 hover:border-border/60 bg-secondary/30"
+            }`}
+          >
+            <Moon className="h-8 w-8 text-primary" strokeWidth={1.5} />
+            <span className="text-[13px] font-medium">Dark</span>
+            <span className="text-[11px] text-muted-foreground">Gold on Charcoal</span>
+          </button>
+        </div>
+      </div>
+    </>
+  );
 };
 
 const SettingsPage = () => {
@@ -203,14 +242,7 @@ const SettingsPage = () => {
             </>
           )}
 
-          {active === "appearance" && (
-            <>
-              <h3 className="font-semibold text-[15px] tracking-tight">Appearance</h3>
-              <div className="space-y-4">
-                <p className="text-[13px] text-muted-foreground">Theme is set to Gold on Charcoal (Dark). Customization options coming soon.</p>
-              </div>
-            </>
-          )}
+          {active === "appearance" && <AppearanceSection />}
 
           {active === "data" && (
             <>
