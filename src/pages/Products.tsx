@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, X, Package } from "lucide-react";
+import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -46,12 +46,14 @@ const Products = () => {
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
-      .from("products" as any)
+      .from("products")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setProducts(data as any as Product[]);
+    if (error) {
+      toast({ title: "Error loading products", description: error.message, variant: "destructive" });
+    } else if (data) {
+      setProducts(data as unknown as Product[]);
     }
     setLoading(false);
   };
@@ -82,7 +84,7 @@ const Products = () => {
     if (!formName.trim() || !formPrice) return;
     setSaving(true);
 
-    const payload = {
+    const payload: any = {
       name: formName.trim(),
       category: formCategory,
       variants: formVariants.trim() || null,
@@ -92,18 +94,13 @@ const Products = () => {
     };
 
     if (editing) {
-      const { error } = await supabase
-        .from("products" as any)
-        .update(payload as any)
-        .eq("id", editing.id);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-      else { toast({ title: "Product updated" }); }
+      const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
+      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+      else toast({ title: "Product updated" });
     } else {
-      const { error } = await supabase
-        .from("products" as any)
-        .insert({ ...payload, in_stock: 0 } as any);
-      if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
-      else { toast({ title: "Product created" }); }
+      const { error } = await supabase.from("products").insert({ ...payload, in_stock: 0 });
+      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
+      else toast({ title: "Product created" });
     }
 
     setSaving(false);
@@ -112,8 +109,8 @@ const Products = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const { error } = await supabase.from("products" as any).delete().eq("id", id);
-    if (error) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Product deleted" }); fetchProducts(); }
   };
 
