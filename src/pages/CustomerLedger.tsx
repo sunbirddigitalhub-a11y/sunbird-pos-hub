@@ -1,20 +1,38 @@
-import { useState } from "react";
-import { Search, Phone, AlertCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, AlertCircle, Loader2, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
 
-const customers = [
-  { id: 1, name: "John Mukasa", phone: "0772123456", purchases: 5, totalSpent: 15200000, balance: 0, lastVisit: "2024-12-15" },
-  { id: 2, name: "Sarah Nantongo", phone: "0701234567", purchases: 3, totalSpent: 7500000, balance: 0, lastVisit: "2024-12-15" },
-  { id: 3, name: "David Okello", phone: "0782345678", purchases: 2, totalSpent: 5500000, balance: 2750000, lastVisit: "2024-12-14" },
-  { id: 4, name: "Grace Achieng", phone: "0753456789", purchases: 1, totalSpent: 600000, balance: 0, lastVisit: "2024-12-14" },
-  { id: 5, name: "Peter Waswa", phone: "0774567890", purchases: 4, totalSpent: 9800000, balance: 0, lastVisit: "2024-12-13" },
-  { id: 6, name: "Mary Nabatanzi", phone: "0705678901", purchases: 2, totalSpent: 4200000, balance: 1200000, lastVisit: "2024-12-13" },
-];
+interface Customer {
+  id: string;
+  name: string;
+  phone: string | null;
+  total_spent: number;
+  balance: number;
+  created_at: string;
+  updated_at: string;
+}
 
 const CustomerLedger = () => {
   const [search, setSearch] = useState("");
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchCustomers = async () => {
+    const { data, error } = await supabase
+      .from("customers")
+      .select("*")
+      .order("updated_at", { ascending: false });
+
+    if (data) setCustomers(data as unknown as Customer[]);
+    if (error) console.error("Error loading customers:", error);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchCustomers(); }, []);
+
   const filtered = customers.filter(
-    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || c.phone.includes(search)
+    (c) => c.name.toLowerCase().includes(search.toLowerCase()) || (c.phone && c.phone.includes(search))
   );
   const totalOutstanding = customers.reduce((s, c) => s + c.balance, 0);
 
@@ -45,47 +63,59 @@ const CustomerLedger = () => {
         <Input placeholder="Search by name or phone..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
       </div>
 
-      <div className="glass-card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-border/20">
-                {["Customer", "Phone", "Purchases", "Total Spent", "Balance", "Last Visit"].map((h) => (
-                  <th key={h} className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map((c) => (
-                <tr key={c.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/15 transition-colors duration-200 cursor-pointer">
-                  <td className="py-3.5 px-5">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
-                        <span className="text-[11px] font-bold text-primary">{c.name.split(" ").map(n => n[0]).join("")}</span>
-                      </div>
-                      <span className="text-[13px] font-medium">{c.name}</span>
-                    </div>
-                  </td>
-                  <td className="py-3.5 px-5 text-[13px] text-muted-foreground">{c.phone}</td>
-                  <td className="py-3.5 px-5 text-[13px]">{c.purchases}</td>
-                  <td className="py-3.5 px-5 text-[13px] font-semibold text-primary">UGX {(c.totalSpent / 1000000).toFixed(1)}M</td>
-                  <td className="py-3.5 px-5">
-                    {c.balance > 0 ? (
-                      <span className="text-[13px] font-semibold text-warning flex items-center gap-1">
-                        <AlertCircle className="h-3.5 w-3.5" />
-                        UGX {c.balance.toLocaleString()}
-                      </span>
-                    ) : (
-                      <span className="text-[12px] text-success font-medium">Cleared</span>
-                    )}
-                  </td>
-                  <td className="py-3.5 px-5 text-[13px] text-muted-foreground">{c.lastVisit}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
-      </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+          <Users className="h-10 w-10 mb-3 opacity-20" />
+          <p className="text-[14px]">{search ? "No matching customers" : "No customers yet"}</p>
+        </div>
+      ) : (
+        <div className="glass-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border/20">
+                  {["Customer", "Phone", "Total Spent", "Balance", "Last Updated"].map((h) => (
+                    <th key={h} className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map((c) => (
+                  <tr key={c.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/15 transition-colors duration-200">
+                    <td className="py-3.5 px-5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+                          <span className="text-[11px] font-bold text-primary">{c.name.split(" ").map(n => n[0]).join("").slice(0, 2)}</span>
+                        </div>
+                        <span className="text-[13px] font-medium">{c.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3.5 px-5 text-[13px] text-muted-foreground">{c.phone || "—"}</td>
+                    <td className="py-3.5 px-5 text-[13px] font-semibold text-primary">UGX {c.total_spent.toLocaleString()}</td>
+                    <td className="py-3.5 px-5">
+                      {c.balance > 0 ? (
+                        <span className="text-[13px] font-semibold text-warning flex items-center gap-1">
+                          <AlertCircle className="h-3.5 w-3.5" />
+                          UGX {c.balance.toLocaleString()}
+                        </span>
+                      ) : (
+                        <span className="text-[12px] text-success font-medium">Cleared</span>
+                      )}
+                    </td>
+                    <td className="py-3.5 px-5 text-[13px] text-muted-foreground">
+                      {new Date(c.updated_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

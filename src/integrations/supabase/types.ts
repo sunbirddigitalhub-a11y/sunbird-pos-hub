@@ -90,6 +90,7 @@ export type Database = {
           id: string
           imei: string
           product_id: string | null
+          quantity: number
           selling_price: number
           status: string
           supplier: string | null
@@ -101,6 +102,7 @@ export type Database = {
           id?: string
           imei: string
           product_id?: string | null
+          quantity?: number
           selling_price?: number
           status?: string
           supplier?: string | null
@@ -112,6 +114,7 @@ export type Database = {
           id?: string
           imei?: string
           product_id?: string | null
+          quantity?: number
           selling_price?: number
           status?: string
           supplier?: string | null
