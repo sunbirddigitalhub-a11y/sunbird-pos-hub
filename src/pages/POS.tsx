@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Minus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle } from "lucide-react";
+import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -66,11 +66,11 @@ const POS = () => {
     customer: string;
     customerPhone: string;
     amountPaid: number;
+    balance: number;
     warranty: number;
     date: Date;
   } | null>(null);
 
-  // Process Sale dialog
   const [showProcessSale, setShowProcessSale] = useState(false);
   const [salePrice, setSalePrice] = useState("");
   const [amountPaid, setAmountPaid] = useState("");
@@ -81,13 +81,13 @@ const POS = () => {
 
   const fetchInventory = async () => {
     const { data, error } = await supabase
-      .from("inventory" as any)
+      .from("inventory")
       .select("id, product_id, imei, status, selling_price, cost_price, supplier")
       .eq("status", "In Stock");
 
     if (error) { console.error("Error fetching inventory:", error); return; }
 
-    const { data: products } = await supabase.from("products" as any).select("id, name, category");
+    const { data: products } = await supabase.from("products").select("id, name, category");
     const productMap = new Map((products as any[] || []).map((p: any) => [p.id, p]));
 
     const items = ((data as any[]) || []).map((item: any) => ({
@@ -101,7 +101,7 @@ const POS = () => {
   };
 
   const fetchCustomers = async () => {
-    const { data } = await supabase.from("customers" as any).select("id, name, phone");
+    const { data } = await supabase.from("customers").select("id, name, phone");
     setCustomers((data as any[]) || []);
   };
 
@@ -119,7 +119,6 @@ const POS = () => {
 
   const addToCart = (item: InventoryItem) => {
     if (cart.length === 0) {
-      // Single item → open Process Sale dialog
       setCart([{
         inventory_id: item.id,
         product_name: item.product_name || "Unknown",
@@ -152,7 +151,7 @@ const POS = () => {
   const handleCreateCustomer = async () => {
     if (!newCustomerName.trim()) return;
     const { data, error } = await supabase
-      .from("customers" as any)
+      .from("customers")
       .insert({ name: newCustomerName.trim(), phone: newCustomerPhone.trim() || null } as any)
       .select().single();
 
@@ -167,30 +166,61 @@ const POS = () => {
     toast({ title: "Customer created", description: customer.name });
   };
 
+  const findOrCreateCustomer = async (name: string, phone: string): Promise<string | null> => {
+    if (!name || name === "Walk-in Customer") return null;
+    
+    // Try to find existing customer by phone or name
+    let customerId: string | null = selectedCustomer?.id || null;
+    
+    if (!customerId && phone) {
+      const { data } = await supabase.from("customers").select("id").eq("phone", phone).maybeSingle();
+      if (data) customerId = (data as any).id;
+    }
+    
+    if (!customerId) {
+      const { data } = await supabase.from("customers").select("id").eq("name", name).maybeSingle();
+      if (data) customerId = (data as any).id;
+    }
+    
+    if (!customerId) {
+      const { data } = await supabase.from("customers")
+        .insert({ name, phone: phone || null } as any)
+        .select("id").single();
+      if (data) customerId = (data as any).id;
+    }
+    
+    return customerId;
+  };
+
   const completeSale = async (overrideItems?: CartItem[], overrideTotal?: number, overridePayment?: string, overrideCustomerName?: string, overrideCustomerPhone?: string, overrideAmountPaid?: number, overrideWarranty?: number) => {
     const items = overrideItems || cart;
     const total = overrideTotal || subtotal;
     const payment = overridePayment || selectedPayment;
     const custName = overrideCustomerName || selectedCustomer?.name || "Walk-in Customer";
     const custPhone = overrideCustomerPhone || selectedCustomer?.phone || "";
-    const paid = overrideAmountPaid || total;
+    const paid = overrideAmountPaid ?? total;
     const warr = overrideWarranty || 6;
+    const balance = Math.max(0, total - paid);
 
     if (items.length === 0) return;
     setProcessing(true);
 
     try {
       const saleNumber = `SL-${Date.now().toString(36).toUpperCase()}`;
+      
+      // Find or create customer (especially important for partial payments)
+      const customerId = await findOrCreateCustomer(custName, custPhone);
 
       const { data: sale, error: saleError } = await supabase
-        .from("sales" as any)
+        .from("sales")
         .insert({
           sale_number: saleNumber,
-          customer_id: selectedCustomer?.id || null,
+          customer_id: customerId,
           customer_name: custName,
           total_amount: total,
           payment_method: payment,
-          status: "Completed",
+          status: balance > 0 ? "Partial" : "Completed",
+          notes: balance > 0 ? `Partial payment. Paid: ${paid}, Balance: ${balance}` : null,
         } as any).select().single();
 
       if (saleError) throw saleError;
@@ -206,17 +236,22 @@ const POS = () => {
         total_price: item.price,
       }));
 
-      const { error: itemsError } = await supabase.from("sale_items" as any).insert(saleItems as any);
+      const { error: itemsError } = await supabase.from("sale_items").insert(saleItems as any);
       if (itemsError) throw itemsError;
 
       for (const item of items) {
-        await supabase.from("inventory" as any).update({ status: "Sold" } as any).eq("id", item.inventory_id);
+        await supabase.from("inventory").update({ status: "Sold" } as any).eq("id", item.inventory_id);
       }
 
-      if (selectedCustomer) {
-        const { data: cust } = await supabase.from("customers" as any).select("total_spent").eq("id", selectedCustomer.id).single();
+      // Update customer: add total_spent and set balance for partial payments
+      if (customerId) {
+        const { data: cust } = await supabase.from("customers").select("total_spent, balance").eq("id", customerId).single();
         if (cust) {
-          await supabase.from("customers" as any).update({ total_spent: ((cust as any).total_spent || 0) + total } as any).eq("id", selectedCustomer.id);
+          const existingBalance = (cust as any).balance || 0;
+          await supabase.from("customers").update({
+            total_spent: ((cust as any).total_spent || 0) + paid,
+            balance: existingBalance + balance,
+          } as any).eq("id", customerId);
         }
       }
 
@@ -229,6 +264,7 @@ const POS = () => {
         customer: custName,
         customerPhone: custPhone,
         amountPaid: paid,
+        balance,
         warranty: warr,
         date: saleDate,
       });
@@ -238,8 +274,9 @@ const POS = () => {
       setSelectedCustomer(null);
       setSelectedPayment("Cash");
       fetchInventory();
+      fetchCustomers();
 
-      toast({ title: "Sale completed!", description: `${saleNumber} — ${formatPrice(total)}` });
+      toast({ title: "Sale completed!", description: `${saleNumber} — ${formatPrice(total)}${balance > 0 ? ` (Balance: ${formatPrice(balance)})` : ""}` });
     } catch (err: any) {
       console.error("Sale error:", err);
       toast({ title: "Error", description: err.message || "Could not complete sale", variant: "destructive" });
@@ -250,7 +287,6 @@ const POS = () => {
 
   const handleProcessSaleComplete = () => {
     const total = Number(salePrice) || cart[0]?.price || 0;
-    // Update cart item price if overridden
     const updatedCart = cart.map((item, i) => i === 0 ? { ...item, price: total } : item);
     completeSale(
       updatedCart,
@@ -324,6 +360,11 @@ const POS = () => {
         <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
           <span>Amount Paid</span><span style="font-weight: bold;">${formatPrice(lastSale.amountPaid)}</span>
         </div>
+        ${lastSale.balance > 0 ? `
+        <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0; color: #e65100;">
+          <span>Outstanding Balance</span><span style="font-weight: bold;">${formatPrice(lastSale.balance)}</span>
+        </div>
+        ` : ""}
 
         <div style="margin: 25px 0; padding: 15px; border: 1px solid #C8982C; border-radius: 10px; text-align: center; background: #FFFBF0;">
           <p style="font-size: 11px; color: #C8982C; font-weight: bold; letter-spacing: 2px; margin: 0;">WARRANTY VALID UNTIL</p>
@@ -352,11 +393,15 @@ const POS = () => {
 
   const sendReceiptWhatsApp = () => {
     if (!lastSale) return;
-    const receiptText = `*SUNBIRD ONLINE STORES*\n*SALES RECEIPT*\n\nCustomer: ${lastSale.customer}\nPhone: ${lastSale.customerPhone || "N/A"}\nDate: ${format(lastSale.date, "dd MMM yyyy, hh:mm a")}\n\n${lastSale.items.map(i => `Device: ${i.product_name}\nIMEI: ${i.imei}`).join("\n")}\n\nPayment: ${lastSale.payment}\n*Total: ${formatPrice(lastSale.total)}*\nAmount Paid: ${formatPrice(lastSale.amountPaid)}\nWarranty: ${lastSale.warranty} months\n\nReceipt #${lastSale.saleNumber}\nThank you for choosing Sunbird! 🐦`;
+    const balanceText = lastSale.balance > 0 ? `\nOutstanding Balance: ${formatPrice(lastSale.balance)}` : "";
+    const receiptText = `*SUNBIRD ONLINE STORES*\n*SALES RECEIPT*\n\nCustomer: ${lastSale.customer}\nPhone: ${lastSale.customerPhone || "N/A"}\nDate: ${format(lastSale.date, "dd MMM yyyy, hh:mm a")}\n\n${lastSale.items.map(i => `Device: ${i.product_name}\nIMEI: ${i.imei}`).join("\n")}\n\nPayment: ${lastSale.payment}\n*Total: ${formatPrice(lastSale.total)}*\nAmount Paid: ${formatPrice(lastSale.amountPaid)}${balanceText}\nWarranty: ${lastSale.warranty} months\n\nReceipt #${lastSale.saleNumber}\nThank you for choosing Sunbird! 🐦`;
 
     const encoded = encodeURIComponent(receiptText);
     window.open(`https://wa.me/256704811097?text=${encoded}`, "_blank");
   };
+
+  // Compute remaining balance for Process Sale dialog
+  const processBalance = Math.max(0, (Number(salePrice) || 0) - (Number(amountPaid) || 0));
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
@@ -522,13 +567,22 @@ const POS = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[13px] font-medium block mb-1.5">Sale Price (UGX) *</label>
-                  <Input type="number" value={salePrice} onChange={(e) => { setSalePrice(e.target.value); setAmountPaid(e.target.value); }} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
+                  <Input type="number" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
                 </div>
                 <div>
                   <label className="text-[13px] font-medium block mb-1.5">Amount Paid (UGX)</label>
                   <Input type="number" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
                 </div>
               </div>
+
+              {/* Balance indicator */}
+              {processBalance > 0 && (
+                <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 flex justify-between items-center">
+                  <span className="text-[12px] text-warning font-medium uppercase tracking-wider">Outstanding Balance</span>
+                  <span className="text-[14px] font-semibold text-warning">{formatPrice(processBalance)}</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[13px] font-medium block mb-1.5">Payment Type</label>
@@ -555,7 +609,7 @@ const POS = () => {
                 disabled={processing || !processCustomerName.trim()}
                 onClick={handleProcessSaleComplete}
               >
-                {processing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : "Complete Sale"}
+                {processing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : processBalance > 0 ? `Complete Sale (Balance: ${formatPrice(processBalance)})` : "Complete Sale"}
               </Button>
             </div>
           )}
@@ -606,12 +660,19 @@ const POS = () => {
         <DialogContent className="glass-card border-border/30 max-w-md max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="text-[16px] font-semibold text-center">
-              <Check className="h-6 w-6 text-green-500 mx-auto mb-2" />
+              <Check className="h-6 w-6 text-success mx-auto mb-2" />
               Sale Complete
             </DialogTitle>
           </DialogHeader>
           {lastSale && (
             <div className="space-y-4">
+              {lastSale.balance > 0 && (
+                <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 text-center">
+                  <p className="text-[12px] text-warning font-medium uppercase tracking-wider">Outstanding Balance</p>
+                  <p className="text-[18px] font-bold text-warning mt-1">{formatPrice(lastSale.balance)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">Recorded in customer ledger</p>
+                </div>
+              )}
               <div id="pos-receipt-content" dangerouslySetInnerHTML={{ __html: generateReceiptHTML() }} />
               <div className="flex gap-2">
                 <Button

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Filter, Smartphone, Laptop, Tablet, MoreVertical, Loader2, Package, Edit2, Trash2, X } from "lucide-react";
+import { Search, Plus, Smartphone, Laptop, Tablet, MoreVertical, Loader2, Package, Edit2, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ interface InventoryItem {
   selling_price: number;
   supplier: string | null;
   product_id: string | null;
+  quantity: number;
   product_name?: string;
   product_category?: string;
 }
@@ -58,6 +59,7 @@ const Inventory = () => {
   const [formCost, setFormCost] = useState("");
   const [formPrice, setFormPrice] = useState("");
   const [formSupplier, setFormSupplier] = useState("");
+  const [formQuantity, setFormQuantity] = useState("1");
 
   const fetchData = async () => {
     const [invRes, prodRes] = await Promise.all([
@@ -75,6 +77,7 @@ const Inventory = () => {
         const prod = item.product_id ? productMap.get(item.product_id) : null;
         return {
           ...item,
+          quantity: item.quantity || 1,
           product_name: prod?.name || "Unknown Product",
           product_category: prod?.category || "Other",
         };
@@ -99,7 +102,7 @@ const Inventory = () => {
   const openNew = () => {
     setEditing(null);
     setFormImei(""); setFormProductId(""); setFormStatus("In Stock");
-    setFormCost(""); setFormPrice(""); setFormSupplier("");
+    setFormCost(""); setFormPrice(""); setFormSupplier(""); setFormQuantity("1");
     setShowForm(true);
   };
 
@@ -111,6 +114,7 @@ const Inventory = () => {
     setFormCost(String(item.cost_price));
     setFormPrice(String(item.selling_price));
     setFormSupplier(item.supplier || "");
+    setFormQuantity(String(item.quantity));
     setShowForm(true);
   };
 
@@ -125,6 +129,7 @@ const Inventory = () => {
       cost_price: Number(formCost) || 0,
       selling_price: Number(formPrice) || 0,
       supplier: formSupplier.trim() || null,
+      quantity: Number(formQuantity) || 1,
     };
 
     if (editing) {
@@ -148,9 +153,9 @@ const Inventory = () => {
     else { toast({ title: "Item deleted" }); fetchData(); }
   };
 
-  const inStockCount = items.filter(i => i.status === "In Stock").length;
-  const inTransitCount = items.filter(i => i.status === "In Transit").length;
-  const totalValue = items.filter(i => i.status === "In Stock").reduce((s, i) => s + i.selling_price, 0);
+  const inStockCount = items.filter(i => i.status === "In Stock").reduce((s, i) => s + i.quantity, 0);
+  const inTransitCount = items.filter(i => i.status === "In Transit").reduce((s, i) => s + i.quantity, 0);
+  const totalValue = items.filter(i => i.status === "In Stock").reduce((s, i) => s + (i.selling_price * i.quantity), 0);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl">
@@ -165,7 +170,6 @@ const Inventory = () => {
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="stat-card">
           <p className="text-[13px] text-muted-foreground">In Stock</p>
@@ -184,12 +188,7 @@ const Inventory = () => {
       <div className="flex gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or IMEI..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
-          />
+          <Input placeholder="Search by name or IMEI..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[140px] h-11 border-border/30 rounded-xl text-[13px]">
@@ -222,6 +221,7 @@ const Inventory = () => {
                 <tr className="border-b border-border/20">
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Product</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">IMEI/Serial</th>
+                  <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Qty</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Status</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Price</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-5">Origin</th>
@@ -245,6 +245,7 @@ const Inventory = () => {
                         </div>
                       </td>
                       <td className="py-3.5 px-5 text-[13px] font-mono text-muted-foreground">{item.imei}</td>
+                      <td className="py-3.5 px-5 text-[13px] font-semibold">{item.quantity}</td>
                       <td className="py-3.5 px-5">
                         <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium ${statusStyles[item.status] || ""}`}>
                           {item.status}
@@ -302,7 +303,7 @@ const Inventory = () => {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Status</label>
                 <Select value={formStatus} onValueChange={setFormStatus}>
@@ -315,8 +316,12 @@ const Inventory = () => {
                 </Select>
               </div>
               <div>
+                <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Quantity</label>
+                <Input type="number" min="1" value={formQuantity} onChange={(e) => setFormQuantity(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
+              </div>
+              <div>
                 <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Supplier</label>
-                <Input value={formSupplier} onChange={(e) => setFormSupplier(e.target.value)} placeholder="Dubai, China..." className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
+                <Input value={formSupplier} onChange={(e) => setFormSupplier(e.target.value)} placeholder="Dubai..." className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -329,6 +334,15 @@ const Inventory = () => {
                 <Input type="number" value={formCost} onChange={(e) => setFormCost(e.target.value)} placeholder="3200000" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
               </div>
             </div>
+            {/* Profit Margin Display */}
+            {(Number(formPrice) > 0 || Number(formCost) > 0) && (
+              <div className="p-3 rounded-xl bg-secondary/30 flex justify-between items-center">
+                <span className="text-[12px] text-muted-foreground uppercase tracking-wider">Profit Margin</span>
+                <span className={`text-[14px] font-semibold ${(Number(formPrice) - Number(formCost)) >= 0 ? "text-success" : "text-destructive"}`}>
+                  UGX {(Number(formPrice) - Number(formCost)).toLocaleString()}
+                </span>
+              </div>
+            )}
             <div className="flex gap-2 pt-2">
               <Button variant="outline" className="flex-1 rounded-xl border-border/30" onClick={() => setShowForm(false)}>Cancel</Button>
               <Button

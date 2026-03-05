@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package } from "lucide-react";
+import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package, TrendingUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -36,7 +36,6 @@ const Products = () => {
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
 
-  // Form state
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("Smartphone");
   const [formVariants, setFormVariants] = useState("");
@@ -118,6 +117,7 @@ const Products = () => {
 
   const totalValue = products.reduce((s, p) => s + p.base_price * p.in_stock, 0);
   const totalItems = products.reduce((s, p) => s + p.in_stock, 0);
+  const totalProfit = products.reduce((s, p) => s + (p.base_price - p.cost_price) * p.in_stock, 0);
 
   return (
     <div className="space-y-6 animate-fade-in max-w-7xl">
@@ -136,8 +136,7 @@ const Products = () => {
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="stat-card">
           <p className="text-[13px] text-muted-foreground">Products</p>
           <p className="text-[24px] font-semibold tracking-tight mt-1">{products.length}</p>
@@ -150,17 +149,15 @@ const Products = () => {
           <p className="text-[13px] text-muted-foreground">Inventory Value</p>
           <p className="text-[24px] font-semibold text-primary tracking-tight mt-1">UGX {(totalValue / 1000000).toFixed(1)}M</p>
         </div>
+        <div className="stat-card">
+          <p className="text-[13px] text-muted-foreground">Potential Profit</p>
+          <p className="text-[24px] font-semibold text-success tracking-tight mt-1">UGX {(totalProfit / 1000000).toFixed(1)}M</p>
+        </div>
       </div>
 
-      {/* Search */}
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Search by name, category, or supplier..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
-        />
+        <Input placeholder="Search by name, category, or supplier..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
       </div>
 
       {loading ? (
@@ -176,6 +173,8 @@ const Products = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((p) => {
             const Icon = categoryIcon(p.category);
+            const profit = p.base_price - p.cost_price;
+            const marginPct = p.base_price > 0 ? ((profit / p.base_price) * 100).toFixed(0) : "0";
             return (
               <div key={p.id} className="glass-card p-5 transition-all duration-300 hover:scale-[1.01] group">
                 <div className="flex items-start justify-between mb-3">
@@ -195,11 +194,29 @@ const Products = () => {
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {p.category}{p.variants ? ` · ${p.variants}` : ""}{p.supplier ? ` · ${p.supplier}` : ""}
                 </p>
-                <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/20">
-                  <span className="text-[14px] font-semibold text-primary">UGX {p.base_price.toLocaleString()}</span>
-                  <span className={`text-[12px] font-medium ${p.in_stock > 5 ? "text-success" : p.in_stock > 0 ? "text-warning" : "text-destructive"}`}>
-                    {p.in_stock} in stock
-                  </span>
+                <div className="mt-4 pt-3 border-t border-border/20 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-muted-foreground">Selling</span>
+                    <span className="text-[14px] font-semibold text-primary">UGX {p.base_price.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-muted-foreground">Cost</span>
+                    <span className="text-[13px] font-medium">UGX {p.cost_price.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-muted-foreground flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" /> Profit
+                    </span>
+                    <span className={`text-[13px] font-semibold ${profit >= 0 ? "text-success" : "text-destructive"}`}>
+                      UGX {profit.toLocaleString()} ({marginPct}%)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-[12px] text-muted-foreground">Stock</span>
+                    <span className={`text-[12px] font-medium ${p.in_stock > 5 ? "text-success" : p.in_stock > 0 ? "text-warning" : "text-destructive"}`}>
+                      {p.in_stock} in stock
+                    </span>
+                  </div>
                 </div>
               </div>
             );
@@ -245,6 +262,22 @@ const Products = () => {
                 <Input type="number" value={formCost} onChange={(e) => setFormCost(e.target.value)} placeholder="3200000" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
               </div>
             </div>
+            {/* Dynamic Profit Margin */}
+            {(Number(formPrice) > 0 || Number(formCost) > 0) && (
+              <div className="p-3 rounded-xl bg-secondary/30 flex justify-between items-center">
+                <span className="text-[12px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" /> Profit Margin
+                </span>
+                <span className={`text-[14px] font-semibold ${(Number(formPrice) - Number(formCost)) >= 0 ? "text-success" : "text-destructive"}`}>
+                  UGX {(Number(formPrice) - Number(formCost)).toLocaleString()}
+                  {Number(formPrice) > 0 && (
+                    <span className="text-[11px] ml-1 opacity-70">
+                      ({(((Number(formPrice) - Number(formCost)) / Number(formPrice)) * 100).toFixed(0)}%)
+                    </span>
+                  )}
+                </span>
+              </div>
+            )}
             <div>
               <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Supplier</label>
               <Input value={formSupplier} onChange={(e) => setFormSupplier(e.target.value)} placeholder="Dubai, China..." className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
