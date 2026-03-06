@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle } from "lucide-react";
+import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -406,10 +406,12 @@ const POS = () => {
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
+  const [savingScreenshot, setSavingScreenshot] = useState(false);
+
   const captureAndUploadReceipt = useCallback(async () => {
     if (!receiptRef.current || !lastSale) return;
+    setSavingScreenshot(true);
     try {
-      // Small delay to ensure receipt is fully rendered
       await new Promise((r) => setTimeout(r, 500));
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: "#ffffff",
@@ -418,27 +420,27 @@ const POS = () => {
         logging: false,
       });
       canvas.toBlob(async (blob) => {
-        if (!blob) return;
+        if (!blob) { setSavingScreenshot(false); return; }
         const fileName = `${lastSale.saleNumber}_${Date.now()}.png`;
         const { error } = await supabase.storage
           .from("receipts")
           .upload(fileName, blob, { contentType: "image/png", upsert: true });
+        setSavingScreenshot(false);
         if (error) {
           console.error("Receipt upload error:", error);
+          toast({ title: "Error", description: "Could not save receipt screenshot", variant: "destructive" });
         } else {
-          console.log("Receipt saved:", fileName);
+          toast({ title: "Screenshot saved", description: "Receipt photo saved to Z-Report" });
         }
       }, "image/png");
     } catch (err) {
       console.error("Receipt capture error:", err);
+      setSavingScreenshot(false);
+      toast({ title: "Error", description: "Could not capture receipt", variant: "destructive" });
     }
   }, [lastSale]);
 
-  useEffect(() => {
-    if (showReceipt && lastSale) {
-      captureAndUploadReceipt();
-    }
-  }, [showReceipt, lastSale, captureAndUploadReceipt]);
+  // No auto-capture — user clicks the camera button manually
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
@@ -725,6 +727,15 @@ const POS = () => {
                   }}
                 >
                   <Printer className="h-4 w-4" /> Print
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
+                  onClick={captureAndUploadReceipt}
+                  disabled={savingScreenshot}
+                >
+                  {savingScreenshot ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  {savingScreenshot ? "Saving..." : "📷 Save"}
                 </Button>
                 <Button
                   variant="outline"
