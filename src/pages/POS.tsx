@@ -731,6 +731,15 @@ const POS = () => {
                 <Button
                   variant="outline"
                   className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
+                  onClick={captureAndUploadReceipt}
+                  disabled={savingScreenshot}
+                >
+                  {savingScreenshot ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                  {savingScreenshot ? "Saving..." : "📷 Save"}
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
                   onClick={sendReceiptWhatsApp}
                 >
                   <MessageCircle className="h-4 w-4" /> WhatsApp
