@@ -406,10 +406,12 @@ const POS = () => {
 
   const receiptRef = useRef<HTMLDivElement>(null);
 
+  const [savingScreenshot, setSavingScreenshot] = useState(false);
+
   const captureAndUploadReceipt = useCallback(async () => {
     if (!receiptRef.current || !lastSale) return;
+    setSavingScreenshot(true);
     try {
-      // Small delay to ensure receipt is fully rendered
       await new Promise((r) => setTimeout(r, 500));
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: "#ffffff",
@@ -418,19 +420,23 @@ const POS = () => {
         logging: false,
       });
       canvas.toBlob(async (blob) => {
-        if (!blob) return;
+        if (!blob) { setSavingScreenshot(false); return; }
         const fileName = `${lastSale.saleNumber}_${Date.now()}.png`;
         const { error } = await supabase.storage
           .from("receipts")
           .upload(fileName, blob, { contentType: "image/png", upsert: true });
+        setSavingScreenshot(false);
         if (error) {
           console.error("Receipt upload error:", error);
+          toast({ title: "Error", description: "Could not save receipt screenshot", variant: "destructive" });
         } else {
-          console.log("Receipt saved:", fileName);
+          toast({ title: "Screenshot saved", description: "Receipt photo saved to Z-Report" });
         }
       }, "image/png");
     } catch (err) {
       console.error("Receipt capture error:", err);
+      setSavingScreenshot(false);
+      toast({ title: "Error", description: "Could not capture receipt", variant: "destructive" });
     }
   }, [lastSale]);
 
