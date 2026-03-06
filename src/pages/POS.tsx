@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle } from "lucide-react";
+import html2canvas from "html2canvas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -403,6 +404,42 @@ const POS = () => {
   // Compute remaining balance for Process Sale dialog
   const processBalance = Math.max(0, (Number(salePrice) || 0) - (Number(amountPaid) || 0));
 
+  const receiptRef = useRef<HTMLDivElement>(null);
+
+  const captureAndUploadReceipt = useCallback(async () => {
+    if (!receiptRef.current || !lastSale) return;
+    try {
+      // Small delay to ensure receipt is fully rendered
+      await new Promise((r) => setTimeout(r, 500));
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+        const fileName = `${lastSale.saleNumber}_${Date.now()}.png`;
+        const { error } = await supabase.storage
+          .from("receipts")
+          .upload(fileName, blob, { contentType: "image/png", upsert: true });
+        if (error) {
+          console.error("Receipt upload error:", error);
+        } else {
+          console.log("Receipt saved:", fileName);
+        }
+      }, "image/png");
+    } catch (err) {
+      console.error("Receipt capture error:", err);
+    }
+  }, [lastSale]);
+
+  useEffect(() => {
+    if (showReceipt && lastSale) {
+      captureAndUploadReceipt();
+    }
+  }, [showReceipt, lastSale, captureAndUploadReceipt]);
+
   return (
     <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
       {/* Product Grid */}
@@ -673,7 +710,7 @@ const POS = () => {
                   <p className="text-[11px] text-muted-foreground mt-1">Recorded in customer ledger</p>
                 </div>
               )}
-              <div id="pos-receipt-content" dangerouslySetInnerHTML={{ __html: generateReceiptHTML() }} />
+              <div ref={receiptRef} id="pos-receipt-content" dangerouslySetInnerHTML={{ __html: generateReceiptHTML() }} />
               <div className="flex gap-2">
                 <Button
                   variant="outline"

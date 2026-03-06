@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -11,7 +12,9 @@ import {
   Cell,
 } from "recharts";
 import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { MessageSquare, FileText, Image, Loader2, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 const monthlyData = [
   { month: "Jul", revenue: 42000000, profit: 8400000 },
@@ -38,7 +41,53 @@ const COLORS = [
 
 const formatM = (v: number) => `${(v / 1000000).toFixed(0)}M`;
 
+interface ReceiptFile {
+  name: string;
+  url: string;
+  created_at: string;
+}
+
 const Reports = () => {
+  const [receipts, setReceipts] = useState<ReceiptFile[]>([]);
+  const [loadingReceipts, setLoadingReceipts] = useState(false);
+  const [selectedReceipt, setSelectedReceipt] = useState<ReceiptFile | null>(null);
+  const [showReceipts, setShowReceipts] = useState(false);
+
+  const fetchReceipts = async () => {
+    setLoadingReceipts(true);
+    try {
+      const { data, error } = await supabase.storage.from("receipts").list("", {
+        limit: 100,
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) throw error;
+      const files: ReceiptFile[] = (data || [])
+        .filter((f) => f.name.endsWith(".png"))
+        .map((f) => {
+          const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(f.name);
+          return {
+            name: f.name,
+            url: urlData.publicUrl,
+            created_at: f.created_at || "",
+          };
+        });
+      setReceipts(files);
+    } catch (err) {
+      console.error("Error loading receipts:", err);
+    } finally {
+      setLoadingReceipts(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchReceipts();
+  }, []);
+
+  const extractSaleNumber = (name: string) => {
+    const parts = name.split("_");
+    return parts[0] || name;
+  };
+
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -47,6 +96,14 @@ const Reports = () => {
           <p className="text-muted-foreground text-[14px] mt-1">Business analytics & daily accountability</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="gap-2 border-border/30 rounded-xl h-10 text-[13px]"
+            onClick={() => setShowReceipts(!showReceipts)}
+          >
+            <Image className="h-4 w-4" />
+            Receipts ({receipts.length})
+          </Button>
           <Button variant="outline" className="gap-2 border-border/30 rounded-xl h-10 text-[13px]">
             <FileText className="h-4 w-4" />
             Z-Report
@@ -57,6 +114,56 @@ const Reports = () => {
           </Button>
         </div>
       </div>
+
+      {/* Receipts Gallery */}
+      {showReceipts && (
+        <div className="glass-card p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="font-semibold text-[15px] tracking-tight flex items-center gap-2">
+              <Image className="h-4 w-4 text-primary" />
+              Receipt Screenshots
+            </h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => fetchReceipts()}>
+              <Loader2 className={`h-4 w-4 ${loadingReceipts ? "animate-spin" : ""}`} />
+            </Button>
+          </div>
+          {loadingReceipts ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : receipts.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Image className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-[13px]">No receipts captured yet. Complete a sale in POS to see receipts here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {receipts.map((receipt) => (
+                <button
+                  key={receipt.name}
+                  onClick={() => setSelectedReceipt(receipt)}
+                  className="group rounded-xl overflow-hidden border border-border/20 hover:border-primary/40 transition-all duration-200 hover:shadow-lg bg-secondary/20"
+                >
+                  <div className="aspect-[3/4] overflow-hidden">
+                    <img
+                      src={receipt.url}
+                      alt={receipt.name}
+                      className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="p-2">
+                    <p className="text-[11px] font-mono font-medium truncate text-primary">{extractSaleNumber(receipt.name)}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      {receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : ""}
+                    </p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* P&L */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -129,6 +236,30 @@ const Reports = () => {
           </div>
         </div>
       </div>
+
+      {/* Receipt Preview Dialog */}
+      <Dialog open={!!selectedReceipt} onOpenChange={(open) => !open && setSelectedReceipt(null)}>
+        <DialogContent className="glass-card border-border/30 max-w-lg max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[15px] font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              {selectedReceipt ? extractSaleNumber(selectedReceipt.name) : "Receipt"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedReceipt && (
+            <div className="space-y-4">
+              <img
+                src={selectedReceipt.url}
+                alt={selectedReceipt.name}
+                className="w-full rounded-xl border border-border/20"
+              />
+              <p className="text-[11px] text-muted-foreground text-center">
+                {selectedReceipt.created_at ? new Date(selectedReceipt.created_at).toLocaleString() : ""}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
