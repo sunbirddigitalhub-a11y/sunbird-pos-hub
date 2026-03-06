@@ -434,11 +434,7 @@ const POS = () => {
     }
   }, [lastSale]);
 
-  useEffect(() => {
-    if (showReceipt && lastSale) {
-      captureAndUploadReceipt();
-    }
-  }, [showReceipt, lastSale, captureAndUploadReceipt]);
+  // No auto-capture — user clicks the camera button manually
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
