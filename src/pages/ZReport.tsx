@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2, Calendar, Eye, MessageCircle } from "lucide-react";
+import { FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2, Calendar, Eye, MessageCircle, Image, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -39,6 +39,12 @@ interface ZReportRecord {
   closed_at: string | null;
 }
 
+interface ReceiptFile {
+  name: string;
+  url: string;
+  created_at: string;
+}
+
 const ZReport = () => {
   const [physicalCash, setPhysicalCash] = useState("");
   const [todaySales, setTodaySales] = useState<SaleRecord[]>([]);
@@ -49,6 +55,11 @@ const ZReport = () => {
   const [selectedReport, setSelectedReport] = useState<ZReportRecord | null>(null);
   const [reportSales, setReportSales] = useState<SaleRecord[]>([]);
   const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Receipt screenshots state
+  const [receiptImages, setReceiptImages] = useState<ReceiptFile[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<ReceiptFile | null>(null);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
@@ -64,8 +75,6 @@ const ZReport = () => {
       .order("created_at", { ascending: false });
 
     const salesArr = (sales as any[]) || [];
-
-    // Fetch items for each sale
     const salesWithItems: SaleRecord[] = [];
     for (const sale of salesArr) {
       const { data: items } = await supabase
@@ -85,6 +94,32 @@ const ZReport = () => {
       .select("*")
       .order("report_date", { ascending: false });
     setPastReports((data as any[]) || []);
+  };
+
+  const fetchReceiptImages = async () => {
+    setLoadingImages(true);
+    try {
+      const { data, error } = await supabase.storage.from("receipts").list("", {
+        limit: 100,
+        sortBy: { column: "created_at", order: "desc" },
+      });
+      if (error) throw error;
+      const files: ReceiptFile[] = (data || [])
+        .filter((f) => f.name.endsWith(".png"))
+        .map((f) => {
+          const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(f.name);
+          return {
+            name: f.name,
+            url: urlData.publicUrl,
+            created_at: f.created_at || "",
+          };
+        });
+      setReceiptImages(files);
+    } catch (err) {
+      console.error("Error loading receipt images:", err);
+    } finally {
+      setLoadingImages(false);
+    }
   };
 
   const fetchSalesForDate = async (date: string) => {
@@ -113,9 +148,9 @@ const ZReport = () => {
   useEffect(() => {
     fetchTodaySales();
     fetchPastReports();
+    fetchReceiptImages();
   }, []);
 
-  // Compute today's breakdown
   const breakdown = [
     { method: "Cash", amount: todaySales.filter(s => s.payment_method === "Cash").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Cash").length },
     { method: "Mobile Money", amount: todaySales.filter(s => s.payment_method === "Mobile Money").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Mobile Money").length },
@@ -153,7 +188,6 @@ const ZReport = () => {
         .upsert(reportData as any, { onConflict: "report_date" });
 
       if (error) throw error;
-
       toast({ title: "Day closed", description: `Z-Report saved for ${format(new Date(), "dd MMM yyyy")}` });
       fetchPastReports();
     } catch (err: any) {
@@ -223,6 +257,11 @@ const ZReport = () => {
     printWindow.print();
   };
 
+  const extractSaleNumber = (name: string) => {
+    const parts = name.split("_");
+    return parts[0] || name;
+  };
+
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -239,6 +278,9 @@ const ZReport = () => {
           </TabsTrigger>
           <TabsTrigger value="receipts" className="rounded-lg text-[13px] gap-2 data-[state=active]:bg-background">
             <Receipt className="h-4 w-4" /> Receipts
+          </TabsTrigger>
+          <TabsTrigger value="screenshots" className="rounded-lg text-[13px] gap-2 data-[state=active]:bg-background">
+            <Image className="h-4 w-4" /> Receipt Photos
           </TabsTrigger>
           <TabsTrigger value="history" className="rounded-lg text-[13px] gap-2 data-[state=active]:bg-background">
             <History className="h-4 w-4" /> Report History
@@ -262,7 +304,6 @@ const ZReport = () => {
             </div>
           </div>
 
-          {/* Payment breakdown */}
           <div className="glass-card overflow-hidden">
             <div className="px-6 py-4 border-b border-border/20">
               <h3 className="font-semibold text-[15px] tracking-tight">Payment Breakdown</h3>
@@ -294,7 +335,6 @@ const ZReport = () => {
             </div>
           </div>
 
-          {/* Cash Reconciliation */}
           <div className="glass-card p-6">
             <h3 className="font-semibold text-[15px] tracking-tight mb-4">Cash Reconciliation</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -347,7 +387,7 @@ const ZReport = () => {
           </div>
         </TabsContent>
 
-        {/* RECEIPTS TAB — soft copies of today's sales */}
+        {/* RECEIPTS TAB */}
         <TabsContent value="receipts" className="mt-4">
           {loading ? (
             <div className="flex justify-center py-12"><Loader2 className="h-8 w-8 text-primary animate-spin" /></div>
@@ -374,6 +414,56 @@ const ZReport = () => {
               ))}
             </div>
           )}
+        </TabsContent>
+
+        {/* RECEIPT PHOTOS TAB */}
+        <TabsContent value="screenshots" className="mt-4">
+          <div className="glass-card p-6">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="font-semibold text-[15px] tracking-tight flex items-center gap-2">
+                <Image className="h-4 w-4 text-primary" />
+                Receipt Screenshots
+              </h3>
+              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => fetchReceiptImages()}>
+                <Loader2 className={`h-4 w-4 ${loadingImages ? "animate-spin" : ""}`} />
+              </Button>
+            </div>
+            {loadingImages ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : receiptImages.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Image className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p className="text-[13px]">No receipt screenshots yet. Use the 📷 button on POS receipts to save screenshots here.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                {receiptImages.map((receipt) => (
+                  <button
+                    key={receipt.name}
+                    onClick={() => setSelectedImage(receipt)}
+                    className="group rounded-xl overflow-hidden border border-border/20 hover:border-primary/40 transition-all duration-200 hover:shadow-lg bg-secondary/20"
+                  >
+                    <div className="aspect-[3/4] overflow-hidden">
+                      <img
+                        src={receipt.url}
+                        alt={receipt.name}
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
+                        loading="lazy"
+                      />
+                    </div>
+                    <div className="p-2">
+                      <p className="text-[11px] font-mono font-medium truncate text-primary">{extractSaleNumber(receipt.name)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        {receipt.created_at ? new Date(receipt.created_at).toLocaleDateString() : ""}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         {/* HISTORY TAB */}
@@ -460,6 +550,30 @@ const ZReport = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Receipt Image Preview Dialog */}
+      <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
+        <DialogContent className="glass-card border-border/30 max-w-lg max-h-[90vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[15px] font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4 text-primary" />
+              {selectedImage ? extractSaleNumber(selectedImage.name) : "Receipt"}
+            </DialogTitle>
+          </DialogHeader>
+          {selectedImage && (
+            <div className="space-y-4">
+              <img
+                src={selectedImage.url}
+                alt={selectedImage.name}
+                className="w-full rounded-xl border border-border/20"
+              />
+              <p className="text-[11px] text-muted-foreground text-center">
+                {selectedImage.created_at ? new Date(selectedImage.created_at).toLocaleString() : ""}
+              </p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Past Report Detail Dialog */}
       <Dialog open={!!selectedReport} onOpenChange={() => { setSelectedReport(null); setReportSales([]); }}>
         <DialogContent className="glass-card border-border/30 max-w-lg max-h-[80vh] overflow-auto">
@@ -503,7 +617,6 @@ const ZReport = () => {
                 </div>
               )}
 
-              {/* Receipts for that day */}
               {reportSales.length > 0 && (
                 <div>
                   <h4 className="text-[13px] font-semibold mb-2">Receipts ({reportSales.length})</h4>

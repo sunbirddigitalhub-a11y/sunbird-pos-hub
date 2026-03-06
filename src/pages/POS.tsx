@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle } from "lucide-react";
+import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
