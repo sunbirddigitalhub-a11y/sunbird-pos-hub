@@ -324,6 +324,16 @@ const ZReport = () => {
           created_at: s.created_at, items: s.items.map(i => i.product_name),
         })),
         product_sales: productSales,
+        outstanding_activity: {
+          new_outstanding_today: newOutstandingToday,
+          payments_collected_today: paymentsCollectedToday,
+          payments_count_today: todayPayments.length,
+          remaining_outstanding_total: totalRemainingOutstanding,
+          payments: todayPayments.map((p: any) => ({
+            amount: p.amount, payment_method: p.payment_method,
+            staff_name: p.staff_name, created_at: p.created_at, notes: p.notes,
+          })),
+        },
         total_expenses: totalExpenses,
         total_outstanding: totalOutstanding,
         net_cash_received: netCashReceived,
