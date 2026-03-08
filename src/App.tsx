@@ -166,7 +166,7 @@ function AppRoutes() {
         <Route path="/analytics" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
             <FeatureLock feature="analytics">
-              <ComingSoonPage title="Analytics" description="Deep insights into your business performance with advanced charts and forecasting." featureName="analytics" />
+              <AnalyticsPage />
             </FeatureLock>
           </ProtectedRoute>
         } />
