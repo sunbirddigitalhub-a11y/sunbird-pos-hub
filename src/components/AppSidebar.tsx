@@ -7,6 +7,7 @@ import {
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
+import { useBusinessTerminology } from "@/hooks/useBusinessTerminology";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -25,38 +26,40 @@ interface NavItem {
   section: string;
 }
 
-const navItems: NavItem[] = [
-  // Core
-  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, feature: "dashboard", section: "Core" },
-  { title: "Point of Sale", url: "/pos", icon: ShoppingCart, feature: "pos", section: "Core" },
-  { title: "Products", url: "/products", icon: Smartphone, feature: "products", section: "Core" },
-  { title: "Inventory", url: "/inventory", icon: Globe, feature: "inventory", section: "Core" },
-  { title: "Customers", url: "/customers", icon: BookOpen, feature: "customers", section: "Core" },
-  // Sales & Finance
-  { title: "Sales", url: "/sales", icon: DollarSign, feature: "sales", section: "Sales & Finance" },
-  { title: "Invoices", url: "/invoices", icon: FileText, feature: "invoices", section: "Sales & Finance" },
-  { title: "Expenses", url: "/expenses", icon: Wallet, feature: "expenses", section: "Sales & Finance" },
-  { title: "Outstanding", url: "/outstanding", icon: AlertCircle, feature: "outstanding", section: "Sales & Finance" },
-  // Supply Chain
-  { title: "Suppliers", url: "/suppliers", icon: Truck, feature: "suppliers", section: "Supply Chain" },
-  { title: "Purchases", url: "/purchases", icon: ShoppingBag, feature: "purchases", section: "Supply Chain" },
-  // Reports & Analytics
-  { title: "Reports", url: "/reports", icon: BarChart3, feature: "reports", section: "Reports" },
-  { title: "Analytics", url: "/analytics", icon: TrendingUp, feature: "analytics", section: "Reports" },
-  { title: "Z-Report", url: "/z-report", icon: ClipboardList, feature: "zReport", section: "Reports" },
-  // Tools
-  { title: "Barcode", url: "/barcode", icon: ScanBarcode, feature: "barcode", section: "Tools" },
-  // Management
-  { title: "Staff Management", url: "/staff-management", icon: UserCog, feature: "staffManagement", section: "Management" },
-  { title: "Users", url: "/users", icon: UsersIcon, feature: "users", section: "Management" },
-  { title: "Stores", url: "/stores", icon: Store, feature: "stores", section: "Management" },
-  // System
-  { title: "Integrations", url: "/integrations", icon: Plug, feature: "integrations", section: "System" },
-  { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
-];
+function useNavItems(): NavItem[] {
+  const t = useBusinessTerminology();
+  return [
+    // Core
+    { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, feature: "dashboard", section: t.sectionCore },
+    { title: t.pos, url: "/pos", icon: ShoppingCart, feature: "pos", section: t.sectionCore },
+    { title: t.products, url: "/products", icon: Smartphone, feature: "products", section: t.sectionCore },
+    { title: t.inventory, url: "/inventory", icon: Globe, feature: "inventory", section: t.sectionCore },
+    { title: t.customers, url: "/customers", icon: BookOpen, feature: "customers", section: t.sectionCore },
+    // Sales & Finance
+    { title: t.sales, url: "/sales", icon: DollarSign, feature: "sales", section: t.sectionSalesFinance },
+    { title: t.invoices, url: "/invoices", icon: FileText, feature: "invoices", section: t.sectionSalesFinance },
+    { title: t.expenses, url: "/expenses", icon: Wallet, feature: "expenses", section: t.sectionSalesFinance },
+    { title: t.outstanding, url: "/outstanding", icon: AlertCircle, feature: "outstanding", section: t.sectionSalesFinance },
+    // Supply Chain
+    { title: t.suppliers, url: "/suppliers", icon: Truck, feature: "suppliers", section: t.sectionSupplyChain },
+    { title: t.purchases, url: "/purchases", icon: ShoppingBag, feature: "purchases", section: t.sectionSupplyChain },
+    // Reports & Analytics
+    { title: "Reports", url: "/reports", icon: BarChart3, feature: "reports", section: "Reports" },
+    { title: "Analytics", url: "/analytics", icon: TrendingUp, feature: "analytics", section: "Reports" },
+    { title: "Z-Report", url: "/z-report", icon: ClipboardList, feature: "zReport", section: "Reports" },
+    // Tools
+    { title: t.barcode, url: "/barcode", icon: ScanBarcode, feature: "barcode", section: "Tools" },
+    // Management
+    { title: t.staff + " Management", url: "/staff-management", icon: UserCog, feature: "staffManagement", section: "Management" },
+    { title: "Users", url: "/users", icon: UsersIcon, feature: "users", section: "Management" },
+    { title: t.stores, url: "/stores", icon: Store, feature: "stores", section: "Management" },
+    // System
+    { title: "Integrations", url: "/integrations", icon: Plug, feature: "integrations", section: "System" },
+    { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
+  ];
+}
 
-// Role-based visibility: which roles can SEE each item
-// master_admin sees everything; supervisor sees most; staff sees Core + Tools only
+// Role-based visibility
 const roleRestrictions: Record<string, AppRole[]> = {
   "/users": ["master_admin"],
   "/settings": ["master_admin"],
@@ -80,13 +83,10 @@ const roleLabels: Record<AppRole, string> = {
 export function AppSidebar() {
   const { profile, role, isGrandmaster, signOut } = useAuth();
   const { hasFeatureAccess } = useSubscription();
+  const navItems = useNavItems();
 
-  // Group items by section — show ALL items to business owners/supervisors
-  // Staff only sees Core + Tools; role-restricted items hidden for unauthorized roles
   const sections = navItems.reduce<Record<string, typeof navItems>>((acc, item) => {
-    // Staff can only see Core + Tools sections
-    if (role === "staff" && !isGrandmaster && !["Core", "Tools"].includes(item.section)) return acc;
-    // Check specific role restrictions (e.g. /users only for master_admin)
+    if (role === "staff" && !isGrandmaster && !["Core", "Tools"].includes(item.section) && item.section !== navItems[0]?.section) return acc;
     const allowedRoles = roleRestrictions[item.url];
     if (allowedRoles && role && !allowedRoles.includes(role) && !isGrandmaster) return acc;
     if (!acc[item.section]) acc[item.section] = [];
@@ -159,7 +159,7 @@ export function AppSidebar() {
                 {items.map((item) => {
                   const accessible = !item.feature || isGrandmaster || hasFeatureAccess(item.feature);
                   return (
-                    <SidebarMenuItem key={item.title}>
+                    <SidebarMenuItem key={item.url}>
                       <SidebarMenuButton asChild>
                         <NavLink
                           to={accessible ? item.url : "#"}

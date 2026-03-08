@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useSubscription } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import { useBusinessTerminology } from "@/hooks/useBusinessTerminology";
 import {
   DollarSign, BookOpen, ScanBarcode, Globe, ClipboardList,
   Settings, Truck, ShoppingBag, FileText, TrendingUp, UserCog,
@@ -12,14 +13,6 @@ import {
 } from "lucide-react";
 import type { PlanFeatures } from "@/hooks/useSubscription";
 
-const primaryTabs = [
-  { label: "Home", icon: LayoutGrid, path: "/dashboard" },
-  { label: "POS", icon: ShoppingCart, path: "/pos" },
-  { label: "Products", icon: Package, path: "/products" },
-  { label: "Reports", icon: BarChart3, path: "/reports" },
-  { label: "More", icon: MoreHorizontal, path: "__more__" },
-];
-
 interface MoreItem {
   title: string;
   path: string;
@@ -27,31 +20,40 @@ interface MoreItem {
   feature?: keyof PlanFeatures;
 }
 
-const moreItems: MoreItem[] = [
-  { title: "Inventory", path: "/inventory", icon: Globe, feature: "inventory" },
-  { title: "Customers", path: "/customers", icon: BookOpen, feature: "customers" },
-  { title: "Sales", path: "/sales", icon: DollarSign, feature: "sales" },
-  { title: "Invoices", path: "/invoices", icon: FileText, feature: "invoices" },
-  { title: "Expenses", path: "/expenses", icon: Wallet, feature: "expenses" },
-  { title: "Outstanding", path: "/outstanding", icon: AlertCircle, feature: "outstanding" },
-  { title: "Suppliers", path: "/suppliers", icon: Truck, feature: "suppliers" },
-  { title: "Purchases", path: "/purchases", icon: ShoppingBag, feature: "purchases" },
-  { title: "Analytics", path: "/analytics", icon: TrendingUp, feature: "analytics" },
-  { title: "Z-Report", path: "/z-report", icon: ClipboardList, feature: "zReport" },
-  { title: "Barcode", path: "/barcode", icon: ScanBarcode, feature: "barcode" },
-  { title: "Staff", path: "/staff-management", icon: UserCog, feature: "staffManagement" },
-  { title: "Users", path: "/users", icon: UsersIcon, feature: "users" },
-  { title: "Stores", path: "/stores", icon: Store, feature: "stores" },
-  { title: "Integrations", path: "/integrations", icon: Plug, feature: "integrations" },
-  { title: "Settings", path: "/settings", icon: Settings, feature: "settings" },
-];
-
 export function MobileBottomNav() {
   const location = useLocation();
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
   const { hasFeatureAccess } = useSubscription();
   const { isGrandmaster, signOut, role } = useAuth();
+  const t = useBusinessTerminology();
+
+  const primaryTabs = [
+    { label: "Home", icon: LayoutGrid, path: "/dashboard" },
+    { label: t.pos, icon: ShoppingCart, path: "/pos" },
+    { label: t.products, icon: Package, path: "/products" },
+    { label: "Reports", icon: BarChart3, path: "/reports" },
+    { label: "More", icon: MoreHorizontal, path: "__more__" },
+  ];
+
+  const moreItems: MoreItem[] = [
+    { title: t.inventory, path: "/inventory", icon: Globe, feature: "inventory" },
+    { title: t.customers, path: "/customers", icon: BookOpen, feature: "customers" },
+    { title: t.sales, path: "/sales", icon: DollarSign, feature: "sales" },
+    { title: t.invoices, path: "/invoices", icon: FileText, feature: "invoices" },
+    { title: t.expenses, path: "/expenses", icon: Wallet, feature: "expenses" },
+    { title: t.outstanding, path: "/outstanding", icon: AlertCircle, feature: "outstanding" },
+    { title: t.suppliers, path: "/suppliers", icon: Truck, feature: "suppliers" },
+    { title: t.purchases, path: "/purchases", icon: ShoppingBag, feature: "purchases" },
+    { title: "Analytics", path: "/analytics", icon: TrendingUp, feature: "analytics" },
+    { title: "Z-Report", path: "/z-report", icon: ClipboardList, feature: "zReport" },
+    { title: t.barcode, path: "/barcode", icon: ScanBarcode, feature: "barcode" },
+    { title: t.staff, path: "/staff-management", icon: UserCog, feature: "staffManagement" },
+    { title: "Users", path: "/users", icon: UsersIcon, feature: "users" },
+    { title: t.stores, path: "/stores", icon: Store, feature: "stores" },
+    { title: "Integrations", path: "/integrations", icon: Plug, feature: "integrations" },
+    { title: "Settings", path: "/settings", icon: Settings, feature: "settings" },
+  ];
 
   const handleTab = (path: string) => {
     if (path === "__more__") {
@@ -69,7 +71,6 @@ export function MobileBottomNav() {
     }
   };
 
-  // Role restrictions for "More" items
   const roleRestrictions: Record<string, string[]> = {
     "/users": ["master_admin"],
     "/settings": ["master_admin"],
