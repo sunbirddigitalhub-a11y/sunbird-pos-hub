@@ -1,34 +1,16 @@
 import {
-  LayoutGrid,
-  ShoppingCart,
-  Globe,
-  Smartphone,
-  DollarSign,
-  BarChart3,
-  ClipboardList,
-  BookOpen,
-  ScanBarcode,
-  Users as UsersIcon,
-  Settings,
-  LogOut,
-  AlertCircle,
-  Lock,
-  Crown,
+  LayoutGrid, ShoppingCart, Globe, Smartphone, DollarSign, BarChart3,
+  ClipboardList, BookOpen, ScanBarcode, Users as UsersIcon, Settings,
+  LogOut, AlertCircle, Lock, Crown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
 import { PlanSwitcher } from "@/components/PlanSwitcher";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarHeader, SidebarFooter,
 } from "@/components/ui/sidebar";
 import type { PlanFeatures } from "@/hooks/useSubscription";
 
@@ -64,14 +46,14 @@ const roleBadgeStyles: Record<AppRole, string> = {
 };
 
 const roleLabels: Record<AppRole, string> = {
-  master_admin: "Master Admin",
+  master_admin: "Admin",
   supervisor: "Supervisor",
   staff: "Staff",
 };
 
 export function AppSidebar() {
-  const { profile, role, signOut } = useAuth();
-  const { hasFeatureAccess, isGrandmaster } = useSubscription();
+  const { profile, role, isGrandmaster, signOut } = useAuth();
+  const { hasFeatureAccess } = useSubscription();
 
   const visibleItems = navItems.filter((item) => role && item.roles.includes(role));
 
@@ -95,6 +77,7 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3">
+        {/* Grandmaster-only link — invisible to normal users */}
         {isGrandmaster && (
           <SidebarGroup>
             <SidebarGroupContent>
@@ -115,7 +98,10 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
-        <PlanSwitcher />
+
+        {/* Plan switcher hidden for grandmaster */}
+        {!isGrandmaster && <PlanSwitcher />}
+
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
@@ -155,7 +141,11 @@ export function AppSidebar() {
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium truncate">{profile?.full_name || "User"}</p>
-            {role && (
+            {isGrandmaster ? (
+              <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-primary/15 text-primary">
+                Grandmaster
+              </span>
+            ) : role && (
               <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${roleBadgeStyles[role]}`}>
                 {roleLabels[role]}
               </span>
