@@ -92,7 +92,6 @@ const ZReport = () => {
   const [selectedReport, setSelectedReport] = useState<ZReportRecord | null>(null);
   const receiptRef = useRef<HTMLDivElement>(null);
   const reportRef = useRef<HTMLDivElement>(null);
-  const reportRef = useRef<HTMLDivElement>(null);
 
   // Expenses
   const [expenses, setExpenses] = useState<Expense[]>([]);
