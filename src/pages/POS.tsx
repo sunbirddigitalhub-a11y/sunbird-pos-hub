@@ -41,8 +41,9 @@ const formatPrice = (n: number) => `UGX ${n.toLocaleString()}`;
 
 const paymentMethods = [
   { id: "Cash", icon: Banknote, label: "Cash" },
-  { id: "Mobile Money", icon: Smartphone, label: "Mobile Money" },
-  { id: "Bank", icon: Building2, label: "Bank" },
+  { id: "MTN MoMo", icon: Smartphone, label: "MTN MoMo" },
+  { id: "Airtel Pay", icon: Smartphone, label: "Airtel Pay" },
+  { id: "Bank Transfer", icon: Building2, label: "Bank Transfer" },
   { id: "Split", icon: CreditCard, label: "Split" },
 ];
 
