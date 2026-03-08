@@ -10,7 +10,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const { user, role, loading } = useAuth();
+  const { user, role, isGrandmaster, loading } = useAuth();
 
   if (loading) {
     return (
@@ -22,8 +22,10 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   if (!user) return <Navigate to="/login" replace />;
 
+  // Grandmaster always has access
+  if (isGrandmaster) return <>{children}</>;
+
   if (allowedRoles && role && !allowedRoles.includes(role)) {
-    // Staff goes to POS, others go to dashboard
     if (role === "staff") return <Navigate to="/pos" replace />;
     return <Navigate to="/dashboard" replace />;
   }
