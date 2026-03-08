@@ -497,14 +497,19 @@ export default function BarcodePage() {
               )}
 
               {generatedBarcode && (
-                <div className="mt-4 p-4 rounded-xl border bg-secondary/40 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Generated Barcode</p>
-                    <p className="text-xl font-mono font-bold tracking-widest">{generatedBarcode}</p>
+                <div className="mt-4 p-4 rounded-xl border bg-secondary/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Generated Barcode</p>
+                      <p className="text-xl font-mono font-bold tracking-widest">{generatedBarcode}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => copyBarcode(generatedBarcode)} className="gap-2">
+                      <Copy className="h-4 w-4" /> Copy
+                    </Button>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => copyBarcode(generatedBarcode)} className="gap-2">
-                    <Copy className="h-4 w-4" /> Copy
-                  </Button>
+                  <div className="bg-white rounded-lg p-3 flex justify-center">
+                    <BarcodePreview code={generatedBarcode} width={2} height={55} fontSize={14} />
+                  </div>
                 </div>
               )}
 
