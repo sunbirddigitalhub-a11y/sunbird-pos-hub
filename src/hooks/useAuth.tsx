@@ -43,7 +43,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [isGrandmaster, setIsGrandmaster] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const loading = authLoading || profileLoading;
   const inactivityTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const resetInactivityTimer = useCallback(() => {
