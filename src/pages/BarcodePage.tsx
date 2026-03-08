@@ -332,17 +332,20 @@ export default function BarcodePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-11">
-          <TabsTrigger value="scan" className="gap-2 text-xs sm:text-sm">
+        <TabsList className="grid w-full grid-cols-5 h-11">
+          <TabsTrigger value="scan" className="gap-1.5 text-xs sm:text-sm">
             <ScanBarcode className="h-4 w-4" /> Scan
           </TabsTrigger>
-          <TabsTrigger value="generate" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="generate" className="gap-1.5 text-xs sm:text-sm">
             <QrCode className="h-4 w-4" /> Generate
           </TabsTrigger>
-          <TabsTrigger value="lookup" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="labels" className="gap-1.5 text-xs sm:text-sm">
+            <Tag className="h-4 w-4" /> Labels
+          </TabsTrigger>
+          <TabsTrigger value="lookup" className="gap-1.5 text-xs sm:text-sm">
             <Search className="h-4 w-4" /> Lookup
           </TabsTrigger>
-          <TabsTrigger value="print" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="print" className="gap-1.5 text-xs sm:text-sm">
             <Printer className="h-4 w-4" /> Print
           </TabsTrigger>
         </TabsList>
