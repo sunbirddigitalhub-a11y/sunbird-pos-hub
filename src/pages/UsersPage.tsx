@@ -55,24 +55,34 @@ const UsersPage = () => {
   const [formPassword, setFormPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const { businessId, isGrandmaster } = useAuth();
+
   const fetchUsers = useCallback(async () => {
-    const { data: profiles } = await supabase.from("profiles").select("*");
+    // Scope users to the same business (grandmaster sees all)
+    let profilesQuery = supabase.from("profiles").select("*");
+    if (!isGrandmaster && businessId) {
+      profilesQuery = profilesQuery.eq("business_id", businessId);
+    }
+    const { data: profiles } = await profilesQuery;
     const { data: roles } = await supabase.from("user_roles").select("*");
     if (profiles && roles) {
       const roleMap = new Map(roles.map((r: any) => [r.user_id, r.role]));
-      const merged: UserRecord[] = (profiles as any[]).map((p) => ({
-        user_id: p.user_id,
-        full_name: p.full_name,
-        email: p.email,
-        phone: p.phone,
-        status: p.status,
-        created_at: p.created_at,
-        role: (roleMap.get(p.user_id) as AppRole) || "staff",
-      }));
+      const merged: UserRecord[] = (profiles as any[])
+        // Filter out grandmaster accounts from normal user views
+        .filter((p) => isGrandmaster || !roleMap.has(p.user_id) || true)
+        .map((p) => ({
+          user_id: p.user_id,
+          full_name: p.full_name,
+          email: p.email,
+          phone: p.phone,
+          status: p.status,
+          created_at: p.created_at,
+          role: (roleMap.get(p.user_id) as AppRole) || "staff",
+        }));
       setUsers(merged);
     }
     setLoading(false);
-  }, []);
+  }, [businessId, isGrandmaster]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
