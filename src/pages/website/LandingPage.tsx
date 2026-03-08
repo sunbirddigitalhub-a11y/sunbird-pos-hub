@@ -3,10 +3,17 @@ import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import {
   ShoppingCart, BarChart3, Cloud, Users, Store, Shield,
-  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star
+  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star, Download, Share
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 const formatPrice = (currency: "usd" | "ugx", usd: number, ugx: number) =>
   currency === "usd" ? `$${usd}` : `UGX ${ugx.toLocaleString()}`;
 
