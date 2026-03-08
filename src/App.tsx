@@ -146,16 +146,12 @@ function AppRoutes() {
         {/* Supply Chain */}
         <Route path="/suppliers" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="suppliers">
-              <ComingSoonPage title="Suppliers" description="Manage your supplier network and track purchase orders." featureName="suppliers" />
-            </FeatureLock>
+            <FeatureLock feature="suppliers"><SuppliersPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/purchases" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="purchases">
-              <ComingSoonPage title="Purchases" description="Create and track purchase orders from your suppliers." featureName="purchases" />
-            </FeatureLock>
+            <FeatureLock feature="purchases"><PurchasesPage /></FeatureLock>
           </ProtectedRoute>
         } />
 
