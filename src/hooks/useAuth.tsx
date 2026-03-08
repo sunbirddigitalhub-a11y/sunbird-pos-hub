@@ -74,6 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const p = profileRes.data as any;
       setProfile(p as Profile);
       setBusinessId(p.business_id || null);
+      // Check onboarding status
+      if (p.business_id) {
+        const { data: biz } = await supabase.from("businesses").select("onboarding_completed").eq("id", p.business_id).single();
+        setOnboardingCompleted(!!(biz as any)?.onboarding_completed);
+      }
     }
     if (roleRes.data) setRole((roleRes.data as any).role as AppRole);
     setIsGrandmaster(!!(gmRes.data));
