@@ -163,7 +163,7 @@ const OnboardingPage = () => {
     if (!businessId) return;
     setLoading(true);
     const businessType =
-      form.businessType === "custom" ? form.customBusinessType : BUSINESS_CATEGORIES.find((b) => b.value === form.businessType)?.label || form.businessType;
+      form.businessType === "custom" ? form.customBusinessType : form.businessType;
 
     const { error } = await supabase
       .from("businesses")
