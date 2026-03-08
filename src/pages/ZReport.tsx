@@ -703,8 +703,8 @@ const ZReport = () => {
                 { label: "Mobile Money", value: formatPrice(breakdown[1].amount), icon: DollarSign },
                 { label: "Partial Sales", value: formatPrice(partialSales.reduce((s, x) => s + x.total_amount, 0)), icon: TrendingUp },
                 { label: "Outstanding", value: formatPrice(totalOutstanding), icon: AlertTriangle },
+                { label: "Payments Collected", value: formatPrice(paymentsCollectedToday), icon: CreditCard },
                 { label: "Total Expenses", value: formatPrice(totalExpenses), icon: TrendingUp },
-                { label: "Inventory Changes", value: String(inventoryActivity.length), icon: Package },
                 { label: "Transactions", value: String(totalTxns), icon: BarChart3 },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
