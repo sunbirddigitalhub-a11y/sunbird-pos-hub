@@ -54,7 +54,7 @@ function useNavItems(): NavItem[] {
     { title: "Users", url: "/users", icon: UsersIcon, feature: "users", section: "Management" },
     { title: t.stores, url: "/stores", icon: Store, feature: "stores", section: "Management" },
     // System
-    { title: "Integrations", url: "/integrations", icon: Plug, feature: "integrations", section: "System" },
+    
     { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
   ];
 }
