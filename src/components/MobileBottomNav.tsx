@@ -76,7 +76,7 @@ export function MobileBottomNav() {
     "/settings": ["master_admin"],
     "/staff-management": ["master_admin", "supervisor"],
     "/stores": ["master_admin"],
-    "/integrations": ["master_admin"],
+    
   };
 
   const filteredMoreItems = moreItems.filter((item) => {
