@@ -15,7 +15,7 @@ import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import ZReport from "./pages/ZReport";
-import CustomerLedger from "./pages/CustomerLedger";
+import CustomersPage from "./pages/CustomersPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import OutstandingBalances from "./pages/OutstandingBalances";
