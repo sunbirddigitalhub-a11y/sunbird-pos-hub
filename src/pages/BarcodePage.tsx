@@ -58,6 +58,45 @@ const generateBarcode = (): string => {
 const formatPrice = (amount: number) =>
   `UGX ${amount.toLocaleString("en-UG")}`;
 
+// Generate barcode SVG string for a given code
+const generateBarcodeSVG = (code: string, opts?: { width?: number; height?: number; fontSize?: number; displayValue?: boolean }): string => {
+  try {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(svg, code, {
+      format: "CODE128",
+      width: opts?.width ?? 2,
+      height: opts?.height ?? 50,
+      fontSize: opts?.fontSize ?? 14,
+      displayValue: opts?.displayValue ?? true,
+      margin: 5,
+      background: "#ffffff",
+      lineColor: "#000000",
+    });
+    return new XMLSerializer().serializeToString(svg);
+  } catch {
+    return "";
+  }
+};
+
+// Inline component to render a barcode SVG
+function BarcodePreview({ code, width, height, fontSize, displayValue, className }: {
+  code: string;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  displayValue?: boolean;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current && code) {
+      const svgStr = generateBarcodeSVG(code, { width, height, fontSize, displayValue });
+      ref.current.innerHTML = svgStr;
+    }
+  }, [code, width, height, fontSize, displayValue]);
+  return <div ref={ref} className={className} />;
+}
+
 export default function BarcodePage() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("scan");
