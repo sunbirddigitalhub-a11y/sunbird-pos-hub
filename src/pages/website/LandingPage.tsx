@@ -29,6 +29,9 @@ const advantages = [
 
 const LandingPage = () => {
   const [currency, setCurrency] = useState<"usd" | "ugx">("usd");
+
+  return (
+    <WebsiteLayout>
     <WebsiteLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
