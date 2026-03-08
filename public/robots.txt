@@ -12,3 +12,10 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://sunbirdgroup.xyz/sitemap.xml
+
+# Block development/preview URLs
+Disallow: /*__lovable*
+Disallow: /*lovableproject*
+Disallow: /*vercel*
