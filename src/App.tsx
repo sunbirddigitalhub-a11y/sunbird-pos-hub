@@ -8,6 +8,7 @@ import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { ThemeProvider } from "@/hooks/useTheme";
 import { AppLayout } from "@/components/AppLayout";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { FeatureLock } from "@/components/FeatureLock";
 import LoginPage from "./pages/LoginPage";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
@@ -23,6 +24,9 @@ import OutstandingBalances from "./pages/OutstandingBalances";
 import BarcodePage from "./pages/BarcodePage";
 import NotFound from "./pages/NotFound";
 import GrandmasterDashboard from "./pages/GrandmasterDashboard";
+import UpgradePage from "./pages/UpgradePage";
+import ReferralPage from "./pages/ReferralPage";
+import ComingSoonPage from "./pages/ComingSoonPage";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
@@ -45,33 +49,27 @@ function AppRoutes() {
   if (!user) {
     return (
       <Routes>
-        {/* Marketing website */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/industries" element={<IndustriesPage />} />
-
-        {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
-
-        {/* Catch-all for unauthenticated */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
 
-  // Staff defaults to POS
   const defaultRoute = role === "staff" ? "/pos" : "/dashboard";
 
   return (
     <AppLayout>
       <Routes>
-        {/* Redirect marketing/auth pages to POS for logged-in users */}
+        {/* Redirect marketing/auth pages */}
         <Route path="/" element={<Navigate to={defaultRoute} replace />} />
         <Route path="/login" element={<Navigate to={defaultRoute} replace />} />
         <Route path="/register" element={<Navigate to={defaultRoute} replace />} />
@@ -83,60 +81,135 @@ function AppRoutes() {
         <Route path="/forgot-password" element={<Navigate to={defaultRoute} replace />} />
         <Route path="/reset-password" element={<Navigate to={defaultRoute} replace />} />
 
-        {/* POS Routes — unchanged */}
+        {/* Grandmaster */}
         <Route path="/grandmaster" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <GrandmasterDashboard />
           </ProtectedRoute>
         } />
+
+        {/* Core */}
         <Route path="/dashboard" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <Dashboard />
+            <FeatureLock feature="dashboard"><Dashboard /></FeatureLock>
           </ProtectedRoute>
         } />
-        <Route path="/pos" element={<POS />} />
+        <Route path="/pos" element={<FeatureLock feature="pos"><POS /></FeatureLock>} />
+        <Route path="/products" element={<FeatureLock feature="products"><Products /></FeatureLock>} />
         <Route path="/inventory" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <Inventory />
-          </ProtectedRoute>
-        } />
-        <Route path="/products" element={<Products />} />
-        <Route path="/sales" element={
-          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <Sales />
-          </ProtectedRoute>
-        } />
-        <Route path="/reports" element={
-          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <Reports />
-          </ProtectedRoute>
-        } />
-        <Route path="/z-report" element={
-          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <ZReport />
+            <FeatureLock feature="inventory"><Inventory /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/customers" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <CustomersPage />
+            <FeatureLock feature="customers"><CustomersPage /></FeatureLock>
+          </ProtectedRoute>
+        } />
+
+        {/* Sales & Finance */}
+        <Route path="/sales" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="sales"><Sales /></FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/invoices" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="invoices">
+              <ComingSoonPage title="Invoices" description="Generate and manage professional invoices for your customers." featureName="invoices" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/expenses" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="expenses">
+              <ComingSoonPage title="Expenses" description="Track business expenses and manage your spending." featureName="expenses" />
+            </FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/outstanding" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <OutstandingBalances />
+            <FeatureLock feature="outstanding"><OutstandingBalances /></FeatureLock>
           </ProtectedRoute>
         } />
-        <Route path="/barcode" element={<BarcodePage />} />
+
+        {/* Supply Chain */}
+        <Route path="/suppliers" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="suppliers">
+              <ComingSoonPage title="Suppliers" description="Manage your supplier network and track purchase orders." featureName="suppliers" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/purchases" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="purchases">
+              <ComingSoonPage title="Purchases" description="Create and track purchase orders from your suppliers." featureName="purchases" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
+
+        {/* Reports */}
+        <Route path="/reports" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="reports"><Reports /></FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/analytics" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="analytics">
+              <ComingSoonPage title="Analytics" description="Deep insights into your business performance with advanced charts and forecasting." featureName="analytics" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/z-report" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="zReport"><ZReport /></FeatureLock>
+          </ProtectedRoute>
+        } />
+
+        {/* Tools */}
+        <Route path="/barcode" element={<FeatureLock feature="barcode"><BarcodePage /></FeatureLock>} />
+
+        {/* Management */}
+        <Route path="/staff-management" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <FeatureLock feature="staffManagement">
+              <ComingSoonPage title="Staff Management" description="Manage staff schedules, performance, and attendance tracking." featureName="staffManagement" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
         <Route path="/users" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
-            <UsersPage />
+            <FeatureLock feature="users"><UsersPage /></FeatureLock>
+          </ProtectedRoute>
+        } />
+        <Route path="/stores" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <FeatureLock feature="stores">
+              <ComingSoonPage title="Stores & Branches" description="Manage multiple store locations and branch operations." featureName="stores" />
+            </FeatureLock>
+          </ProtectedRoute>
+        } />
+
+        {/* System */}
+        <Route path="/integrations" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <FeatureLock feature="integrations">
+              <ComingSoonPage title="Integrations" description="Connect with third-party services, APIs, and automation tools." featureName="integrations" />
+            </FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/settings" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
-            <SettingsPage />
+            <FeatureLock feature="settings"><SettingsPage /></FeatureLock>
           </ProtectedRoute>
         } />
+
+        {/* Upgrade & Referral */}
+        <Route path="/upgrade" element={<UpgradePage />} />
+        <Route path="/referral" element={<ReferralPage />} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AppLayout>
