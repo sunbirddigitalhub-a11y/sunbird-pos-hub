@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 
 const RegisterPage = () => {
   const { signUp } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +31,8 @@ const RegisterPage = () => {
     if (error) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Account created!", description: "Please check your email to verify your account before logging in." });
+      toast({ title: "Account created!", description: "You can now sign in with your credentials." });
+      navigate("/login");
     }
     setLoading(false);
   };
