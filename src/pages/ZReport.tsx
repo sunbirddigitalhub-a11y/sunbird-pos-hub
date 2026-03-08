@@ -113,11 +113,6 @@ const ZReport = () => {
   const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ReceiptFile | null>(null);
 
-  // Stored report details (for history drill-down)
-  const [reportExpenses, setReportExpenses] = useState<Expense[]>([]);
-  const [reportAuditLogs, setReportAuditLogs] = useState<AuditEntry[]>([]);
-  const [reportInventory, setReportInventory] = useState<any[]>([]);
-  const [reportOutstandings, setReportOutstandings] = useState<SaleRecord[]>([]);
 
   const today = format(new Date(), "yyyy-MM-dd");
 
