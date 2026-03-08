@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package, TrendingUp, Barcode, Copy, Download } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package, TrendingUp, Barcode, Copy, Upload, X, Image as ImageIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -18,6 +18,7 @@ interface Product {
   supplier: string | null;
   in_stock: number;
   barcode: string | null;
+  image_url: string | null;
 }
 
 const categoryIcon = (cat: string) => {
@@ -29,7 +30,6 @@ const categoryIcon = (cat: string) => {
 const categories = ["Smartphone", "Laptop", "Tablet", "Accessory", "Other"];
 
 const generateBarcode = (): string => {
-  // Generate a CODE128-compatible barcode: prefix + timestamp + random
   const prefix = "256";
   const timestamp = Date.now().toString().slice(-8);
   const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
@@ -44,6 +44,7 @@ const Products = () => {
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formName, setFormName] = useState("");
   const [formCategory, setFormCategory] = useState("Smartphone");
@@ -52,6 +53,9 @@ const Products = () => {
   const [formCost, setFormCost] = useState("");
   const [formSupplier, setFormSupplier] = useState("");
   const [formBarcode, setFormBarcode] = useState("");
+  const [formImageFile, setFormImageFile] = useState<File | null>(null);
+  const [formImagePreview, setFormImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -81,6 +85,7 @@ const Products = () => {
     setEditing(null);
     setFormName(""); setFormCategory("Smartphone"); setFormVariants(""); setFormPrice(""); setFormCost(""); setFormSupplier("");
     setFormBarcode(generateBarcode());
+    setFormImageFile(null); setFormImagePreview(null);
     setShowForm(true);
   };
 
@@ -89,12 +94,53 @@ const Products = () => {
     setFormName(p.name); setFormCategory(p.category); setFormVariants(p.variants || "");
     setFormPrice(String(p.base_price)); setFormCost(String(p.cost_price)); setFormSupplier(p.supplier || "");
     setFormBarcode(p.barcode || "");
+    setFormImageFile(null); setFormImagePreview(p.image_url || null);
     setShowForm(true);
+  };
+
+  const handleImageSelect = (file: File) => {
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum size is 2MB", variant: "destructive" });
+      return;
+    }
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid format", description: "Use JPG, PNG, or WEBP", variant: "destructive" });
+      return;
+    }
+    setFormImageFile(file);
+    setFormImagePreview(URL.createObjectURL(file));
+  };
+
+  const uploadImage = async (): Promise<string | null> => {
+    if (!formImageFile) return formImagePreview; // keep existing URL if no new file
+    setUploadingImage(true);
+    const ext = formImageFile.name.split(".").pop();
+    const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+    const { error } = await supabase.storage.from("product-images").upload(fileName, formImageFile, {
+      contentType: formImageFile.type,
+      upsert: true,
+    });
+    setUploadingImage(false);
+    if (error) {
+      toast({ title: "Upload failed", description: error.message, variant: "destructive" });
+      return null;
+    }
+    const { data: urlData } = supabase.storage.from("product-images").getPublicUrl(fileName);
+    return urlData.publicUrl;
   };
 
   const handleSave = async () => {
     if (!formName.trim() || !formPrice) return;
     setSaving(true);
+
+    let imageUrl: string | null = editing?.image_url || null;
+    if (formImageFile) {
+      const uploaded = await uploadImage();
+      if (uploaded) imageUrl = uploaded;
+    } else if (formImagePreview === null && editing?.image_url) {
+      imageUrl = null; // image was removed
+    }
 
     const payload: any = {
       name: formName.trim(),
@@ -104,6 +150,7 @@ const Products = () => {
       cost_price: Number(formCost) || 0,
       supplier: formSupplier.trim() || null,
       barcode: formBarcode.trim() || null,
+      image_url: imageUrl,
     };
 
     if (editing) {
@@ -211,9 +258,15 @@ const Products = () => {
             return (
               <div key={p.id} className="glass-card p-5 transition-all duration-300 hover:scale-[1.01] group">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center">
-                    <Icon className="h-5 w-5 text-primary/80" />
-                  </div>
+                  {p.image_url ? (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-secondary/60">
+                      <img src={p.image_url} alt={p.name} className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center">
+                      <Icon className="h-5 w-5 text-primary/80" />
+                    </div>
+                  )}
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={() => openEdit(p)}>
                       <Edit2 className="h-3.5 w-3.5 text-muted-foreground" />
@@ -268,11 +321,47 @@ const Products = () => {
 
       {/* Add/Edit Dialog */}
       <Dialog open={showForm} onOpenChange={setShowForm}>
-        <DialogContent className="glass-card border-border/30 max-w-md">
+        <DialogContent className="glass-card border-border/30 max-w-md max-h-[90vh] overflow-auto">
           <DialogHeader>
             <DialogTitle className="text-[16px] font-semibold">{editing ? "Edit Product" : "Add Product"}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            {/* Image Upload */}
+            <div>
+              <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Product Image</label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleImageSelect(e.target.files[0])}
+              />
+              {formImagePreview ? (
+                <div className="relative w-full h-32 rounded-xl overflow-hidden bg-secondary/30 border border-border/30">
+                  <img src={formImagePreview} alt="Preview" className="w-full h-full object-contain" />
+                  <button
+                    onClick={() => { setFormImageFile(null); setFormImagePreview(null); }}
+                    className="absolute top-2 right-2 w-6 h-6 rounded-full bg-destructive/80 flex items-center justify-center text-destructive-foreground"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => {
+                    e.preventDefault(); e.stopPropagation();
+                    if (e.dataTransfer.files?.[0]) handleImageSelect(e.dataTransfer.files[0]);
+                  }}
+                  className="w-full h-24 rounded-xl border-2 border-dashed border-border/40 bg-secondary/20 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:bg-secondary/40 transition-colors"
+                >
+                  <Upload className="h-5 w-5 text-muted-foreground" />
+                  <p className="text-[11px] text-muted-foreground">Click or drag to upload (JPG, PNG, WEBP · max 2MB)</p>
+                </div>
+              )}
+            </div>
+
             <div>
               <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Product Name *</label>
               <Input value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="e.g. iPhone 15 Pro Max" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
@@ -305,12 +394,7 @@ const Products = () => {
                   placeholder="Enter or generate barcode"
                   className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] font-mono flex-1"
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 rounded-xl border-border/30 gap-1.5 shrink-0"
-                  onClick={() => setFormBarcode(generateBarcode())}
-                >
+                <Button type="button" variant="outline" className="h-11 rounded-xl border-border/30 gap-1.5 shrink-0" onClick={() => setFormBarcode(generateBarcode())}>
                   <Barcode className="h-4 w-4" /> Generate
                 </Button>
               </div>
@@ -326,7 +410,6 @@ const Products = () => {
                 <Input type="number" value={formCost} onChange={(e) => setFormCost(e.target.value)} placeholder="3200000" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
               </div>
             </div>
-            {/* Dynamic Profit Margin */}
             {(Number(formPrice) > 0 || Number(formCost) > 0) && (
               <div className="p-3 rounded-xl bg-secondary/30 flex justify-between items-center">
                 <span className="text-[12px] text-muted-foreground uppercase tracking-wider flex items-center gap-1">
@@ -351,9 +434,9 @@ const Products = () => {
               <Button
                 className="flex-1 rounded-xl bg-primary text-primary-foreground font-semibold"
                 onClick={handleSave}
-                disabled={!formName.trim() || !formPrice || saving}
+                disabled={!formName.trim() || !formPrice || saving || uploadingImage}
               >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : editing ? "Update" : "Create"}
+                {saving || uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : editing ? "Update" : "Create"}
               </Button>
             </div>
           </div>

@@ -18,6 +18,7 @@ import ZReport from "./pages/ZReport";
 import CustomerLedger from "./pages/CustomerLedger";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import OutstandingBalances from "./pages/OutstandingBalances";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -73,6 +74,11 @@ function AppRoutes() {
         <Route path="/customer-ledger" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <CustomerLedger />
+          </ProtectedRoute>
+        } />
+        <Route path="/outstanding" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <OutstandingBalances />
           </ProtectedRoute>
         } />
         <Route path="/users" element={

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera, Barcode } from "lucide-react";
+import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera, Barcode, Package } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ interface InventoryItem {
   product_name?: string;
   category?: string;
   barcode?: string | null;
+  image_url?: string | null;
 }
 
 interface CartItem {
@@ -93,7 +94,7 @@ const POS = () => {
 
     if (error) { console.error("Error fetching inventory:", error); return; }
 
-    const { data: products } = await supabase.from("products").select("id, name, category, barcode");
+    const { data: products } = await supabase.from("products").select("id, name, category, barcode, image_url");
     const productMap = new Map((products as any[] || []).map((p: any) => [p.id, p]));
 
     const items = ((data as any[]) || []).map((item: any) => ({
@@ -101,6 +102,7 @@ const POS = () => {
       product_name: productMap.get(item.product_id)?.name || "Unknown",
       category: productMap.get(item.product_id)?.category || "Other",
       barcode: productMap.get(item.product_id)?.barcode || null,
+      image_url: productMap.get(item.product_id)?.image_url || null,
     }));
 
     setInventory(items);
@@ -114,14 +116,9 @@ const POS = () => {
 
   useEffect(() => { fetchInventory(); fetchCustomers(); }, []);
 
-  // Barcode scanner detection: scanners send characters rapidly followed by Enter
+  // Barcode scanner detection
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only intercept when search input is focused or no input is focused
-      const active = document.activeElement;
-      const isInputFocused = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
-      
-      // If a dialog is open, don't intercept
       if (showProcessSale || showReceipt || showCustomerDialog || showNewCustomer) return;
 
       if (e.key === "Enter" && barcodeBufferRef.current.length >= 5) {
@@ -132,15 +129,12 @@ const POS = () => {
         return;
       }
 
-      // Only capture printable single characters (barcode scanner behavior)
       if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
         barcodeBufferRef.current += e.key;
-        
         if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
         barcodeTimerRef.current = setTimeout(() => {
-          // If buffer has accumulated but no Enter, it's manual typing - clear
           barcodeBufferRef.current = "";
-        }, 100); // Scanners type within 50-100ms
+        }, 100);
       }
     };
 
@@ -149,17 +143,14 @@ const POS = () => {
   }, [inventory, cart, showProcessSale, showReceipt, showCustomerDialog, showNewCustomer]);
 
   const handleBarcodeScanned = (code: string) => {
-    // Search inventory by barcode
     const matchingItems = inventory.filter(
       (item) => item.barcode === code && !cart.some((c) => c.imei === item.imei)
     );
-
     if (matchingItems.length > 0) {
       const item = matchingItems[0];
       addToCart(item);
       toast({ title: "Item scanned", description: `${item.product_name} added to cart` });
     } else {
-      // Also search by IMEI
       const imeiMatch = inventory.find(
         (item) => item.imei === code && !cart.some((c) => c.imei === item.imei)
       );
@@ -170,7 +161,6 @@ const POS = () => {
         toast({ title: "Not found", description: `No in-stock item found for: ${code}`, variant: "destructive" });
       }
     }
-    // Clear search field
     setSearch("");
   };
 
@@ -222,7 +212,6 @@ const POS = () => {
       .from("customers")
       .insert({ name: newCustomerName.trim(), phone: newCustomerPhone.trim() || null } as any)
       .select().single();
-
     if (error) { toast({ title: "Error", description: "Could not create customer", variant: "destructive" }); return; }
     const customer = data as any;
     setSelectedCustomer({ id: customer.id, name: customer.name, phone: customer.phone });
@@ -236,26 +225,21 @@ const POS = () => {
 
   const findOrCreateCustomer = async (name: string, phone: string): Promise<string | null> => {
     if (!name || name === "Walk-in Customer") return null;
-    
     let customerId: string | null = selectedCustomer?.id || null;
-    
     if (!customerId && phone) {
       const { data } = await supabase.from("customers").select("id").eq("phone", phone).maybeSingle();
       if (data) customerId = (data as any).id;
     }
-    
     if (!customerId) {
       const { data } = await supabase.from("customers").select("id").eq("name", name).maybeSingle();
       if (data) customerId = (data as any).id;
     }
-    
     if (!customerId) {
       const { data } = await supabase.from("customers")
         .insert({ name, phone: phone || null } as any)
         .select("id").single();
       if (data) customerId = (data as any).id;
     }
-    
     return customerId;
   };
 
@@ -274,7 +258,6 @@ const POS = () => {
 
     try {
       const saleNumber = `SL-${Date.now().toString(36).toUpperCase()}`;
-      
       const customerId = await findOrCreateCustomer(custName, custPhone);
 
       const { data: sale, error: saleError } = await supabase
@@ -353,15 +336,7 @@ const POS = () => {
   const handleProcessSaleComplete = () => {
     const total = Number(salePrice) || cart[0]?.price || 0;
     const updatedCart = cart.map((item, i) => i === 0 ? { ...item, price: total } : item);
-    completeSale(
-      updatedCart,
-      total,
-      processPayment,
-      processCustomerName || "Walk-in Customer",
-      processCustomerPhone,
-      Number(amountPaid) || total,
-      Number(warranty) || 6
-    );
+    completeSale(updatedCart, total, processPayment, processCustomerName || "Walk-in Customer", processCustomerPhone, Number(amountPaid) || total, Number(warranty) || 6);
   };
 
   const filteredCustomers = customers.filter(
@@ -385,12 +360,10 @@ const POS = () => {
           <p style="margin: 2px 0; font-size: ${fontSize};">Quality Phones from Dubai</p>
         </div>
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-        
-        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Invoice:</b> ${lastSale.saleNumber}</p>
-        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Date:</b> ${format(lastSale.date, "dd/MM/yyyy hh:mm a")}</p>
-        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Customer:</b> ${lastSale.customer}</p>
-        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Phone:</b> ${lastSale.customerPhone || "N/A"}</p>
-        
+        <p style="margin: 4px 0;"><b>Invoice:</b> ${lastSale.saleNumber}</p>
+        <p style="margin: 4px 0;"><b>Date:</b> ${format(lastSale.date, "dd/MM/yyyy hh:mm a")}</p>
+        <p style="margin: 4px 0;"><b>Customer:</b> ${lastSale.customer}</p>
+        <p style="margin: 4px 0;"><b>Phone:</b> ${lastSale.customerPhone || "N/A"}</p>
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
         <table style="width: 100%; border-collapse: collapse; font-size: ${fontSize};">
           <tr style="border-bottom: 1px dashed #000;">
@@ -400,57 +373,28 @@ const POS = () => {
             <th style="text-align: right; padding: 2px 0;">Total</th>
           </tr>
           ${lastSale.items.map((item) => `
-            <tr>
-              <td style="text-align: left; padding: 3px 0;">${item.product_name}</td>
-              <td style="text-align: center; padding: 3px 0;">1</td>
-              <td style="text-align: right; padding: 3px 0;">${item.price.toLocaleString()}</td>
-              <td style="text-align: right; padding: 3px 0;">${item.price.toLocaleString()}</td>
-            </tr>
-            <tr>
-              <td colspan="4" style="font-size: 10px; color: #555; padding: 0 0 3px;">IMEI: ${item.imei}</td>
-            </tr>
+            <tr><td style="text-align: left; padding: 3px 0;">${item.product_name}</td><td style="text-align: center;">1</td><td style="text-align: right;">${item.price.toLocaleString()}</td><td style="text-align: right;">${item.price.toLocaleString()}</td></tr>
+            <tr><td colspan="4" style="font-size: 10px; color: #555; padding: 0 0 3px;">IMEI: ${item.imei}</td></tr>
           `).join("")}
         </table>
-        
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
-          <span>Subtotal:</span><span>${formatPrice(lastSale.total)}</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold; font-size: ${paperWidth === "80mm" ? "14px" : "12px"};">
-          <span>TOTAL:</span><span>${formatPrice(lastSale.total)}</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
-          <span>Payment:</span><span>${lastSale.payment}</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
-          <span>Amount Paid:</span><span>${formatPrice(lastSale.amountPaid)}</span>
-        </div>
-        ${lastSale.balance > 0 ? `
-        <div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold;">
-          <span>Balance Due:</span><span>${formatPrice(lastSale.balance)}</span>
-        </div>
-        ` : ""}
-        
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;"><span>Subtotal:</span><span>${formatPrice(lastSale.total)}</span></div>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold; font-size: ${paperWidth === "80mm" ? "14px" : "12px"};"><span>TOTAL:</span><span>${formatPrice(lastSale.total)}</span></div>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;"><span>Payment:</span><span>${lastSale.payment}</span></div>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;"><span>Amount Paid:</span><span>${formatPrice(lastSale.amountPaid)}</span></div>
+        ${lastSale.balance > 0 ? `<div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold;"><span>Balance Due:</span><span>${formatPrice(lastSale.balance)}</span></div>` : ""}
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-        <div style="text-align: center; margin: 4px 0;">
-          <p style="margin: 2px 0;"><b>Warranty: ${lastSale.warranty} months</b></p>
-          <p style="margin: 2px 0;">Valid until: ${format(warrantyDate, "dd MMM yyyy")}</p>
-        </div>
-        
+        <div style="text-align: center; margin: 4px 0;"><p style="margin: 2px 0;"><b>Warranty: ${lastSale.warranty} months</b></p><p style="margin: 2px 0;">Valid until: ${format(warrantyDate, "dd MMM yyyy")}</p></div>
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-        <div style="font-size: ${paperWidth === "80mm" ? "10px" : "9px"}; line-height: 1.3; margin: 4px 0;">
+        <div style="font-size: ${paperWidth === "80mm" ? "10px" : "9px"}; line-height: 1.3;">
           <p style="margin: 2px 0;">Terms & Conditions:</p>
           <p style="margin: 1px 0;">1. Warranty covers manufacturer defects only.</p>
           <p style="margin: 1px 0;">2. Physical/water damage excluded.</p>
           <p style="margin: 1px 0;">3. Warranty void if opened by unauthorized personnel.</p>
           <p style="margin: 1px 0;">4. No refunds after 24 hours.</p>
         </div>
-        
         <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
-        <div style="text-align: center; margin: 8px 0;">
-          <p style="margin: 2px 0; font-weight: bold;">Thank you for shopping with us!</p>
-          <p style="margin: 2px 0;">Receipt #${receiptId}</p>
-        </div>
+        <div style="text-align: center; margin: 8px 0;"><p style="margin: 2px 0; font-weight: bold;">Thank you for shopping with us!</p><p style="margin: 2px 0;">Receipt #${receiptId}</p></div>
       </div>
     `;
   };
@@ -468,13 +412,10 @@ const POS = () => {
     if (!lastSale) return;
     const balanceText = lastSale.balance > 0 ? `\nOutstanding Balance: ${formatPrice(lastSale.balance)}` : "";
     const receiptText = `*SUNBIRD ONLINE STORES*\n*SALES RECEIPT*\n\nCustomer: ${lastSale.customer}\nPhone: ${lastSale.customerPhone || "N/A"}\nDate: ${format(lastSale.date, "dd MMM yyyy, hh:mm a")}\n\n${lastSale.items.map(i => `Device: ${i.product_name}\nIMEI: ${i.imei}`).join("\n")}\n\nPayment: ${lastSale.payment}\n*Total: ${formatPrice(lastSale.total)}*\nAmount Paid: ${formatPrice(lastSale.amountPaid)}${balanceText}\nWarranty: ${lastSale.warranty} months\n\nReceipt #${lastSale.saleNumber}\nThank you for choosing Sunbird! 🐦`;
-
-    const encoded = encodeURIComponent(receiptText);
-    window.open(`https://wa.me/256704811097?text=${encoded}`, "_blank");
+    window.open(`https://wa.me/256704811097?text=${encodeURIComponent(receiptText)}`, "_blank");
   };
 
   const processBalance = Math.max(0, (Number(salePrice) || 0) - (Number(amountPaid) || 0));
-
   const receiptRef = useRef<HTMLDivElement>(null);
   const [savingScreenshot, setSavingScreenshot] = useState(false);
 
@@ -483,28 +424,19 @@ const POS = () => {
     setSavingScreenshot(true);
     try {
       await new Promise((r) => setTimeout(r, 500));
-      const canvas = await html2canvas(receiptRef.current, {
-        backgroundColor: "#ffffff",
-        scale: 2,
-        useCORS: true,
-        logging: false,
-      });
+      const canvas = await html2canvas(receiptRef.current, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false });
       canvas.toBlob(async (blob) => {
         if (!blob) { setSavingScreenshot(false); return; }
         const fileName = `${lastSale.saleNumber}_${Date.now()}.png`;
-        const { error } = await supabase.storage
-          .from("receipts")
-          .upload(fileName, blob, { contentType: "image/png", upsert: true });
+        const { error } = await supabase.storage.from("receipts").upload(fileName, blob, { contentType: "image/png", upsert: true });
         setSavingScreenshot(false);
         if (error) {
-          console.error("Receipt upload error:", error);
           toast({ title: "Error", description: "Could not save receipt screenshot", variant: "destructive" });
         } else {
           toast({ title: "Screenshot saved", description: "Receipt photo saved to Z-Report" });
         }
       }, "image/png");
     } catch (err) {
-      console.error("Receipt capture error:", err);
       setSavingScreenshot(false);
       toast({ title: "Error", description: "Could not capture receipt", variant: "destructive" });
     }
@@ -525,11 +457,8 @@ const POS = () => {
             onKeyDown={(e) => {
               if (e.key === "Enter" && search.trim().length >= 3) {
                 e.preventDefault();
-                // Check if search matches a barcode or IMEI exactly
                 const exactMatch = inventory.find(
-                  (item) =>
-                    !cart.some((c) => c.imei === item.imei) &&
-                    (item.barcode === search.trim() || item.imei === search.trim())
+                  (item) => !cart.some((c) => c.imei === item.imei) && (item.barcode === search.trim() || item.imei === search.trim())
                 );
                 if (exactMatch) {
                   addToCart(exactMatch);
@@ -548,28 +477,34 @@ const POS = () => {
             <Loader2 className="h-8 w-8 text-primary animate-spin" />
           </div>
         ) : available.length === 0 ? (
-          <div className="flex-1 flex items-center justify-center text-muted-foreground">
-            <p className="text-[14px]">{search ? "No matching items found" : "No items in stock"}</p>
+          <div className="flex-1 flex items-center justify-center text-muted-foreground relative">
+            {/* Watermark logo */}
+            <img src="/images/sunbird-logo.png" alt="" className="absolute w-32 h-32 opacity-[0.06] pointer-events-none" />
+            <p className="text-[14px] z-10">{search ? "No matching items found" : "No items in stock"}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 overflow-auto flex-1 pb-2">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-2 overflow-auto flex-1 pb-2 relative">
+            {/* Watermark behind grid */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+              <img src="/images/sunbird-logo.png" alt="" className="w-40 h-40 opacity-[0.04]" />
+            </div>
             {available.map((item) => (
               <button
                 key={item.id}
                 onClick={() => addToCart(item)}
-                className="glass-card p-4 text-left transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] group"
+                className="glass-card p-2.5 text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] group relative z-10"
               >
-                <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center mb-3 group-hover:bg-primary/10 transition-colors duration-300">
-                  <Smartphone className="h-5 w-5 text-primary/80" />
-                </div>
-                <p className="text-[13px] font-medium truncate">{item.product_name}</p>
-                <p className="text-[11px] text-muted-foreground font-mono mt-1">{item.imei}</p>
-                {item.barcode && (
-                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1">
-                    <Barcode className="h-3 w-3" /> {item.barcode}
-                  </p>
+                {item.image_url ? (
+                  <div className="w-full aspect-square rounded-lg overflow-hidden bg-secondary/40 mb-2">
+                    <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
+                  </div>
+                ) : (
+                  <div className="w-full aspect-square rounded-lg bg-secondary/40 flex items-center justify-center mb-2">
+                    <Package className="h-6 w-6 text-muted-foreground/40" />
+                  </div>
                 )}
-                <p className="text-[14px] font-semibold text-primary mt-2">{formatPrice(item.selling_price)}</p>
+                <p className="text-[11px] font-medium truncate leading-tight">{item.product_name}</p>
+                <p className="text-[12px] font-semibold text-primary mt-0.5">{formatPrice(item.selling_price)}</p>
               </button>
             ))}
           </div>
@@ -577,7 +512,7 @@ const POS = () => {
       </div>
 
       {/* Cart Panel */}
-      <div className="w-full lg:w-[400px] glass-card flex flex-col shrink-0 overflow-hidden">
+      <div className="w-full lg:w-[360px] glass-card flex flex-col shrink-0 overflow-hidden">
         <div className="px-5 py-4 border-b border-border/20 flex items-center gap-2">
           <ShoppingCart className="h-4 w-4 text-primary" />
           <h2 className="font-semibold text-[14px] tracking-tight">Current Sale</h2>
@@ -605,9 +540,10 @@ const POS = () => {
 
         <div className="flex-1 overflow-auto px-4 py-3 space-y-2">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-              <ShoppingCart className="h-10 w-10 mb-3 opacity-20" />
-              <p className="text-[13px]">Tap a product or scan a barcode</p>
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground relative">
+              <img src="/images/sunbird-logo.png" alt="" className="absolute w-20 h-20 opacity-[0.07] pointer-events-none" />
+              <ShoppingCart className="h-8 w-8 mb-2 opacity-20 z-10" />
+              <p className="text-[12px] z-10">Tap a product or scan a barcode</p>
             </div>
           ) : (
             cart.map((item) => (
@@ -627,7 +563,7 @@ const POS = () => {
 
         <div className="p-5 border-t border-border/20 space-y-4">
           <div className="flex justify-between text-[16px] font-semibold">
-            <span>Total ({cart.length} items)</span>
+            <span>Total ({cart.length})</span>
             <span className="text-primary">{formatPrice(subtotal)}</span>
           </div>
 
@@ -637,19 +573,17 @@ const POS = () => {
                 key={id}
                 variant="outline"
                 onClick={() => setSelectedPayment(id)}
-                className={`gap-2 text-[13px] h-10 rounded-xl transition-all duration-200 ${
-                  selectedPayment === id
-                    ? "border-primary/50 bg-primary/10 text-primary"
-                    : "border-border/30 hover:bg-secondary/60"
+                className={`gap-2 text-[12px] h-9 rounded-xl transition-all duration-200 ${
+                  selectedPayment === id ? "border-primary/50 bg-primary/10 text-primary" : "border-border/30 hover:bg-secondary/60"
                 }`}
               >
-                <Icon className="h-4 w-4" /> {label}
+                <Icon className="h-3.5 w-3.5" /> {label}
               </Button>
             ))}
           </div>
 
           <Button
-            className="w-full h-12 text-[15px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+            className="w-full h-11 text-[14px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
             disabled={cart.length === 0 || processing}
             onClick={() => {
               if (cart.length === 1) {
@@ -666,7 +600,7 @@ const POS = () => {
             {processing ? (
               <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</>
             ) : (
-              <><Check className="h-4 w-4 mr-2" /> Complete Sale — {formatPrice(subtotal)}</>
+              <><Check className="h-4 w-4 mr-2" /> Complete — {formatPrice(subtotal)}</>
             )}
           </Button>
         </div>
@@ -684,7 +618,6 @@ const POS = () => {
                 <p className="text-[14px] font-semibold">{cart[0].product_name}</p>
                 <p className="text-[12px] text-muted-foreground font-mono">{cart[0].imei}</p>
               </div>
-
               <div>
                 <label className="text-[13px] font-medium block mb-1.5">Customer Name *</label>
                 <Input value={processCustomerName} onChange={(e) => setProcessCustomerName(e.target.value)} placeholder="Customer name" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
@@ -703,21 +636,17 @@ const POS = () => {
                   <Input type="number" value={amountPaid} onChange={(e) => setAmountPaid(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
                 </div>
               </div>
-
               {processBalance > 0 && (
                 <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 flex justify-between items-center">
                   <span className="text-[12px] text-warning font-medium uppercase tracking-wider">Outstanding Balance</span>
                   <span className="text-[14px] font-semibold text-warning">{formatPrice(processBalance)}</span>
                 </div>
               )}
-
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-[13px] font-medium block mb-1.5">Payment Type</label>
                   <Select value={processPayment} onValueChange={setProcessPayment}>
-                    <SelectTrigger className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]">
-                      <SelectValue />
-                    </SelectTrigger>
+                    <SelectTrigger className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Cash">Cash</SelectItem>
                       <SelectItem value="Mobile Money">Mobile Money</SelectItem>
@@ -731,12 +660,7 @@ const POS = () => {
                   <Input type="number" value={warranty} onChange={(e) => setWarranty(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
                 </div>
               </div>
-
-              <Button
-                className="w-full h-12 text-[15px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90"
-                disabled={processing || !processCustomerName.trim()}
-                onClick={handleProcessSaleComplete}
-              >
+              <Button className="w-full h-12 text-[15px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90" disabled={processing || !processCustomerName.trim()} onClick={handleProcessSaleComplete}>
                 {processing ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Processing...</> : processBalance > 0 ? `Complete Sale (Balance: ${formatPrice(processBalance)})` : "Complete Sale"}
               </Button>
             </div>
@@ -747,9 +671,7 @@ const POS = () => {
       {/* Customer Selection Dialog */}
       <Dialog open={showCustomerDialog} onOpenChange={setShowCustomerDialog}>
         <DialogContent className="glass-card border-border/30 max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-[16px] font-semibold">Select Customer</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle className="text-[16px] font-semibold">Select Customer</DialogTitle></DialogHeader>
           {showNewCustomer ? (
             <div className="space-y-3">
               <Input placeholder="Customer name" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" autoFocus />
@@ -803,34 +725,17 @@ const POS = () => {
               )}
               <div ref={receiptRef} id="pos-receipt-content" dangerouslySetInnerHTML={{ __html: generateReceiptHTML() }} />
               <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl gap-2 border-border/30"
-                  onClick={() => handlePrintReceipt("80mm")}
-                >
+                <Button variant="outline" className="flex-1 rounded-xl gap-2 border-border/30" onClick={() => handlePrintReceipt("80mm")}>
                   <Printer className="h-4 w-4" /> 80mm
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl gap-2 border-border/30"
-                  onClick={() => handlePrintReceipt("58mm")}
-                >
+                <Button variant="outline" className="flex-1 rounded-xl gap-2 border-border/30" onClick={() => handlePrintReceipt("58mm")}>
                   <Printer className="h-4 w-4" /> 58mm
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
-                  onClick={captureAndUploadReceipt}
-                  disabled={savingScreenshot}
-                >
+                <Button variant="outline" className="flex-1 rounded-xl gap-2 border-primary/30 text-primary" onClick={captureAndUploadReceipt} disabled={savingScreenshot}>
                   {savingScreenshot ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                   {savingScreenshot ? "..." : "📷"}
                 </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
-                  onClick={sendReceiptWhatsApp}
-                >
+                <Button variant="outline" className="flex-1 rounded-xl gap-2 border-primary/30 text-primary" onClick={sendReceiptWhatsApp}>
                   <MessageCircle className="h-4 w-4" />
                 </Button>
               </div>

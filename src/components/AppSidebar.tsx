@@ -10,6 +10,7 @@ import {
   Users as UsersIcon,
   Settings,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { title: "Sales", url: "/sales", icon: DollarSign, roles: ["master_admin", "supervisor"] },
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ["master_admin", "supervisor"] },
   { title: "Z-Report", url: "/z-report", icon: ClipboardList, roles: ["master_admin", "supervisor"] },
+  { title: "Outstanding", url: "/outstanding", icon: AlertCircle, roles: ["master_admin", "supervisor"] },
   { title: "Customer Ledger", url: "/customer-ledger", icon: BookOpen, roles: ["master_admin"] },
   { title: "Users", url: "/users", icon: UsersIcon, roles: ["master_admin"] },
   { title: "Settings", url: "/settings", icon: Settings, roles: ["master_admin"] },
