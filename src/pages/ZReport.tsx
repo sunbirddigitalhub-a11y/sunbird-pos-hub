@@ -74,6 +74,9 @@ interface ZReportRecord {
   cash_difference: number;
   status: string;
   closed_at: string | null;
+  closed_by_name: string | null;
+  closed_by_role: string | null;
+  report_snapshot: any | null;
 }
 
 const expenseCategories = ["General", "Rent", "Utilities", "Salaries", "Transport", "Supplies", "Marketing", "Repairs", "Other"];
