@@ -85,8 +85,10 @@ export function AppSidebar() {
   const { hasFeatureAccess } = useSubscription();
   const navItems = useNavItems();
 
+  const coreSection = navItems[0]?.section;
+  const toolsSection = navItems.find(i => i.url === "/barcode")?.section || "Tools";
   const sections = navItems.reduce<Record<string, typeof navItems>>((acc, item) => {
-    if (role === "staff" && !isGrandmaster && !["Core", "Tools"].includes(item.section) && item.section !== navItems[0]?.section) return acc;
+    if (role === "staff" && !isGrandmaster && item.section !== coreSection && item.section !== toolsSection) return acc;
     const allowedRoles = roleRestrictions[item.url];
     if (allowedRoles && role && !allowedRoles.includes(role) && !isGrandmaster) return acc;
     if (!acc[item.section]) acc[item.section] = [];
