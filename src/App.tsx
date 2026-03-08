@@ -76,6 +76,11 @@ function AppRoutes() {
             <CustomerLedger />
           </ProtectedRoute>
         } />
+        <Route path="/outstanding" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <OutstandingBalances />
+          </ProtectedRoute>
+        } />
         <Route path="/users" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <UsersPage />
