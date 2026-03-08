@@ -112,7 +112,7 @@ const CURRENCIES = [
 ];
 
 const OnboardingPage = () => {
-  const { user, businessId } = useAuth();
+  const { user, businessId, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -183,6 +183,7 @@ const OnboardingPage = () => {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome aboard! 🎉", description: "Your business is set up and ready to go." });
+      await refreshProfile();
       navigate("/dashboard");
     }
     setLoading(false);
@@ -192,6 +193,7 @@ const OnboardingPage = () => {
     if (!businessId) return;
     setLoading(true);
     await supabase.from("businesses").update({ onboarding_completed: true } as any).eq("id", businessId);
+    await refreshProfile();
     navigate("/dashboard");
     setLoading(false);
   };

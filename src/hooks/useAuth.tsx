@@ -28,6 +28,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
   isAdminOrSupervisor: () => boolean;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -154,8 +155,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasRole = (r: AppRole) => role === r;
   const isAdminOrSupervisor = () => role === "master_admin" || role === "supervisor";
 
+  const refreshProfile = useCallback(async () => {
+    if (user) await fetchProfileAndRole(user.id);
+  }, [user, fetchProfileAndRole]);
+
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, businessId, isGrandmaster, onboardingCompleted, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor }}>
+    <AuthContext.Provider value={{ user, session, profile, role, businessId, isGrandmaster, onboardingCompleted, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
