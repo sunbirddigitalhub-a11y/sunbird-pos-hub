@@ -10,6 +10,7 @@ import {
   Users as UsersIcon,
   Settings,
   LogOut,
+  AlertCircle,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
