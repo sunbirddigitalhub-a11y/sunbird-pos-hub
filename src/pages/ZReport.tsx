@@ -115,6 +115,9 @@ const ZReport = () => {
   // Inventory activity
   const [inventoryActivity, setInventoryActivity] = useState<any[]>([]);
 
+  // Payment history (outstanding balance activity)
+  const [todayPayments, setTodayPayments] = useState<any[]>([]);
+
   // Receipt screenshots
   const [receiptImages, setReceiptImages] = useState<ReceiptFile[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
