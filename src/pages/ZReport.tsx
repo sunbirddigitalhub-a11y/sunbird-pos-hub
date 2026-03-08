@@ -217,49 +217,6 @@ const ZReport = () => {
     finally { setLoadingImages(false); }
   };
 
-  const fetchSalesForDate = async (date: string) => {
-    const startOfDay = `${date}T00:00:00`;
-    const endOfDay = `${date}T23:59:59`;
-    const { data: sales } = await supabase
-      .from("sales" as any).select("*")
-      .gte("created_at", startOfDay).lte("created_at", endOfDay)
-      .order("created_at", { ascending: false });
-    const salesArr = (sales as any[]) || [];
-    const salesWithItems: SaleRecord[] = [];
-    for (const sale of salesArr) {
-      const { data: items } = await supabase
-        .from("sale_items" as any).select("product_name, imei, unit_price")
-        .eq("sale_id", sale.id);
-      salesWithItems.push({ ...sale, items: (items as any[]) || [] });
-    }
-    setReportSales(salesWithItems);
-  };
-
-  const fetchReportDetails = async (date: string) => {
-    const startOfDay = `${date}T00:00:00`;
-    const endOfDay = `${date}T23:59:59`;
-    // Expenses for that date
-    const { data: expData } = await supabase.from("expenses" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).order("created_at", { ascending: false });
-    setReportExpenses((expData as any[]) || []);
-    // Audit logs for that date
-    const { data: auditData } = await supabase.from("audit_logs" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).order("created_at", { ascending: false });
-    setReportAuditLogs((auditData as any[]) || []);
-    // Inventory activity for that date
-    const { data: invAdded } = await supabase.from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id").gte("created_at", startOfDay).lte("created_at", endOfDay);
-    const { data: invUpdated } = await supabase.from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id").gte("updated_at", startOfDay).lte("updated_at", endOfDay);
-    const { data: prods } = await supabase.from("products" as any).select("id, name");
-    const pMap = new Map((prods as any[] || []).map((p: any) => [p.id, p.name]));
-    const allInv = new Map<string, any>();
-    for (const item of (invAdded as any[] || [])) { allInv.set(item.id, { ...item, product_name: pMap.get(item.product_id) || "Unknown", action: "Added" }); }
-    for (const item of (invUpdated as any[] || [])) { if (!allInv.has(item.id)) { allInv.set(item.id, { ...item, product_name: pMap.get(item.product_id) || "Unknown", action: item.status === "Sold" ? "Sold" : "Updated" }); } }
-    setReportInventory(Array.from(allInv.values()));
-    // Outstanding sales for that date
-    const { data: outSales } = await supabase.from("sales" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).eq("status", "Partial").order("created_at", { ascending: false });
-    const outArr = (outSales as any[]) || [];
-    const outWithItems: SaleRecord[] = [];
-    for (const sale of outArr) { const { data: items } = await supabase.from("sale_items" as any).select("product_name, imei, unit_price").eq("sale_id", sale.id); outWithItems.push({ ...sale, items: (items as any[]) || [] }); }
-    setReportOutstandings(outWithItems);
-  };
 
   useEffect(() => {
     fetchTodaySales();
