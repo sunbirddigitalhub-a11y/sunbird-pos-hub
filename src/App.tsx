@@ -36,7 +36,7 @@ import SuppliersPage from "./pages/SuppliersPage";
 import PurchasesPage from "./pages/PurchasesPage";
 import StaffManagementPage from "./pages/StaffManagementPage";
 import StoresPage from "./pages/StoresPage";
-
+import OnboardingPage from "./pages/OnboardingPage";
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
 import FeaturesPage from "./pages/website/FeaturesPage";
