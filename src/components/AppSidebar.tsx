@@ -7,6 +7,7 @@ import {
   BarChart3,
   ClipboardList,
   BookOpen,
+  ScanBarcode,
   Users as UsersIcon,
   Settings,
   LogOut,
