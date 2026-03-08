@@ -28,6 +28,8 @@ import UpgradePage from "./pages/UpgradePage";
 import ReferralPage from "./pages/ReferralPage";
 import ComingSoonPage from "./pages/ComingSoonPage";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import IntegrationsPage from "./pages/IntegrationsPage";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
@@ -164,7 +166,7 @@ function AppRoutes() {
         <Route path="/analytics" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
             <FeatureLock feature="analytics">
-              <ComingSoonPage title="Analytics" description="Deep insights into your business performance with advanced charts and forecasting." featureName="analytics" />
+              <AnalyticsPage />
             </FeatureLock>
           </ProtectedRoute>
         } />
@@ -202,7 +204,7 @@ function AppRoutes() {
         <Route path="/integrations" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <FeatureLock feature="integrations">
-              <ComingSoonPage title="Integrations" description="Connect with third-party services, APIs, and automation tools." featureName="integrations" />
+              <IntegrationsPage />
             </FeatureLock>
           </ProtectedRoute>
         } />
