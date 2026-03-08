@@ -95,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setBusinessId(null);
         setIsGrandmaster(false);
+        setOnboardingCompleted(false);
       }
       setLoading(false);
     });
