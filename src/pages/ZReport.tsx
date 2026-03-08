@@ -758,24 +758,43 @@ const ZReport = () => {
             </div>
           </TabsContent>
 
-          {/* ═══ HISTORY TAB ═══ */}
-          <TabsContent value="history" className="mt-4">
+          {/* ═══ STORED REPORTS TAB ═══ */}
+          <TabsContent value="history" className="mt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-[15px] tracking-tight flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" /> Stored End-of-Day Reports
+              </h3>
+              <span className="text-[12px] text-muted-foreground">{pastReports.length} report(s)</span>
+            </div>
             {pastReports.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-[14px]">No past reports yet</div>
+              <div className="text-center py-12 text-muted-foreground text-[14px]">
+                <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p>No reports stored yet. Close the day from the Summary tab to save a report.</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {pastReports.map((report) => (
                   <div key={report.id} className="glass-card p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${report.status === "Closed" ? "bg-success/10" : "bg-warning/10"}`}>
+                      {report.status === "Closed" ? <CheckCircle className="h-5 w-5 text-success" /> : <Clock className="h-5 w-5 text-warning" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium">{format(new Date(report.report_date), "dd MMM yyyy")}</p>
-                      <p className="text-[11px] text-muted-foreground">{report.total_transactions} txns · {report.status}</p>
+                      <p className="text-[13px] font-medium">{format(new Date(report.report_date), "EEEE, dd MMM yyyy")}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {report.total_transactions} transactions · {report.status}
+                        {report.closed_at && ` · Closed at ${format(new Date(report.closed_at), "HH:mm")}`}
+                      </p>
                     </div>
-                    <p className="text-[14px] font-semibold text-primary shrink-0">{formatPrice(report.total_sales)}</p>
-                    <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-lg" onClick={() => { setSelectedReport(report); fetchSalesForDate(report.report_date); }}>
-                      <Eye className="h-4 w-4" />
+                    <div className="text-right shrink-0">
+                      <p className="text-[14px] font-semibold text-primary">{formatPrice(report.total_sales)}</p>
+                      {report.physical_cash !== null && (
+                        <p className={`text-[10px] font-medium ${report.cash_difference === 0 ? "text-success" : "text-destructive"}`}>
+                          {report.cash_difference === 0 ? "Balanced" : `${formatPrice(Math.abs(report.cash_difference))} ${(report.cash_difference ?? 0) > 0 ? "over" : "short"}`}
+                        </p>
+                      )}
+                    </div>
+                    <Button variant="outline" size="sm" className="shrink-0 rounded-lg gap-1.5 border-primary/30 text-primary text-[12px]" onClick={() => { setSelectedReport(report); fetchSalesForDate(report.report_date); fetchReportDetails(report.report_date); }}>
+                      <Eye className="h-3.5 w-3.5" /> View
                     </Button>
                   </div>
                 ))}
