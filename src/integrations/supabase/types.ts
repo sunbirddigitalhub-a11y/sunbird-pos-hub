@@ -52,31 +52,37 @@ export type Database = {
       }
       customers: {
         Row: {
+          address: string | null
           balance: number
           created_at: string
           email: string | null
           id: string
           name: string
+          notes: string | null
           phone: string | null
           total_spent: number
           updated_at: string
         }
         Insert: {
+          address?: string | null
           balance?: number
           created_at?: string
           email?: string | null
           id?: string
           name: string
+          notes?: string | null
           phone?: string | null
           total_spent?: number
           updated_at?: string
         }
         Update: {
+          address?: string | null
           balance?: number
           created_at?: string
           email?: string | null
           id?: string
           name?: string
+          notes?: string | null
           phone?: string | null
           total_spent?: number
           updated_at?: string
