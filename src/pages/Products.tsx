@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package, TrendingUp } from "lucide-react";
+import { Search, Plus, Smartphone, Laptop, Tablet, Edit2, Trash2, Loader2, Package, TrendingUp, Barcode, Copy, Download } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,7 @@ interface Product {
   cost_price: number;
   supplier: string | null;
   in_stock: number;
+  barcode: string | null;
 }
 
 const categoryIcon = (cat: string) => {
@@ -26,6 +27,14 @@ const categoryIcon = (cat: string) => {
 };
 
 const categories = ["Smartphone", "Laptop", "Tablet", "Accessory", "Other"];
+
+const generateBarcode = (): string => {
+  // Generate a CODE128-compatible barcode: prefix + timestamp + random
+  const prefix = "256";
+  const timestamp = Date.now().toString().slice(-8);
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, "0");
+  return `${prefix}${timestamp}${random}`;
+};
 
 const Products = () => {
   const [search, setSearch] = useState("");
@@ -42,6 +51,7 @@ const Products = () => {
   const [formPrice, setFormPrice] = useState("");
   const [formCost, setFormCost] = useState("");
   const [formSupplier, setFormSupplier] = useState("");
+  const [formBarcode, setFormBarcode] = useState("");
 
   const fetchProducts = async () => {
     const { data, error } = await supabase
@@ -63,12 +73,14 @@ const Products = () => {
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.category.toLowerCase().includes(search.toLowerCase()) ||
-      (p.supplier && p.supplier.toLowerCase().includes(search.toLowerCase()))
+      (p.supplier && p.supplier.toLowerCase().includes(search.toLowerCase())) ||
+      (p.barcode && p.barcode.toLowerCase().includes(search.toLowerCase()))
   );
 
   const openNew = () => {
     setEditing(null);
     setFormName(""); setFormCategory("Smartphone"); setFormVariants(""); setFormPrice(""); setFormCost(""); setFormSupplier("");
+    setFormBarcode(generateBarcode());
     setShowForm(true);
   };
 
@@ -76,6 +88,7 @@ const Products = () => {
     setEditing(p);
     setFormName(p.name); setFormCategory(p.category); setFormVariants(p.variants || "");
     setFormPrice(String(p.base_price)); setFormCost(String(p.cost_price)); setFormSupplier(p.supplier || "");
+    setFormBarcode(p.barcode || "");
     setShowForm(true);
   };
 
@@ -90,16 +103,31 @@ const Products = () => {
       base_price: Number(formPrice),
       cost_price: Number(formCost) || 0,
       supplier: formSupplier.trim() || null,
+      barcode: formBarcode.trim() || null,
     };
 
     if (editing) {
       const { error } = await supabase.from("products").update(payload).eq("id", editing.id);
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Product updated" });
+      if (error) {
+        if (error.message.includes("unique") || error.message.includes("duplicate")) {
+          toast({ title: "Barcode already exists", description: "Please use a different barcode", variant: "destructive" });
+        } else {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+      } else {
+        toast({ title: "Product updated" });
+      }
     } else {
       const { error } = await supabase.from("products").insert({ ...payload, in_stock: 0 });
-      if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
-      else toast({ title: "Product created" });
+      if (error) {
+        if (error.message.includes("unique") || error.message.includes("duplicate")) {
+          toast({ title: "Barcode already exists", description: "Please use a different barcode", variant: "destructive" });
+        } else {
+          toast({ title: "Error", description: error.message, variant: "destructive" });
+        }
+      } else {
+        toast({ title: "Product created" });
+      }
     }
 
     setSaving(false);
@@ -111,6 +139,11 @@ const Products = () => {
     const { error } = await supabase.from("products").delete().eq("id", id);
     if (error) toast({ title: "Error", description: error.message, variant: "destructive" });
     else { toast({ title: "Product deleted" }); fetchProducts(); }
+  };
+
+  const copyBarcode = (barcode: string) => {
+    navigator.clipboard.writeText(barcode);
+    toast({ title: "Barcode copied", description: barcode });
   };
 
   const goToPOS = () => navigate("/pos");
@@ -157,7 +190,7 @@ const Products = () => {
 
       <div className="relative">
         <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search by name, category, or supplier..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
+        <Input placeholder="Search by name, category, supplier, or barcode..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" />
       </div>
 
       {loading ? (
@@ -194,6 +227,15 @@ const Products = () => {
                 <p className="text-[12px] text-muted-foreground mt-0.5">
                   {p.category}{p.variants ? ` · ${p.variants}` : ""}{p.supplier ? ` · ${p.supplier}` : ""}
                 </p>
+                {p.barcode && (
+                  <div className="mt-2 flex items-center gap-1.5">
+                    <Barcode className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-[11px] font-mono text-muted-foreground">{p.barcode}</span>
+                    <button onClick={() => copyBarcode(p.barcode!)} className="text-muted-foreground hover:text-foreground transition-colors">
+                      <Copy className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
                 <div className="mt-4 pt-3 border-t border-border/20 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] text-muted-foreground">Selling</span>
@@ -252,6 +294,28 @@ const Products = () => {
                 <Input value={formVariants} onChange={(e) => setFormVariants(e.target.value)} placeholder="128GB / 256GB" className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]" />
               </div>
             </div>
+
+            {/* Barcode Field */}
+            <div>
+              <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Barcode</label>
+              <div className="flex gap-2">
+                <Input
+                  value={formBarcode}
+                  onChange={(e) => setFormBarcode(e.target.value)}
+                  placeholder="Enter or generate barcode"
+                  className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] font-mono flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-11 rounded-xl border-border/30 gap-1.5 shrink-0"
+                  onClick={() => setFormBarcode(generateBarcode())}
+                >
+                  <Barcode className="h-4 w-4" /> Generate
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-1.5">Selling Price (UGX) *</label>
