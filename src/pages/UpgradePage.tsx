@@ -51,7 +51,6 @@ const plans: {
       "Analytics dashboard",
       "API access",
       "Automated alerts",
-      "Integrations",
       "Priority support",
     ],
     limits: "Unlimited stores · Unlimited users",
