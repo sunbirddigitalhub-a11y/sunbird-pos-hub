@@ -21,71 +21,32 @@ export interface PlanFeatures {
 
 const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
   basic: {
-    dashboard: true,
-    pos: true,
-    inventory: false,
-    products: true,
-    sales: false,
-    reports: false,
-    zReport: false,
-    outstanding: false,
-    customers: false,
-    barcode: true,
-    users: false,
-    settings: false,
+    dashboard: true, pos: true, inventory: false, products: true, sales: false,
+    reports: false, zReport: false, outstanding: false, customers: false,
+    barcode: true, users: false, settings: false,
   },
   business: {
-    dashboard: true,
-    pos: true,
-    inventory: true,
-    products: true,
-    sales: true,
-    reports: true,
-    zReport: false,
-    outstanding: true,
-    customers: true,
-    barcode: true,
-    users: false,
-    settings: false,
+    dashboard: true, pos: true, inventory: true, products: true, sales: true,
+    reports: true, zReport: false, outstanding: true, customers: true,
+    barcode: true, users: false, settings: false,
   },
   enterprise: {
-    dashboard: true,
-    pos: true,
-    inventory: true,
-    products: true,
-    sales: true,
-    reports: true,
-    zReport: true,
-    outstanding: true,
-    customers: true,
-    barcode: true,
-    users: true,
-    settings: true,
+    dashboard: true, pos: true, inventory: true, products: true, sales: true,
+    reports: true, zReport: true, outstanding: true, customers: true,
+    barcode: true, users: true, settings: true,
   },
 };
 
 const FEATURE_ROUTE_MAP: Record<string, keyof PlanFeatures> = {
-  "/dashboard": "dashboard",
-  "/pos": "pos",
-  "/inventory": "inventory",
-  "/products": "products",
-  "/sales": "sales",
-  "/reports": "reports",
-  "/z-report": "zReport",
-  "/outstanding": "outstanding",
-  "/customers": "customers",
-  "/barcode": "barcode",
-  "/users": "users",
-  "/settings": "settings",
+  "/dashboard": "dashboard", "/pos": "pos", "/inventory": "inventory",
+  "/products": "products", "/sales": "sales", "/reports": "reports",
+  "/z-report": "zReport", "/outstanding": "outstanding", "/customers": "customers",
+  "/barcode": "barcode", "/users": "users", "/settings": "settings",
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
-  basic: "Basic Plan",
-  business: "Business Plan",
-  enterprise: "Enterprise Plan",
+  basic: "Basic Plan", business: "Business Plan", enterprise: "Enterprise Plan",
 };
-
-const GRANDMASTER_EMAIL = "sunbirdgroup9@gmail.com";
 
 interface SubscriptionContextType {
   plan: PlanType;
@@ -103,13 +64,11 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType | undefined>(undefined);
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isGrandmaster, loading: authLoading } = useAuth();
   const [plan, setPlan] = useState<PlanType>("basic");
   const [isTrial, setIsTrial] = useState(true);
   const [trialEnd, setTrialEnd] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const isGrandmaster = user?.email === GRANDMASTER_EMAIL;
 
   const trialDaysLeft = trialEnd
     ? Math.max(0, Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
@@ -130,7 +89,6 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setIsTrial(d.is_trial);
       setTrialEnd(new Date(d.trial_end));
     } else {
-      // No subscription found — create one
       await supabase.from("subscriptions" as any).insert({
         user_id: user.id,
         plan: "basic",
@@ -158,7 +116,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const hasFeatureAccess = (feature: keyof PlanFeatures): boolean => {
     if (isGrandmaster) return true;
-    if (isTrial && !trialExpired) return true; // Trial users can preview all features
+    if (isTrial && !trialExpired) return true;
     return PLAN_FEATURES[plan][feature];
   };
 

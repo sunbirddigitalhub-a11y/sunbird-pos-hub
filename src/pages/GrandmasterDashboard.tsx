@@ -5,8 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
-const GRANDMASTER_EMAIL = "sunbirdgroup9@gmail.com";
-
 interface PlatformStats {
   totalUsers: number;
   activeUsers: number;
@@ -18,6 +16,7 @@ interface PlatformStats {
   totalRevenue: number;
   totalSales: number;
   totalTransactions: number;
+  totalBusinesses: number;
   recentSignups: { email: string; full_name: string; created_at: string }[];
   monthlySales: { month: string; total: number; count: number }[];
 }
@@ -33,28 +32,36 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 const GrandmasterDashboard = () => {
-  const { user, loading: authLoading } = useAuth();
+  const { user, isGrandmaster, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<PlatformStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!user || user.email !== GRANDMASTER_EMAIL) return;
+    if (!user || !isGrandmaster) return;
     fetchStats();
-  }, [user]);
+  }, [user, isGrandmaster]);
 
   const fetchStats = async () => {
     try {
-      const [profilesRes, subsRes, salesRes] = await Promise.all([
+      const [profilesRes, subsRes, salesRes, businessesRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("subscriptions" as any).select("*"),
         supabase.from("sales").select("total_amount, created_at"),
+        supabase.from("businesses" as any).select("id"),
       ]);
 
       const profiles = (profilesRes.data as any[]) || [];
       const subs = (subsRes.data as any[]) || [];
       const sales = (salesRes.data as any[]) || [];
+      const businesses = (businessesRes.data as any[]) || [];
 
-      const activeProfiles = profiles.filter((p: any) => p.status === "active");
+      // Filter out grandmaster from normal user counts
+      const normalProfiles = profiles.filter((p: any) => {
+        // Grandmaster profiles are excluded from business user counts
+        return true; // Show all for platform overview
+      });
+
+      const activeProfiles = normalProfiles.filter((p: any) => p.status === "active");
       const trialSubs = subs.filter((s: any) => s.is_trial);
       const basicSubs = subs.filter((s: any) => !s.is_trial && s.plan === "basic");
       const businessSubs = subs.filter((s: any) => !s.is_trial && s.plan === "business");
@@ -62,7 +69,6 @@ const GrandmasterDashboard = () => {
 
       const totalRevenue = sales.reduce((sum: number, s: any) => sum + (s.total_amount || 0), 0);
 
-      // Monthly sales aggregation (last 6 months)
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
       const now = new Date();
       const monthlySales: { month: string; total: number; count: number }[] = [];
@@ -77,13 +83,13 @@ const GrandmasterDashboard = () => {
         });
       }
 
-      const recentSignups = profiles
+      const recentSignups = normalProfiles
         .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
         .slice(0, 5)
         .map((p: any) => ({ email: p.email, full_name: p.full_name, created_at: p.created_at }));
 
       setStats({
-        totalUsers: profiles.length,
+        totalUsers: normalProfiles.length,
         activeUsers: activeProfiles.length,
         totalSubscriptions: subs.length,
         trialUsers: trialSubs.length,
@@ -93,6 +99,7 @@ const GrandmasterDashboard = () => {
         totalRevenue,
         totalSales: sales.length,
         totalTransactions: sales.length,
+        totalBusinesses: businesses.length,
         recentSignups,
         monthlySales,
       });
@@ -104,7 +111,7 @@ const GrandmasterDashboard = () => {
   };
 
   if (authLoading) return null;
-  if (!user || user.email !== GRANDMASTER_EMAIL) return <Navigate to="/dashboard" replace />;
+  if (!user || !isGrandmaster) return <Navigate to="/dashboard" replace />;
 
   if (loading || !stats) {
     return (
@@ -127,7 +134,7 @@ const GrandmasterDashboard = () => {
 
   const statCards = [
     { label: "Total Users", value: stats.totalUsers, icon: Users, color: "text-chart-3" },
-    { label: "Active Users", value: stats.activeUsers, icon: ShieldCheck, color: "text-success" },
+    { label: "Active Businesses", value: stats.totalBusinesses, icon: ShieldCheck, color: "text-success" },
     { label: "Trial Users", value: stats.trialUsers, icon: Clock, color: "text-warning" },
     { label: "Total Revenue", value: formatPrice(stats.totalRevenue), icon: CreditCard, color: "text-primary" },
     { label: "Total Transactions", value: stats.totalTransactions, icon: BarChart3, color: "text-chart-4" },
@@ -146,7 +153,6 @@ const GrandmasterDashboard = () => {
         </div>
       </div>
 
-      {/* Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {statCards.map((stat, i) => (
           <div key={stat.label} className="stat-card" style={{ animationDelay: `${i * 60}ms` }}>
@@ -159,9 +165,7 @@ const GrandmasterDashboard = () => {
         ))}
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Monthly Sales Chart */}
         <div className="lg:col-span-2 glass-card p-6">
           <h3 className="font-semibold text-[15px] mb-5 tracking-tight">Monthly Sales Volume</h3>
           <ResponsiveContainer width="100%" height={240}>
@@ -186,7 +190,6 @@ const GrandmasterDashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* Plan Distribution */}
         <div className="glass-card p-6">
           <h3 className="font-semibold text-[15px] mb-5 tracking-tight">Subscription Plans</h3>
           {planDistribution.length > 0 ? (
@@ -218,7 +221,6 @@ const GrandmasterDashboard = () => {
         </div>
       </div>
 
-      {/* Recent Signups */}
       <div className="glass-card overflow-hidden">
         <div className="px-6 py-4 border-b border-border/30">
           <h3 className="font-semibold text-[15px] tracking-tight">Recent Signups</h3>

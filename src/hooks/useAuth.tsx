@@ -11,6 +11,7 @@ interface Profile {
   email: string;
   phone: string | null;
   status: string;
+  business_id: string | null;
 }
 
 interface AuthContextType {
@@ -18,6 +19,8 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   role: AppRole | null;
+  businessId: string | null;
+  isGrandmaster: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: any }>;
@@ -35,6 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [businessId, setBusinessId] = useState<string | null>(null);
+  const [isGrandmaster, setIsGrandmaster] = useState(false);
   const [loading, setLoading] = useState(true);
   const inactivityTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -58,12 +63,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [resetInactivityTimer]);
 
   const fetchProfileAndRole = useCallback(async (userId: string) => {
-    const [profileRes, roleRes] = await Promise.all([
+    const [profileRes, roleRes, gmRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role").eq("user_id", userId).single(),
+      supabase.from("grandmasters" as any).select("id").eq("user_id", userId).maybeSingle(),
     ]);
-    if (profileRes.data) setProfile(profileRes.data as unknown as Profile);
+    if (profileRes.data) {
+      const p = profileRes.data as any;
+      setProfile(p as Profile);
+      setBusinessId(p.business_id || null);
+    }
     if (roleRes.data) setRole((roleRes.data as any).role as AppRole);
+    setIsGrandmaster(!!(gmRes.data));
   }, []);
 
   useEffect(() => {
@@ -75,6 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setProfile(null);
         setRole(null);
+        setBusinessId(null);
+        setIsGrandmaster(false);
       }
       setLoading(false);
     });
@@ -94,7 +107,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (!error) {
-      // Log login
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from("audit_logs").insert({
@@ -135,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdminOrSupervisor = () => role === "master_admin" || role === "supervisor";
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor }}>
+    <AuthContext.Provider value={{ user, session, profile, role, businessId, isGrandmaster, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor }}>
       {children}
     </AuthContext.Provider>
   );
