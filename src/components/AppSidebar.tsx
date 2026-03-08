@@ -65,7 +65,6 @@ const roleRestrictions: Record<string, AppRole[]> = {
   "/settings": ["master_admin"],
   "/staff-management": ["master_admin", "supervisor"],
   "/stores": ["master_admin"],
-  "/integrations": ["master_admin"],
 };
 
 const roleBadgeStyles: Record<AppRole, string> = {
