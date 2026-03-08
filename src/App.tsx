@@ -84,6 +84,11 @@ function AppRoutes() {
         <Route path="/reset-password" element={<Navigate to={defaultRoute} replace />} />
 
         {/* POS Routes — unchanged */}
+        <Route path="/grandmaster" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <GrandmasterDashboard />
+          </ProtectedRoute>
+        } />
         <Route path="/dashboard" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
             <Dashboard />

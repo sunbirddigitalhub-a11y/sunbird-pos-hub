@@ -104,6 +104,26 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3">
+        {isGrandmaster && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/grandmaster"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
+                      activeClassName="bg-primary/10 border border-primary/25"
+                    >
+                      <Crown className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
+                      <span className="flex-1">Platform Overview</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
         <PlanSwitcher />
         <SidebarGroup>
           <SidebarGroupContent>
