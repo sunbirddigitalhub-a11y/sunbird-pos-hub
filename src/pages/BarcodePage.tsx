@@ -546,6 +546,99 @@ export default function BarcodePage() {
           </Card>
         </TabsContent>
 
+
+        {/* ── LABELS TAB ── */}
+        <TabsContent value="labels" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Barcode Label Generator</CardTitle>
+              <CardDescription>
+                Preview and download barcode labels with real CODE128 barcodes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {productsWithBarcode.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Tag className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                  <p>No products with barcodes yet. Generate barcodes first.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {productsWithBarcode.map((p) => (
+                      <div
+                        key={p.id}
+                        className="border rounded-xl p-4 bg-card flex flex-col items-center gap-2 hover:border-primary/40 transition-colors"
+                      >
+                        <p className="text-sm font-semibold text-center truncate w-full">{p.name}</p>
+                        <div className="bg-white rounded-lg p-2">
+                          <BarcodePreview
+                            code={p.barcode!}
+                            width={1.8}
+                            height={45}
+                            fontSize={12}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{formatPrice(p.base_price)}</p>
+                        <div className="flex gap-2 w-full">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => copyBarcode(p.barcode!)}
+                          >
+                            <Copy className="h-3 w-3" /> Copy
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => {
+                              const svgStr = generateBarcodeSVG(p.barcode!, { width: 2, height: 60, fontSize: 14 });
+                              const blob = new Blob([svgStr], { type: "image/svg+xml" });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `barcode-${p.barcode}.svg`;
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            }}
+                          >
+                            <Download className="h-3 w-3" /> SVG
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => {
+                              const svgStr = generateBarcodeSVG(p.barcode!, { width: 2, height: 60, fontSize: 14 });
+                              const win = window.open("", "_blank");
+                              if (win) {
+                                win.document.write(`
+                                  <html><head><title>Label: ${p.name}</title></head>
+                                  <body style="margin:24px;text-align:center;font-family:sans-serif;">
+                                    <h3 style="margin:0 0 8px;">${p.name}</h3>
+                                    ${svgStr}
+                                    <p style="margin:8px 0 0;color:#555;">${formatPrice(p.base_price)}</p>
+                                    <script>setTimeout(()=>window.print(),400);<\/script>
+                                  </body></html>
+                                `);
+                                win.document.close();
+                              }
+                            }}
+                          >
+                            <Printer className="h-3 w-3" /> Print
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* ── LOOKUP TAB ── */}
         <TabsContent value="lookup" className="space-y-4">
           <Card>
