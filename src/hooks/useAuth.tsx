@@ -21,6 +21,7 @@ interface AuthContextType {
   role: AppRole | null;
   businessId: string | null;
   isGrandmaster: boolean;
+  onboardingCompleted: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: any }>;
