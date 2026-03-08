@@ -24,7 +24,6 @@ export interface PlanFeatures {
   staffManagement: boolean;
   stores: boolean;
   expenses: boolean;
-  integrations: boolean;
 }
 
 const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
