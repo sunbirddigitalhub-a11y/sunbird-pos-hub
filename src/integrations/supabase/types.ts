@@ -383,6 +383,9 @@ export type Database = {
           cash_sales: number
           cash_transactions: number
           closed_at: string | null
+          closed_by: string | null
+          closed_by_name: string | null
+          closed_by_role: string | null
           created_at: string
           id: string
           mobile_money_sales: number
@@ -390,6 +393,7 @@ export type Database = {
           notes: string | null
           physical_cash: number | null
           report_date: string
+          report_snapshot: Json | null
           split_sales: number
           split_transactions: number
           status: string
@@ -403,6 +407,9 @@ export type Database = {
           cash_sales?: number
           cash_transactions?: number
           closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
+          closed_by_role?: string | null
           created_at?: string
           id?: string
           mobile_money_sales?: number
@@ -410,6 +417,7 @@ export type Database = {
           notes?: string | null
           physical_cash?: number | null
           report_date: string
+          report_snapshot?: Json | null
           split_sales?: number
           split_transactions?: number
           status?: string
@@ -423,6 +431,9 @@ export type Database = {
           cash_sales?: number
           cash_transactions?: number
           closed_at?: string | null
+          closed_by?: string | null
+          closed_by_name?: string | null
+          closed_by_role?: string | null
           created_at?: string
           id?: string
           mobile_money_sales?: number
@@ -430,6 +441,7 @@ export type Database = {
           notes?: string | null
           physical_cash?: number | null
           report_date?: string
+          report_snapshot?: Json | null
           split_sales?: number
           split_transactions?: number
           status?: string
