@@ -88,6 +88,11 @@ function AppRoutes() {
             <GrandmasterDashboard />
           </ProtectedRoute>
         } />
+        <Route path="/subscriptions" element={
+          <ProtectedRoute allowedRoles={["master_admin"]}>
+            <SubscriptionManagement />
+          </ProtectedRoute>
+        } />
 
         {/* Core */}
         <Route path="/dashboard" element={
