@@ -61,7 +61,7 @@ const FEATURE_ROUTE_MAP: Record<string, keyof PlanFeatures> = {
   "/barcode": "barcode", "/users": "users", "/settings": "settings",
   "/suppliers": "suppliers", "/purchases": "purchases", "/invoices": "invoices",
   "/analytics": "analytics", "/staff-management": "staffManagement",
-  "/stores": "stores", "/expenses": "expenses", "/integrations": "integrations",
+  "/stores": "stores", "/expenses": "expenses",
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
