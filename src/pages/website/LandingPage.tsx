@@ -36,7 +36,18 @@ const advantages = [
 
 const LandingPage = () => {
   const [currency, setCurrency] = useState<"usd" | "ugx">("usd");
+  const { canInstall, isInstalled, install, showIOSPrompt } = usePWAInstall();
+  const [showIOSDialog, setShowIOSDialog] = useState(false);
 
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await install();
+    } else if (showIOSPrompt) {
+      setShowIOSDialog(true);
+    }
+  };
+
+  const showInstallButton = (canInstall || showIOSPrompt) && !isInstalled;
   return (
     <WebsiteLayout>
       {/* Hero */}
