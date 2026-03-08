@@ -129,6 +129,15 @@
   }
 }
 
+@layer base {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+}
+
 @layer utilities {
   .gold-gradient-text {
     background: linear-gradient(135deg, hsl(43, 72%, 58%), hsl(48, 80%, 68%));

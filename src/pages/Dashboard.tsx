@@ -157,16 +157,16 @@ const Dashboard = () => {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {statCards.map((stat, i) => (
-          <div key={stat.label} className="stat-card" style={{ animationDelay: `${i * 80}ms` }}>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-muted-foreground text-[12px] sm:text-[13px]">{stat.label}</span>
-              <div className="w-8 h-8 rounded-xl bg-secondary/80 flex items-center justify-center">
+          <div key={stat.label} className="stat-card min-h-[100px]" style={{ animationDelay: `${i * 80}ms` }}>
+            <div className="flex items-center justify-between mb-3 md:mb-4">
+              <span className="text-muted-foreground text-[11px] sm:text-[13px] leading-tight">{stat.label}</span>
+              <div className="w-8 h-8 rounded-xl bg-secondary/80 flex items-center justify-center shrink-0">
                 <stat.icon className="h-4 w-4 text-primary" />
               </div>
             </div>
-            <div className="flex items-end gap-2">
-              <span className="text-[18px] sm:text-[24px] font-semibold tracking-tight">{stat.value}</span>
-              <span className={`text-[11px] font-medium flex items-center gap-0.5 mb-1 ${stat.up ? "text-success" : "text-destructive"}`}>
+            <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
+              <span className="text-[16px] sm:text-[24px] font-semibold tracking-tight leading-none">{stat.value}</span>
+              <span className={`text-[10px] sm:text-[11px] font-medium flex items-center gap-0.5 ${stat.up ? "text-success" : "text-destructive"}`}>
                 {stat.up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                 {stat.change}
               </span>
