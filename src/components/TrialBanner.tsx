@@ -1,8 +1,11 @@
 import { Clock, Crown, Zap } from "lucide-react";
 import { useSubscription, PLAN_LABELS } from "@/hooks/useSubscription";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 export function TrialBanner() {
   const { isTrial, trialDaysLeft, trialExpired, isGrandmaster, plan } = useSubscription();
+  const navigate = useNavigate();
 
   if (isGrandmaster) return null;
 
@@ -16,7 +19,9 @@ export function TrialBanner() {
             You're on the {PLAN_LABELS[plan]}. Upgrade to unlock more features.
           </p>
         </div>
-        <Zap className="h-4 w-4 text-destructive shrink-0" />
+        <Button size="sm" onClick={() => navigate("/upgrade")} className="rounded-lg h-7 px-3 text-[11px] shrink-0">
+          <Zap className="h-3 w-3 mr-1" /> Upgrade
+        </Button>
       </div>
     );
   }

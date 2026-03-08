@@ -17,6 +17,14 @@ export interface PlanFeatures {
   barcode: boolean;
   users: boolean;
   settings: boolean;
+  suppliers: boolean;
+  purchases: boolean;
+  invoices: boolean;
+  analytics: boolean;
+  staffManagement: boolean;
+  stores: boolean;
+  expenses: boolean;
+  integrations: boolean;
 }
 
 const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
@@ -24,16 +32,22 @@ const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     dashboard: true, pos: true, inventory: false, products: true, sales: false,
     reports: false, zReport: false, outstanding: false, customers: false,
     barcode: true, users: false, settings: false,
+    suppliers: false, purchases: false, invoices: false, analytics: false,
+    staffManagement: false, stores: false, expenses: false, integrations: false,
   },
   business: {
     dashboard: true, pos: true, inventory: true, products: true, sales: true,
     reports: true, zReport: false, outstanding: true, customers: true,
     barcode: true, users: false, settings: false,
+    suppliers: true, purchases: true, invoices: true, analytics: false,
+    staffManagement: false, stores: false, expenses: true, integrations: false,
   },
   enterprise: {
     dashboard: true, pos: true, inventory: true, products: true, sales: true,
     reports: true, zReport: true, outstanding: true, customers: true,
     barcode: true, users: true, settings: true,
+    suppliers: true, purchases: true, invoices: true, analytics: true,
+    staffManagement: true, stores: true, expenses: true, integrations: true,
   },
 };
 
@@ -42,11 +56,22 @@ const FEATURE_ROUTE_MAP: Record<string, keyof PlanFeatures> = {
   "/products": "products", "/sales": "sales", "/reports": "reports",
   "/z-report": "zReport", "/outstanding": "outstanding", "/customers": "customers",
   "/barcode": "barcode", "/users": "users", "/settings": "settings",
+  "/suppliers": "suppliers", "/purchases": "purchases", "/invoices": "invoices",
+  "/analytics": "analytics", "/staff-management": "staffManagement",
+  "/stores": "stores", "/expenses": "expenses", "/integrations": "integrations",
 };
 
 export const PLAN_LABELS: Record<PlanType, string> = {
   basic: "Basic Plan", business: "Business Plan", enterprise: "Enterprise Plan",
 };
+
+export const PLAN_PRICES: Record<PlanType, { usd: number; ugx: number }> = {
+  basic: { usd: 10, ugx: 37000 },
+  business: { usd: 25, ugx: 92000 },
+  enterprise: { usd: 60, ugx: 220000 },
+};
+
+export { PLAN_FEATURES, FEATURE_ROUTE_MAP };
 
 interface SubscriptionContextType {
   plan: PlanType;
@@ -90,9 +115,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       setTrialEnd(new Date(d.trial_end));
     } else {
       await supabase.from("subscriptions" as any).insert({
-        user_id: user.id,
-        plan: "basic",
-        is_trial: true,
+        user_id: user.id, plan: "basic", is_trial: true,
       } as any);
       setPlan("basic");
       setIsTrial(true);

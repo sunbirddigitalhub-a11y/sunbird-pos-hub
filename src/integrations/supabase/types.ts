@@ -318,6 +318,8 @@ export type Database = {
           full_name: string
           id: string
           phone: string | null
+          referral_code: string | null
+          referred_by: string | null
           status: string
           updated_at: string
           user_id: string
@@ -329,6 +331,8 @@ export type Database = {
           full_name: string
           id?: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -340,6 +344,8 @@ export type Database = {
           full_name?: string
           id?: string
           phone?: string | null
+          referral_code?: string | null
+          referred_by?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -353,6 +359,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referrals: {
+        Row: {
+          created_at: string
+          id: string
+          referral_code: string
+          referred_email: string | null
+          referred_user_id: string | null
+          referrer_user_id: string
+          reward_type: string | null
+          reward_value: number | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          referral_code: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          referral_code?: string
+          referred_email?: string | null
+          referred_user_id?: string | null
+          referrer_user_id?: string
+          reward_type?: string | null
+          reward_value?: number | null
+          status?: string
+        }
+        Relationships: []
       }
       sale_items: {
         Row: {
