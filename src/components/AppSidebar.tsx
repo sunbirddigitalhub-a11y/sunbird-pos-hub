@@ -12,9 +12,12 @@ import {
   Settings,
   LogOut,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
+import { useSubscription } from "@/hooks/useSubscription";
+import { PlanSwitcher } from "@/components/PlanSwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +29,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import type { PlanFeatures } from "@/hooks/useSubscription";
 
 type AppRole = "master_admin" | "supervisor" | "staff";
 
@@ -34,21 +38,22 @@ interface NavItem {
   url: string;
   icon: any;
   roles: AppRole[];
+  feature?: keyof PlanFeatures;
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, roles: ["master_admin", "supervisor"] },
-  { title: "Point of Sale", url: "/pos", icon: ShoppingCart, roles: ["master_admin", "supervisor", "staff"] },
-  { title: "Inventory", url: "/inventory", icon: Globe, roles: ["master_admin", "supervisor"] },
-  { title: "Products", url: "/products", icon: Smartphone, roles: ["master_admin", "supervisor", "staff"] },
-  { title: "Sales", url: "/sales", icon: DollarSign, roles: ["master_admin", "supervisor"] },
-  { title: "Reports", url: "/reports", icon: BarChart3, roles: ["master_admin", "supervisor"] },
-  { title: "Z-Report", url: "/z-report", icon: ClipboardList, roles: ["master_admin", "supervisor"] },
-  { title: "Outstanding", url: "/outstanding", icon: AlertCircle, roles: ["master_admin", "supervisor"] },
-  { title: "Customers", url: "/customers", icon: BookOpen, roles: ["master_admin", "supervisor"] },
-  { title: "Barcode", url: "/barcode", icon: ScanBarcode, roles: ["master_admin", "supervisor", "staff"] },
-  { title: "Users", url: "/users", icon: UsersIcon, roles: ["master_admin"] },
-  { title: "Settings", url: "/settings", icon: Settings, roles: ["master_admin"] },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, roles: ["master_admin", "supervisor"], feature: "dashboard" },
+  { title: "Point of Sale", url: "/pos", icon: ShoppingCart, roles: ["master_admin", "supervisor", "staff"], feature: "pos" },
+  { title: "Inventory", url: "/inventory", icon: Globe, roles: ["master_admin", "supervisor"], feature: "inventory" },
+  { title: "Products", url: "/products", icon: Smartphone, roles: ["master_admin", "supervisor", "staff"], feature: "products" },
+  { title: "Sales", url: "/sales", icon: DollarSign, roles: ["master_admin", "supervisor"], feature: "sales" },
+  { title: "Reports", url: "/reports", icon: BarChart3, roles: ["master_admin", "supervisor"], feature: "reports" },
+  { title: "Z-Report", url: "/z-report", icon: ClipboardList, roles: ["master_admin", "supervisor"], feature: "zReport" },
+  { title: "Outstanding", url: "/outstanding", icon: AlertCircle, roles: ["master_admin", "supervisor"], feature: "outstanding" },
+  { title: "Customers", url: "/customers", icon: BookOpen, roles: ["master_admin", "supervisor"], feature: "customers" },
+  { title: "Barcode", url: "/barcode", icon: ScanBarcode, roles: ["master_admin", "supervisor", "staff"], feature: "barcode" },
+  { title: "Users", url: "/users", icon: UsersIcon, roles: ["master_admin"], feature: "users" },
+  { title: "Settings", url: "/settings", icon: Settings, roles: ["master_admin"], feature: "settings" },
 ];
 
 const roleBadgeStyles: Record<AppRole, string> = {
@@ -65,6 +70,7 @@ const roleLabels: Record<AppRole, string> = {
 
 export function AppSidebar() {
   const { profile, role, signOut } = useAuth();
+  const { hasFeatureAccess, isGrandmaster } = useSubscription();
 
   const visibleItems = navItems.filter((item) => role && item.roles.includes(role));
 
@@ -88,24 +94,34 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-3">
+        <PlanSwitcher />
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
-              {visibleItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-all duration-200"
-                      activeClassName="bg-primary/10 text-primary border border-primary/25"
-                    >
-                      <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
-                      <span>{item.title}</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {visibleItems.map((item) => {
+                const accessible = !item.feature || isGrandmaster || hasFeatureAccess(item.feature);
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink
+                        to={accessible ? item.url : "#"}
+                        end={item.url === "/"}
+                        className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 ${
+                          accessible
+                            ? "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                            : "text-muted-foreground/40 cursor-not-allowed"
+                        }`}
+                        activeClassName={accessible ? "bg-primary/10 text-primary border border-primary/25" : ""}
+                        onClick={(e: React.MouseEvent) => { if (!accessible) e.preventDefault(); }}
+                      >
+                        <item.icon className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
+                        <span className="flex-1">{item.title}</span>
+                        {!accessible && <Lock className="h-3.5 w-3.5 text-muted-foreground/40" />}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
