@@ -27,6 +27,7 @@ import GrandmasterDashboard from "./pages/GrandmasterDashboard";
 import UpgradePage from "./pages/UpgradePage";
 import ReferralPage from "./pages/ReferralPage";
 import ComingSoonPage from "./pages/ComingSoonPage";
+import SubscriptionManagement from "./pages/SubscriptionManagement";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
