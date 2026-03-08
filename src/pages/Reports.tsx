@@ -10,8 +10,6 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText } from "lucide-react";
 
 const monthlyData = [
   { month: "Jul", revenue: 42000000, profit: 8400000 },
