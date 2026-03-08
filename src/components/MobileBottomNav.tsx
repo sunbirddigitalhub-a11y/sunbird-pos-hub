@@ -51,7 +51,7 @@ export function MobileBottomNav() {
     { title: t.staff, path: "/staff-management", icon: UserCog, feature: "staffManagement" },
     { title: "Users", path: "/users", icon: UsersIcon, feature: "users" },
     { title: t.stores, path: "/stores", icon: Store, feature: "stores" },
-    { title: "Integrations", path: "/integrations", icon: Plug, feature: "integrations" },
+    
     { title: "Settings", path: "/settings", icon: Settings, feature: "settings" },
   ];
 
