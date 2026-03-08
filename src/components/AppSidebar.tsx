@@ -81,13 +81,14 @@ export function AppSidebar() {
   const { profile, role, isGrandmaster, signOut } = useAuth();
   const { hasFeatureAccess } = useSubscription();
 
-  // Group items by section, filtering by role
+  // Group items by section — show ALL items to business owners/supervisors
+  // Staff only sees Core + Tools; role-restricted items hidden for unauthorized roles
   const sections = navItems.reduce<Record<string, typeof navItems>>((acc, item) => {
-    // Check role restrictions
+    // Staff can only see Core + Tools sections
+    if (role === "staff" && !isGrandmaster && !["Core", "Tools"].includes(item.section)) return acc;
+    // Check specific role restrictions (e.g. /users only for master_admin)
     const allowedRoles = roleRestrictions[item.url];
     if (allowedRoles && role && !allowedRoles.includes(role) && !isGrandmaster) return acc;
-    // Staff can only see Core + Tools sections
-    if (role === "staff" && !["Core", "Tools"].includes(item.section)) return acc;
     if (!acc[item.section]) acc[item.section] = [];
     acc[item.section].push(item);
     return acc;
