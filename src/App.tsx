@@ -30,6 +30,12 @@ import ComingSoonPage from "./pages/ComingSoonPage";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import InvoicesPage from "./pages/InvoicesPage";
+import ExpensesPage from "./pages/ExpensesPage";
+import SuppliersPage from "./pages/SuppliersPage";
+import PurchasesPage from "./pages/PurchasesPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
+import StoresPage from "./pages/StoresPage";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
@@ -123,16 +129,12 @@ function AppRoutes() {
         } />
         <Route path="/invoices" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="invoices">
-              <ComingSoonPage title="Invoices" description="Generate and manage professional invoices for your customers." featureName="invoices" />
-            </FeatureLock>
+            <FeatureLock feature="invoices"><InvoicesPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/expenses" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="expenses">
-              <ComingSoonPage title="Expenses" description="Track business expenses and manage your spending." featureName="expenses" />
-            </FeatureLock>
+            <FeatureLock feature="expenses"><ExpensesPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/outstanding" element={
@@ -144,16 +146,12 @@ function AppRoutes() {
         {/* Supply Chain */}
         <Route path="/suppliers" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="suppliers">
-              <ComingSoonPage title="Suppliers" description="Manage your supplier network and track purchase orders." featureName="suppliers" />
-            </FeatureLock>
+            <FeatureLock feature="suppliers"><SuppliersPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/purchases" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="purchases">
-              <ComingSoonPage title="Purchases" description="Create and track purchase orders from your suppliers." featureName="purchases" />
-            </FeatureLock>
+            <FeatureLock feature="purchases"><PurchasesPage /></FeatureLock>
           </ProtectedRoute>
         } />
 
@@ -182,9 +180,7 @@ function AppRoutes() {
         {/* Management */}
         <Route path="/staff-management" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="staffManagement">
-              <ComingSoonPage title="Staff Management" description="Manage staff schedules, performance, and attendance tracking." featureName="staffManagement" />
-            </FeatureLock>
+            <FeatureLock feature="staffManagement"><StaffManagementPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/users" element={
@@ -194,9 +190,7 @@ function AppRoutes() {
         } />
         <Route path="/stores" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
-            <FeatureLock feature="stores">
-              <ComingSoonPage title="Stores & Branches" description="Manage multiple store locations and branch operations." featureName="stores" />
-            </FeatureLock>
+            <FeatureLock feature="stores"><StoresPage /></FeatureLock>
           </ProtectedRoute>
         } />
 
