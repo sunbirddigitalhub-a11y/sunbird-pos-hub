@@ -83,6 +83,39 @@ export type Database = {
         }
         Relationships: []
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          staff_member: string | null
+          staff_user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          staff_member?: string | null
+          staff_user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          staff_member?: string | null
+          staff_user_id?: string | null
+        }
+        Relationships: []
+      }
       inventory: {
         Row: {
           cost_price: number
