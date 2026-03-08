@@ -112,7 +112,7 @@ const CURRENCIES = [
 ];
 
 const OnboardingPage = () => {
-  const { user, businessId } = useAuth();
+  const { user, businessId, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
