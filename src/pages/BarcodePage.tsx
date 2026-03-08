@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import JsBarcode from "jsbarcode";
 import {
   ScanBarcode,
   Printer,
@@ -25,6 +27,8 @@ import {
   VolumeX,
   Tag,
   Trash2,
+  Download,
+  Eye,
 } from "lucide-react";
 
 interface Product {
@@ -53,6 +57,45 @@ const generateBarcode = (): string => {
 
 const formatPrice = (amount: number) =>
   `UGX ${amount.toLocaleString("en-UG")}`;
+
+// Generate barcode SVG string for a given code
+const generateBarcodeSVG = (code: string, opts?: { width?: number; height?: number; fontSize?: number; displayValue?: boolean }): string => {
+  try {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    JsBarcode(svg, code, {
+      format: "CODE128",
+      width: opts?.width ?? 2,
+      height: opts?.height ?? 50,
+      fontSize: opts?.fontSize ?? 14,
+      displayValue: opts?.displayValue ?? true,
+      margin: 5,
+      background: "#ffffff",
+      lineColor: "#000000",
+    });
+    return new XMLSerializer().serializeToString(svg);
+  } catch {
+    return "";
+  }
+};
+
+// Inline component to render a barcode SVG
+function BarcodePreview({ code, width, height, fontSize, displayValue, className }: {
+  code: string;
+  width?: number;
+  height?: number;
+  fontSize?: number;
+  displayValue?: boolean;
+  className?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (ref.current && code) {
+      const svgStr = generateBarcodeSVG(code, { width, height, fontSize, displayValue });
+      ref.current.innerHTML = svgStr;
+    }
+  }, [code, width, height, fontSize, displayValue]);
+  return <div ref={ref} className={className} />;
+}
 
 export default function BarcodePage() {
   const { toast } = useToast();
@@ -220,22 +263,28 @@ export default function BarcodePage() {
     }
 
     const sizes = {
-      small: { w: 120, h: 60, fontSize: 10 },
-      medium: { w: 200, h: 100, fontSize: 13 },
-      large: { w: 300, h: 150, fontSize: 16 },
+      small: { w: 160, h: 90, fontSize: 9, barcodeH: 30, barcodeW: 1.2 },
+      medium: { w: 240, h: 130, fontSize: 12, barcodeH: 45, barcodeW: 1.6 },
+      large: { w: 340, h: 180, fontSize: 15, barcodeH: 65, barcodeW: 2 },
     };
     const s = sizes[labelSize];
 
     const labelsHtml = toPrint
-      .flatMap((p) =>
-        Array.from({ length: printQty }, () => `
-          <div style="width:${s.w}px;height:${s.h}px;border:1px solid #333;padding:8px;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;margin:4px;font-family:monospace;text-align:center;">
+      .flatMap((p) => {
+        const svgStr = generateBarcodeSVG(p.barcode!, {
+          width: s.barcodeW,
+          height: s.barcodeH,
+          fontSize: s.fontSize,
+          displayValue: true,
+        });
+        return Array.from({ length: printQty }, () => `
+          <div style="width:${s.w}px;height:${s.h}px;border:1px solid #ccc;padding:8px;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;margin:4px;font-family:sans-serif;text-align:center;border-radius:6px;">
             <div style="font-size:${s.fontSize}px;font-weight:700;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:${s.w - 16}px;">${p.name}</div>
-            <div style="font-size:${s.fontSize + 4}px;letter-spacing:3px;font-weight:900;margin:4px 0;">${p.barcode}</div>
-            <div style="font-size:${s.fontSize - 2}px;color:#555;">${formatPrice(p.base_price)}</div>
+            ${svgStr}
+            <div style="font-size:${s.fontSize - 2}px;color:#555;margin-top:2px;">${formatPrice(p.base_price)}</div>
           </div>
-        `)
-      )
+        `);
+      })
       .join("");
 
     const win = window.open("", "_blank");
@@ -289,17 +338,20 @@ export default function BarcodePage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-4 h-11">
-          <TabsTrigger value="scan" className="gap-2 text-xs sm:text-sm">
+        <TabsList className="grid w-full grid-cols-5 h-11">
+          <TabsTrigger value="scan" className="gap-1.5 text-xs sm:text-sm">
             <ScanBarcode className="h-4 w-4" /> Scan
           </TabsTrigger>
-          <TabsTrigger value="generate" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="generate" className="gap-1.5 text-xs sm:text-sm">
             <QrCode className="h-4 w-4" /> Generate
           </TabsTrigger>
-          <TabsTrigger value="lookup" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="labels" className="gap-1.5 text-xs sm:text-sm">
+            <Tag className="h-4 w-4" /> Labels
+          </TabsTrigger>
+          <TabsTrigger value="lookup" className="gap-1.5 text-xs sm:text-sm">
             <Search className="h-4 w-4" /> Lookup
           </TabsTrigger>
-          <TabsTrigger value="print" className="gap-2 text-xs sm:text-sm">
+          <TabsTrigger value="print" className="gap-1.5 text-xs sm:text-sm">
             <Printer className="h-4 w-4" /> Print
           </TabsTrigger>
         </TabsList>
@@ -451,14 +503,19 @@ export default function BarcodePage() {
               )}
 
               {generatedBarcode && (
-                <div className="mt-4 p-4 rounded-xl border bg-secondary/40 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-1">Generated Barcode</p>
-                    <p className="text-xl font-mono font-bold tracking-widest">{generatedBarcode}</p>
+                <div className="mt-4 p-4 rounded-xl border bg-secondary/40 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Generated Barcode</p>
+                      <p className="text-xl font-mono font-bold tracking-widest">{generatedBarcode}</p>
+                    </div>
+                    <Button size="sm" variant="outline" onClick={() => copyBarcode(generatedBarcode)} className="gap-2">
+                      <Copy className="h-4 w-4" /> Copy
+                    </Button>
                   </div>
-                  <Button size="sm" variant="outline" onClick={() => copyBarcode(generatedBarcode)} className="gap-2">
-                    <Copy className="h-4 w-4" /> Copy
-                  </Button>
+                  <div className="bg-white rounded-lg p-3 flex justify-center">
+                    <BarcodePreview code={generatedBarcode} width={2} height={55} fontSize={14} />
+                  </div>
                 </div>
               )}
 
@@ -495,6 +552,99 @@ export default function BarcodePage() {
                     </Table>
                   </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
+        {/* ── LABELS TAB ── */}
+        <TabsContent value="labels" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Barcode Label Generator</CardTitle>
+              <CardDescription>
+                Preview and download barcode labels with real CODE128 barcodes
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {productsWithBarcode.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Tag className="h-10 w-10 mx-auto mb-2 opacity-40" />
+                  <p>No products with barcodes yet. Generate barcodes first.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {productsWithBarcode.map((p) => (
+                      <div
+                        key={p.id}
+                        className="border rounded-xl p-4 bg-card flex flex-col items-center gap-2 hover:border-primary/40 transition-colors"
+                      >
+                        <p className="text-sm font-semibold text-center truncate w-full">{p.name}</p>
+                        <div className="bg-white rounded-lg p-2">
+                          <BarcodePreview
+                            code={p.barcode!}
+                            width={1.8}
+                            height={45}
+                            fontSize={12}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{formatPrice(p.base_price)}</p>
+                        <div className="flex gap-2 w-full">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => copyBarcode(p.barcode!)}
+                          >
+                            <Copy className="h-3 w-3" /> Copy
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => {
+                              const svgStr = generateBarcodeSVG(p.barcode!, { width: 2, height: 60, fontSize: 14 });
+                              const blob = new Blob([svgStr], { type: "image/svg+xml" });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement("a");
+                              a.href = url;
+                              a.download = `barcode-${p.barcode}.svg`;
+                              a.click();
+                              URL.revokeObjectURL(url);
+                            }}
+                          >
+                            <Download className="h-3 w-3" /> SVG
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            className="flex-1 gap-1.5 text-xs"
+                            onClick={() => {
+                              const svgStr = generateBarcodeSVG(p.barcode!, { width: 2, height: 60, fontSize: 14 });
+                              const win = window.open("", "_blank");
+                              if (win) {
+                                win.document.write(`
+                                  <html><head><title>Label: ${p.name}</title></head>
+                                  <body style="margin:24px;text-align:center;font-family:sans-serif;">
+                                    <h3 style="margin:0 0 8px;">${p.name}</h3>
+                                    ${svgStr}
+                                    <p style="margin:8px 0 0;color:#555;">${formatPrice(p.base_price)}</p>
+                                    <script>setTimeout(()=>window.print(),400);<\/script>
+                                  </body></html>
+                                `);
+                                win.document.close();
+                              }
+                            }}
+                          >
+                            <Printer className="h-3 w-3" /> Print
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               )}
             </CardContent>
           </Card>
