@@ -55,7 +55,8 @@ const navItems: NavItem[] = [
   { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
 ];
 
-// Role-based visibility for certain items
+// Role-based visibility: which roles can SEE each item
+// master_admin sees everything; supervisor sees most; staff sees Core + Tools only
 const roleRestrictions: Record<string, AppRole[]> = {
   "/users": ["master_admin"],
   "/settings": ["master_admin"],
