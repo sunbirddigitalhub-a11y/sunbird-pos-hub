@@ -298,6 +298,56 @@ const ZReport = () => {
   const handleCloseDay = async () => {
     setClosing(true);
     try {
+      // Build full snapshot of today's data
+      const snapshot = {
+        sales: todaySales.map(s => ({
+          sale_number: s.sale_number,
+          customer_name: s.customer_name,
+          total_amount: s.total_amount,
+          payment_method: s.payment_method,
+          status: s.status,
+          notes: s.notes,
+          created_at: s.created_at,
+          items: s.items,
+        })),
+        expenses: expenses.map(e => ({
+          name: e.name,
+          category: e.category,
+          amount: e.amount,
+          description: e.description,
+          staff_member: e.staff_member,
+          created_at: e.created_at,
+        })),
+        inventory_activity: inventoryActivity.map((item: any) => ({
+          product_name: item.product_name,
+          imei: item.imei,
+          action: item.action,
+          quantity: item.quantity,
+          status: item.status,
+          time: item.updated_at || item.created_at,
+        })),
+        staff_activity: auditLogs.map(log => ({
+          action: log.action,
+          email: (log.details as any)?.email || null,
+          role: log.user_role,
+          time: log.created_at,
+          ip_address: log.ip_address,
+        })),
+        outstanding_balances: outstandingSales.map(s => ({
+          sale_number: s.sale_number,
+          customer_name: s.customer_name,
+          total_amount: s.total_amount,
+          amount_paid: parsePaid(s),
+          balance: parseBalance(s),
+          payment_method: s.payment_method,
+          created_at: s.created_at,
+          items: s.items.map(i => i.product_name),
+        })),
+        total_expenses: totalExpenses,
+        total_outstanding: totalOutstanding,
+        breakdown: breakdown,
+      };
+
       const reportData = {
         report_date: today,
         total_sales: totalSales,
@@ -314,6 +364,10 @@ const ZReport = () => {
         cash_difference: physicalCash ? Number(physicalCash) - systemCash : 0,
         status: "Closed",
         closed_at: new Date().toISOString(),
+        closed_by: profile?.user_id || null,
+        closed_by_name: profile?.full_name || null,
+        closed_by_role: role || null,
+        report_snapshot: snapshot,
       };
       const { error } = await supabase
         .from("z_reports" as any)
