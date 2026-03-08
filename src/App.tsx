@@ -22,6 +22,7 @@ import SettingsPage from "./pages/SettingsPage";
 import OutstandingBalances from "./pages/OutstandingBalances";
 import BarcodePage from "./pages/BarcodePage";
 import NotFound from "./pages/NotFound";
+import GrandmasterDashboard from "./pages/GrandmasterDashboard";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
