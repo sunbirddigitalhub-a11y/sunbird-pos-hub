@@ -51,10 +51,18 @@ import ResetPasswordPage from "./pages/website/ResetPasswordPage";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { user, role, loading } = useAuth();
+  const { user, role, loading, onboardingCompleted, isGrandmaster } = useAuth();
 
   if (loading) return null;
 
+  if (user && !onboardingCompleted && !isGrandmaster) {
+    return (
+      <Routes>
+        <Route path="/onboarding" element={<OnboardingPage />} />
+        <Route path="*" element={<Navigate to="/onboarding" replace />} />
+      </Routes>
+    );
+  }
   if (!user) {
     return (
       <Routes>
