@@ -33,7 +33,7 @@ const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     // Locked in Basic
     zReport: false, outstanding: false, users: false, settings: false,
     suppliers: false, purchases: false, invoices: false, analytics: false,
-    staffManagement: false, stores: false, expenses: false, integrations: false,
+    staffManagement: false, stores: false, expenses: false,
   },
   business: {
     dashboard: true, pos: true, products: true, inventory: true, customers: true,
@@ -42,7 +42,7 @@ const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     suppliers: true, purchases: true, invoices: true,
     staffManagement: true, users: true, settings: true,
     // Locked in Business
-    analytics: false, stores: false, integrations: false,
+    analytics: false, stores: false,
   },
   enterprise: {
     dashboard: true, pos: true, products: true, inventory: true, customers: true,
@@ -50,7 +50,7 @@ const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
     zReport: true, outstanding: true, expenses: true,
     suppliers: true, purchases: true, invoices: true,
     staffManagement: true, users: true, settings: true,
-    analytics: true, stores: true, integrations: true,
+    analytics: true, stores: true,
   },
 };
 
