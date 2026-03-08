@@ -2,6 +2,8 @@ import { ReactNode, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import { MobileBottomNav } from "./MobileBottomNav";
+import { MobileHeader } from "./MobileHeader";
 
 const navLinks = [
   { label: "Features", href: "/features" },
@@ -17,16 +19,18 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[hsl(220,15%,92%)]">
+      {/* Mobile sticky header (Dubizzle-style) */}
+      <MobileHeader />
+
+      {/* Desktop Navbar — hidden on mobile */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[hsl(220,15%,92%)] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/images/sunbird-logo.png" alt="SunbirdPOSHub" className="w-8 h-8 rounded-lg object-cover" />
             <span className="font-bold text-lg text-[hsl(220,15%,15%)]">SunbirdPOSHub</span>
           </Link>
 
-          {/* Desktop */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="flex items-center gap-1">
             {navLinks.map((l) => (
               <Link
                 key={l.href}
@@ -42,7 +46,7 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
 
-          <div className="hidden md:flex items-center gap-3">
+          <div className="flex items-center gap-3">
             <Link to="/login">
               <Button variant="ghost" className="text-sm font-medium text-[hsl(220,10%,35%)] hover:text-[hsl(220,15%,15%)]">
                 Login
@@ -54,43 +58,17 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
               </Button>
             </Link>
           </div>
-
-          {/* Mobile toggle */}
-          <button className="md:hidden p-2 text-[hsl(220,10%,35%)]" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
         </div>
-
-        {/* Mobile menu */}
-        {mobileOpen && (
-          <div className="md:hidden border-t border-[hsl(220,15%,92%)] bg-white px-4 pb-4">
-            {navLinks.map((l) => (
-              <Link
-                key={l.href}
-                to={l.href}
-                onClick={() => setMobileOpen(false)}
-                className="block py-3 text-sm font-medium text-[hsl(220,10%,35%)] hover:text-[hsl(211,80%,50%)]"
-              >
-                {l.label}
-              </Link>
-            ))}
-            <div className="flex flex-col gap-2 mt-3 pt-3 border-t border-[hsl(220,15%,92%)]">
-              <Link to="/login" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full">Login</Button>
-              </Link>
-              <Link to="/register" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-[hsl(211,80%,55%)] hover:bg-[hsl(211,80%,48%)] text-white">Start Free Trial</Button>
-              </Link>
-            </div>
-          </div>
-        )}
       </nav>
 
       {/* Content */}
-      <main>{children}</main>
+      <main className="mobile-main-content">{children}</main>
 
-      {/* Footer */}
-      <footer className="bg-[hsl(220,15%,8%)] text-[hsl(220,10%,55%)] py-16">
+      {/* Mobile Bottom Nav */}
+      <MobileBottomNav />
+
+      {/* Footer — hidden on mobile, shown on desktop */}
+      <footer className="hidden md:block bg-[hsl(220,15%,8%)] text-[hsl(220,10%,55%)] py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
             <div>
@@ -127,6 +105,13 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
             Sunbird Online Stores &copy; {new Date().getFullYear()} — sunbirdgroup.xyz
           </div>
         </div>
+      </footer>
+
+      {/* Mobile minimal footer */}
+      <footer className="md:hidden bg-[#F5F5F5] border-t border-[#E5E7EB] py-6 pb-24 text-center">
+        <p className="text-xs text-[#6B7280]">
+          Sunbird Online Stores &copy; {new Date().getFullYear()} — sunbirdgroup.xyz
+        </p>
       </footer>
     </div>
   );
