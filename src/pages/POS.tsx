@@ -444,15 +444,15 @@ const POS = () => {
   }, [lastSale]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
+    <div className="flex flex-col lg:flex-row gap-3 md:gap-5 h-[calc(100vh-6rem)] animate-fade-in">
       {/* Product Grid */}
       <div className="flex-1 flex flex-col min-w-0">
-        <h1 className="text-[28px] font-bold tracking-tight mb-5">Point of Sale</h1>
-        <div className="relative mb-4">
+        <h1 className="text-[22px] md:text-[28px] font-bold tracking-tight mb-3 md:mb-5">Point of Sale</h1>
+        <div className="relative mb-3 md:mb-4">
           <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             ref={searchInputRef}
-            placeholder="Search or scan barcode / IMEI / product name..."
+            placeholder="Search or scan barcode / IMEI..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
@@ -468,7 +468,7 @@ const POS = () => {
                 }
               }
             }}
-            className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
+            className="pl-10 h-12 md:h-11 bg-secondary/50 border-border/30 rounded-xl text-[15px] md:text-[14px] apple-ring"
             autoFocus
           />
         </div>
@@ -479,12 +479,11 @@ const POS = () => {
           </div>
         ) : available.length === 0 ? (
           <div className="flex-1 flex items-center justify-center text-muted-foreground relative">
-            {/* Watermark logo */}
             <img src="/images/sunbird-logo.png" alt="" className="absolute w-32 h-32 opacity-[0.06] pointer-events-none" />
             <p className="text-[14px] z-10">{search ? "No matching items found" : "No items in stock"}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-2 overflow-auto flex-1 pb-2 relative">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 md:gap-2 overflow-auto flex-1 pb-2 relative">
             {/* Watermark behind grid */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
               <img src="/images/sunbird-logo.png" alt="" className="w-40 h-40 opacity-[0.04]" />
@@ -493,19 +492,19 @@ const POS = () => {
               <button
                 key={item.id}
                 onClick={() => addToCart(item)}
-                className="glass-card p-2.5 text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] group relative z-10"
+                className="glass-card p-2 md:p-2.5 text-left transition-all duration-200 hover:scale-[1.03] active:scale-[0.97] group relative z-10 touch-manipulation"
               >
                 {item.image_url ? (
-                  <div className="w-full aspect-square rounded-lg overflow-hidden bg-secondary/40 mb-2">
-                    <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" />
+                  <div className="w-full aspect-square rounded-lg overflow-hidden bg-secondary/40 mb-1.5 md:mb-2">
+                    <img src={item.image_url} alt={item.product_name} className="w-full h-full object-cover" loading="lazy" />
                   </div>
                 ) : (
-                  <div className="w-full aspect-square rounded-lg bg-secondary/40 flex items-center justify-center mb-2">
-                    <Package className="h-6 w-6 text-muted-foreground/40" />
+                  <div className="w-full aspect-square rounded-lg bg-secondary/40 flex items-center justify-center mb-1.5 md:mb-2">
+                    <Package className="h-6 w-6 md:h-6 md:w-6 text-muted-foreground/40" />
                   </div>
                 )}
-                <p className="text-[11px] font-medium truncate leading-tight">{item.product_name}</p>
-                <p className="text-[12px] font-semibold text-primary mt-0.5">{formatPrice(item.selling_price)}</p>
+                <p className="text-[12px] md:text-[11px] font-medium truncate leading-tight">{item.product_name}</p>
+                <p className="text-[13px] md:text-[12px] font-semibold text-primary mt-0.5">{formatPrice(item.selling_price)}</p>
               </button>
             ))}
           </div>
@@ -513,15 +512,15 @@ const POS = () => {
       </div>
 
       {/* Cart Panel */}
-      <div className="w-full lg:w-[360px] glass-card flex flex-col shrink-0 overflow-hidden">
-        <div className="px-5 py-4 border-b border-border/20 flex items-center gap-2">
+      <div className="w-full lg:w-[360px] glass-card flex flex-col shrink-0 overflow-hidden max-h-[50vh] lg:max-h-none">
+        <div className="px-4 md:px-5 py-3 md:py-4 border-b border-border/20 flex items-center gap-2">
           <ShoppingCart className="h-4 w-4 text-primary" />
           <h2 className="font-semibold text-[14px] tracking-tight">Current Sale</h2>
           <span className="ml-auto text-[12px] text-muted-foreground">{cart.length} items</span>
         </div>
 
-        <div className="px-4 py-3 border-b border-border/20">
-          <button onClick={() => setShowCustomerDialog(true)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-left">
+        <div className="px-3 md:px-4 py-2 md:py-3 border-b border-border/20">
+          <button onClick={() => setShowCustomerDialog(true)} className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-left touch-manipulation min-h-[44px]">
             <User className="h-4 w-4 text-muted-foreground" />
             {selectedCustomer ? (
               <div className="flex-1 min-w-0">
@@ -532,16 +531,16 @@ const POS = () => {
               <span className="text-[13px] text-muted-foreground">Select customer (optional)</span>
             )}
             {selectedCustomer && (
-              <button onClick={(e) => { e.stopPropagation(); setSelectedCustomer(null); }} className="text-muted-foreground hover:text-foreground">
-                <X className="h-3.5 w-3.5" />
+              <button onClick={(e) => { e.stopPropagation(); setSelectedCustomer(null); }} className="text-muted-foreground hover:text-foreground p-1 touch-manipulation">
+                <X className="h-4 w-4" />
               </button>
             )}
           </button>
         </div>
 
-        <div className="flex-1 overflow-auto px-4 py-3 space-y-2">
+        <div className="flex-1 overflow-auto px-3 md:px-4 py-2 md:py-3 space-y-2">
           {cart.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-muted-foreground relative">
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground relative py-6 lg:py-0">
               <img src="/images/sunbird-logo.png" alt="" className="absolute w-20 h-20 opacity-[0.07] pointer-events-none" />
               <ShoppingCart className="h-8 w-8 mb-2 opacity-20 z-10" />
               <p className="text-[12px] z-10">Tap a product or scan a barcode</p>
@@ -554,37 +553,37 @@ const POS = () => {
                   <p className="text-[11px] text-muted-foreground font-mono">{item.imei}</p>
                   <p className="text-[12px] text-primary font-semibold mt-0.5">{formatPrice(item.price)}</p>
                 </div>
-                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive/60 hover:text-destructive shrink-0" onClick={() => removeFromCart(item.imei)}>
-                  <X className="h-3.5 w-3.5" />
+                <Button variant="ghost" size="icon" className="h-9 w-9 md:h-7 md:w-7 rounded-lg text-destructive/60 hover:text-destructive shrink-0 touch-manipulation" onClick={() => removeFromCart(item.imei)}>
+                  <X className="h-4 w-4 md:h-3.5 md:w-3.5" />
                 </Button>
               </div>
             ))
           )}
         </div>
 
-        <div className="p-5 border-t border-border/20 space-y-4">
+        <div className="p-4 md:p-5 border-t border-border/20 space-y-3 md:space-y-4">
           <div className="flex justify-between text-[16px] font-semibold">
             <span>Total ({cart.length})</span>
             <span className="text-primary">{formatPrice(subtotal)}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 md:grid-cols-2 gap-1.5 md:gap-2">
             {paymentMethods.map(({ id, icon: Icon, label }) => (
               <Button
                 key={id}
                 variant="outline"
                 onClick={() => setSelectedPayment(id)}
-                className={`gap-2 text-[12px] h-9 rounded-xl transition-all duration-200 ${
+                className={`gap-1.5 md:gap-2 text-[11px] md:text-[12px] h-10 md:h-9 rounded-xl transition-all duration-200 touch-manipulation ${
                   selectedPayment === id ? "border-primary/50 bg-primary/10 text-primary" : "border-border/30 hover:bg-secondary/60"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5" /> {label}
+                <Icon className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{label}</span><span className="sm:hidden">{label.split(" ")[0]}</span>
               </Button>
             ))}
           </div>
 
           <Button
-            className="w-full h-11 text-[14px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-50"
+            className="w-full h-14 md:h-11 text-[16px] md:text-[14px] font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-300 active:scale-[0.98] disabled:opacity-50 touch-manipulation"
             disabled={cart.length === 0 || processing}
             onClick={() => {
               if (cart.length === 1) {
