@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2,
   Calendar, Eye, MessageCircle, Image, Camera, Download, Plus, Trash2,
-  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck, ShoppingBag
+  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck, ShoppingBag, CreditCard
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
