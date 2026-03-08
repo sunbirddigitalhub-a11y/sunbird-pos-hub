@@ -169,6 +169,60 @@ export type Database = {
           },
         ]
       }
+      payment_history: {
+        Row: {
+          amount: number
+          created_at: string
+          customer_id: string | null
+          id: string
+          notes: string | null
+          payment_method: string
+          receipt_url: string | null
+          sale_id: string
+          staff_name: string | null
+          staff_user_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_url?: string | null
+          sale_id: string
+          staff_name?: string | null
+          staff_user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          customer_id?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string
+          receipt_url?: string | null
+          sale_id?: string
+          staff_name?: string | null
+          staff_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_history_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_history_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           barcode: string | null
