@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2,
   Calendar, Eye, MessageCircle, Image, Camera, Download, Plus, Trash2,
-  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck
+  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck, ShoppingBag
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,7 +28,7 @@ interface SaleRecord {
   notes: string | null;
   sold_by: string | null;
   created_at: string;
-  items: { product_name: string; imei: string | null; unit_price: number }[];
+  items: { product_name: string; imei: string | null; unit_price: number; quantity: number }[];
 }
 
 interface Expense {
@@ -79,6 +79,13 @@ interface ZReportRecord {
   report_snapshot: any | null;
 }
 
+interface ProductSale {
+  product_name: string;
+  quantity: number;
+  unit_price: number;
+  total_revenue: number;
+}
+
 const expenseCategories = ["General", "Rent", "Utilities", "Salaries", "Transport", "Supplies", "Marketing", "Repairs", "Other"];
 
 const ZReport = () => {
@@ -113,7 +120,6 @@ const ZReport = () => {
   const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ReceiptFile | null>(null);
 
-
   const today = format(new Date(), "yyyy-MM-dd");
 
   // ─── Data fetching ───────────────────────────
@@ -128,7 +134,7 @@ const ZReport = () => {
     const salesWithItems: SaleRecord[] = [];
     for (const sale of salesArr) {
       const { data: items } = await supabase
-        .from("sale_items" as any).select("product_name, imei, unit_price")
+        .from("sale_items" as any).select("product_name, imei, unit_price, quantity")
         .eq("sale_id", sale.id);
       salesWithItems.push({ ...sale, items: (items as any[]) || [] });
     }
@@ -159,34 +165,22 @@ const ZReport = () => {
   const fetchInventoryActivity = async () => {
     const startOfDay = `${today}T00:00:00`;
     const endOfDay = `${today}T23:59:59`;
-    // Inventory items added/updated today
     const { data: added } = await supabase
       .from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id")
       .gte("created_at", startOfDay).lte("created_at", endOfDay);
     const { data: updated } = await supabase
       .from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id")
       .gte("updated_at", startOfDay).lte("updated_at", endOfDay);
-
-    // Get product names
     const { data: products } = await supabase.from("products" as any).select("id, name");
     const productMap = new Map((products as any[] || []).map((p: any) => [p.id, p.name]));
-
     const allItems = new Map<string, any>();
     for (const item of (added as any[] || [])) {
-      allItems.set(item.id, {
-        ...item,
-        product_name: productMap.get(item.product_id) || "Unknown",
-        action: "Added",
-      });
+      allItems.set(item.id, { ...item, product_name: productMap.get(item.product_id) || "Unknown", action: "Added" });
     }
     for (const item of (updated as any[] || [])) {
       if (!allItems.has(item.id)) {
         const isNewToday = new Date(item.created_at).toISOString().slice(0, 10) === today;
-        allItems.set(item.id, {
-          ...item,
-          product_name: productMap.get(item.product_id) || "Unknown",
-          action: item.status === "Sold" ? "Sold" : isNewToday ? "Added" : "Updated",
-        });
+        allItems.set(item.id, { ...item, product_name: productMap.get(item.product_id) || "Unknown", action: item.status === "Sold" ? "Sold" : isNewToday ? "Added" : "Updated" });
       }
     }
     setInventoryActivity(Array.from(allItems.values()));
@@ -217,7 +211,6 @@ const ZReport = () => {
     finally { setLoadingImages(false); }
   };
 
-
   useEffect(() => {
     fetchTodaySales();
     fetchPastReports();
@@ -247,81 +240,71 @@ const ZReport = () => {
     const match = sale.notes?.match(/Balance:\s*([\d,]+)/);
     return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
   }, 0);
+  const netCashReceived = totalSales - totalOutstanding - totalExpenses;
+
+  // Sales by product aggregation
+  const productSales: ProductSale[] = (() => {
+    const map = new Map<string, ProductSale>();
+    for (const sale of todaySales) {
+      for (const item of sale.items) {
+        const key = item.product_name;
+        const existing = map.get(key);
+        const qty = item.quantity || 1;
+        if (existing) {
+          existing.quantity += qty;
+          existing.total_revenue += item.unit_price * qty;
+        } else {
+          map.set(key, { product_name: key, quantity: qty, unit_price: item.unit_price, total_revenue: item.unit_price * qty });
+        }
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => b.total_revenue - a.total_revenue);
+  })();
 
   // ─── Actions ─────────────────────────────────
   const handleCloseDay = async () => {
     setClosing(true);
     try {
-      // Build full snapshot of today's data
       const snapshot = {
         sales: todaySales.map(s => ({
-          sale_number: s.sale_number,
-          customer_name: s.customer_name,
-          total_amount: s.total_amount,
-          payment_method: s.payment_method,
-          status: s.status,
-          notes: s.notes,
-          created_at: s.created_at,
-          items: s.items,
+          sale_number: s.sale_number, customer_name: s.customer_name, total_amount: s.total_amount,
+          payment_method: s.payment_method, status: s.status, notes: s.notes, created_at: s.created_at, items: s.items,
         })),
         expenses: expenses.map(e => ({
-          name: e.name,
-          category: e.category,
-          amount: e.amount,
-          description: e.description,
-          staff_member: e.staff_member,
-          created_at: e.created_at,
+          name: e.name, category: e.category, amount: e.amount, description: e.description,
+          staff_member: e.staff_member, created_at: e.created_at,
         })),
         inventory_activity: inventoryActivity.map((item: any) => ({
-          product_name: item.product_name,
-          imei: item.imei,
-          action: item.action,
-          quantity: item.quantity,
-          status: item.status,
-          time: item.updated_at || item.created_at,
+          product_name: item.product_name, imei: item.imei, action: item.action,
+          quantity: item.quantity, status: item.status, time: item.updated_at || item.created_at,
         })),
         staff_activity: auditLogs.map(log => ({
-          action: log.action,
-          email: (log.details as any)?.email || null,
-          role: log.user_role,
-          time: log.created_at,
-          ip_address: log.ip_address,
+          action: log.action, email: (log.details as any)?.email || null,
+          role: log.user_role, time: log.created_at, ip_address: log.ip_address,
         })),
         outstanding_balances: outstandingSales.map(s => ({
-          sale_number: s.sale_number,
-          customer_name: s.customer_name,
-          total_amount: s.total_amount,
-          amount_paid: parsePaid(s),
-          balance: parseBalance(s),
-          payment_method: s.payment_method,
-          created_at: s.created_at,
-          items: s.items.map(i => i.product_name),
+          sale_number: s.sale_number, customer_name: s.customer_name, total_amount: s.total_amount,
+          amount_paid: parsePaid(s), balance: parseBalance(s), payment_method: s.payment_method,
+          created_at: s.created_at, items: s.items.map(i => i.product_name),
         })),
+        product_sales: productSales,
         total_expenses: totalExpenses,
         total_outstanding: totalOutstanding,
+        net_cash_received: netCashReceived,
         breakdown: breakdown,
       };
 
       const reportData = {
-        report_date: today,
-        total_sales: totalSales,
-        total_transactions: totalTxns,
-        cash_sales: breakdown[0].amount,
-        cash_transactions: breakdown[0].count,
-        mobile_money_sales: breakdown[1].amount,
-        mobile_money_transactions: breakdown[1].count,
-        bank_sales: breakdown[2].amount,
-        bank_transactions: breakdown[2].count,
-        split_sales: breakdown[3].amount,
-        split_transactions: breakdown[3].count,
+        report_date: today, total_sales: totalSales, total_transactions: totalTxns,
+        cash_sales: breakdown[0].amount, cash_transactions: breakdown[0].count,
+        mobile_money_sales: breakdown[1].amount, mobile_money_transactions: breakdown[1].count,
+        bank_sales: breakdown[2].amount, bank_transactions: breakdown[2].count,
+        split_sales: breakdown[3].amount, split_transactions: breakdown[3].count,
         physical_cash: physicalCash ? Number(physicalCash) : null,
         cash_difference: physicalCash ? Number(physicalCash) - systemCash : 0,
-        status: "Closed",
-        closed_at: new Date().toISOString(),
-        closed_by: profile?.user_id || null,
-        closed_by_name: profile?.full_name || null,
-        closed_by_role: role || null,
-        report_snapshot: snapshot,
+        status: "Closed", closed_at: new Date().toISOString(),
+        closed_by: profile?.user_id || null, closed_by_name: profile?.full_name || null,
+        closed_by_role: role || null, report_snapshot: snapshot,
       };
       const { error } = await supabase
         .from("z_reports" as any)
@@ -339,11 +322,8 @@ const ZReport = () => {
     setSavingExpense(true);
     try {
       const { error } = await supabase.from("expenses" as any).insert({
-        name: expName.trim(),
-        category: expCategory,
-        amount: Number(expAmount),
-        description: expDesc.trim() || null,
-        staff_member: profile?.full_name || null,
+        name: expName.trim(), category: expCategory, amount: Number(expAmount),
+        description: expDesc.trim() || null, staff_member: profile?.full_name || null,
         staff_user_id: profile?.user_id || null,
       } as any);
       if (error) throw error;
@@ -376,20 +356,226 @@ const ZReport = () => {
     } catch { toast({ title: "Error", description: "Could not capture screenshot", variant: "destructive" }); }
   }, [today]);
 
-  // PDF export
-  const handleExportPDF = useCallback(async () => {
-    if (!reportRef.current) return;
-    try {
-      const canvas = await html2canvas(reportRef.current, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false });
-      const imgData = canvas.toDataURL("image/png");
-      const pdf = new jsPDF("p", "mm", "a4");
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`ZReport_${today}.pdf`);
-      toast({ title: "PDF exported", description: "Report PDF downloaded" });
-    } catch { toast({ title: "Error", description: "Could not export PDF", variant: "destructive" }); }
-  }, [today]);
+  // ─── TEXT-BASED PDF EXPORT ──────────────────
+  const handleExportPDF = useCallback(() => {
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pw = pdf.internal.pageSize.getWidth();
+    const ph = pdf.internal.pageSize.getHeight();
+    const margin = 14;
+    const maxW = pw - margin * 2;
+    let y = margin;
+
+    const checkPage = (needed: number) => {
+      if (y + needed > ph - margin) { pdf.addPage(); y = margin; }
+    };
+
+    const drawLine = () => {
+      pdf.setDrawColor(200); pdf.line(margin, y, pw - margin, y); y += 3;
+    };
+
+    const heading = (text: string) => {
+      checkPage(14);
+      pdf.setFontSize(12); pdf.setFont("helvetica", "bold");
+      pdf.text(text, margin, y); y += 7;
+    };
+
+    const subText = (text: string, size = 9) => {
+      checkPage(8);
+      pdf.setFontSize(size); pdf.setFont("helvetica", "normal");
+      pdf.text(text, margin, y); y += 5;
+    };
+
+    const drawTable = (headers: string[], rows: string[][], colWidths: number[]) => {
+      const rowH = 6;
+      // Header
+      checkPage(rowH * 2);
+      pdf.setFontSize(8); pdf.setFont("helvetica", "bold");
+      pdf.setFillColor(240, 240, 240);
+      pdf.rect(margin, y - 4, maxW, rowH, "F");
+      let x = margin;
+      headers.forEach((h, i) => { pdf.text(h, x + 1, y); x += colWidths[i]; });
+      y += rowH;
+      // Rows
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(8);
+      rows.forEach((row) => {
+        checkPage(rowH);
+        x = margin;
+        row.forEach((cell, i) => {
+          const cellText = pdf.splitTextToSize(cell, colWidths[i] - 2);
+          pdf.text(cellText[0] || "", x + 1, y);
+          x += colWidths[i];
+        });
+        y += rowH;
+      });
+      y += 2;
+    };
+
+    // ── Title
+    pdf.setFontSize(16); pdf.setFont("helvetica", "bold");
+    pdf.text("SUNBIRD ONLINE STORES", pw / 2, y, { align: "center" }); y += 7;
+    pdf.setFontSize(11); pdf.setFont("helvetica", "normal");
+    pdf.text("End-of-Day Business Report", pw / 2, y, { align: "center" }); y += 6;
+    pdf.setFontSize(9);
+    pdf.text(`Date: ${format(new Date(), "dd MMMM yyyy")}`, pw / 2, y, { align: "center" }); y += 5;
+    pdf.text(`Generated by: ${profile?.full_name || "N/A"} (${role || "N/A"}) at ${format(new Date(), "HH:mm:ss")}`, pw / 2, y, { align: "center" }); y += 4;
+    drawLine();
+
+    // ── 1. Daily Sales Summary
+    heading("1. DAILY SALES SUMMARY");
+    const summaryRows = [
+      ["Total Sales", formatPrice(totalSales)],
+      ["Cash Sales", formatPrice(systemCash)],
+      ["Mobile Money Sales", formatPrice(breakdown[1].amount)],
+      ["Partial Payments", formatPrice(partialSales.reduce((s, x) => s + x.total_amount, 0))],
+      ["Outstanding Balances", formatPrice(totalOutstanding)],
+      ["Total Transactions", String(totalTxns)],
+    ];
+    summaryRows.forEach(([label, val]) => {
+      checkPage(6);
+      pdf.setFontSize(9); pdf.setFont("helvetica", "normal");
+      pdf.text(label, margin, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(val, pw - margin, y, { align: "right" });
+      y += 6;
+    });
+    y += 2; drawLine();
+
+    // ── 2. Detailed Sales
+    heading("2. DETAILED SALES");
+    if (todaySales.length === 0) {
+      subText("No sales recorded today.");
+    } else {
+      const cols2 = [28, 36, 28, 28, 28, 28];
+      drawTable(
+        ["Invoice", "Customer", "Payment", "Total", "Paid", "Balance"],
+        todaySales.map(s => [
+          s.sale_number, s.customer_name || "Walk-in", s.payment_method,
+          formatPrice(s.total_amount), formatPrice(parsePaid(s)), formatPrice(parseBalance(s))
+        ]),
+        cols2
+      );
+    }
+    drawLine();
+
+    // ── 3. Outstanding Balances
+    heading("3. OUTSTANDING BALANCES");
+    if (outstandingSales.length === 0) {
+      subText("No outstanding balances.");
+    } else {
+      const cols3 = [28, 36, 28, 28, 28, 28];
+      drawTable(
+        ["Invoice", "Customer", "Total", "Paid", "Balance", "Method"],
+        outstandingSales.map(s => [
+          s.sale_number, s.customer_name || "Walk-in",
+          formatPrice(s.total_amount), formatPrice(parsePaid(s)),
+          formatPrice(parseBalance(s)), s.payment_method
+        ]),
+        cols3
+      );
+      checkPage(8);
+      pdf.setFontSize(9); pdf.setFont("helvetica", "bold");
+      pdf.text("Total Outstanding Balance:", margin, y);
+      pdf.text(formatPrice(totalOutstanding), pw - margin, y, { align: "right" }); y += 6;
+    }
+    drawLine();
+
+    // ── 4. Sales by Product
+    heading("4. SALES BY PRODUCT");
+    if (productSales.length === 0) {
+      subText("No products sold today.");
+    } else {
+      const cols4 = [60, 22, 32, 32];
+      drawTable(
+        ["Product Name", "Qty Sold", "Unit Price", "Total Revenue"],
+        productSales.map(p => [p.product_name, String(p.quantity), formatPrice(p.unit_price), formatPrice(p.total_revenue)]),
+        cols4
+      );
+    }
+    drawLine();
+
+    // ── 5. Expenses
+    heading("5. EXPENSES");
+    if (expenses.length === 0) {
+      subText("No expenses recorded today.");
+    } else {
+      const cols5 = [36, 28, 28, 36, 22];
+      drawTable(
+        ["Name", "Category", "Amount", "Staff", "Time"],
+        expenses.map(e => [e.name, e.category, formatPrice(e.amount), e.staff_member || "—", e.created_at ? format(new Date(e.created_at), "HH:mm") : "—"]),
+        cols5
+      );
+      checkPage(8);
+      pdf.setFontSize(9); pdf.setFont("helvetica", "bold");
+      pdf.text("Total Daily Expenses:", margin, y);
+      pdf.text(formatPrice(totalExpenses), pw - margin, y, { align: "right" }); y += 6;
+    }
+    drawLine();
+
+    // ── 6. Inventory Activity
+    heading("6. INVENTORY ACTIVITY");
+    if (inventoryActivity.length === 0) {
+      subText("No inventory changes today.");
+    } else {
+      const cols6 = [46, 24, 22, 36, 22];
+      drawTable(
+        ["Product", "Action", "Qty", "IMEI", "Time"],
+        inventoryActivity.map((item: any) => [
+          item.product_name, item.action, String(item.quantity), item.imei || "—",
+          format(new Date(item.updated_at || item.created_at), "HH:mm")
+        ]),
+        cols6
+      );
+    }
+    drawLine();
+
+    // ── 7. Staff Login Activity
+    heading("7. STAFF LOGIN ACTIVITY");
+    const loginLogs = auditLogs.filter(l => l.action === "login" || l.action === "logout");
+    if (loginLogs.length === 0) {
+      subText("No staff activity recorded today.");
+    } else {
+      const cols7 = [48, 28, 36, 36];
+      drawTable(
+        ["Staff", "Role", "Action", "Time"],
+        loginLogs.map(l => [
+          (l.details as any)?.email || "—", l.user_role || "—", l.action,
+          format(new Date(l.created_at), "HH:mm:ss")
+        ]),
+        cols7
+      );
+    }
+    drawLine();
+
+    // ── 8. Daily Financial Summary
+    heading("8. DAILY FINANCIAL SUMMARY");
+    const finRows = [
+      ["Total Revenue", formatPrice(totalSales)],
+      ["Total Expenses", formatPrice(totalExpenses)],
+      ["Outstanding Balances", formatPrice(totalOutstanding)],
+      ["Net Cash Received", formatPrice(netCashReceived)],
+    ];
+    checkPage(30);
+    pdf.setFillColor(245, 245, 245);
+    pdf.rect(margin, y - 4, maxW, finRows.length * 7 + 4, "F");
+    finRows.forEach(([label, val]) => {
+      pdf.setFontSize(10); pdf.setFont("helvetica", label === "Net Cash Received" ? "bold" : "normal");
+      pdf.text(label, margin + 4, y);
+      pdf.setFont("helvetica", "bold");
+      pdf.text(val, pw - margin - 4, y, { align: "right" });
+      y += 7;
+    });
+    y += 4;
+    subText("Net Cash Received = Total Revenue - Outstanding Balances - Expenses", 7);
+    y += 4; drawLine();
+
+    // Footer
+    checkPage(20);
+    pdf.setFontSize(7); pdf.setFont("helvetica", "normal"); pdf.setTextColor(130);
+    pdf.text(`Report generated on ${format(new Date(), "dd MMM yyyy")} at ${format(new Date(), "HH:mm:ss")} by ${profile?.full_name || "N/A"} (${role || "N/A"})`, pw / 2, y, { align: "center" });
+
+    pdf.save(`ZReport_${today}.pdf`);
+    toast({ title: "PDF exported", description: "Complete daily report PDF downloaded" });
+  }, [today, todaySales, expenses, auditLogs, inventoryActivity, productSales, totalSales, totalExpenses, totalOutstanding, netCashReceived, breakdown, partialSales, outstandingSales, systemCash, totalTxns, profile, role]);
 
   const handlePrintReceipt = () => {
     if (!receiptRef.current) return;
@@ -410,7 +596,6 @@ const ZReport = () => {
     return match ? parseInt(match[1].replace(/,/g, "")) : sale.total_amount;
   };
 
-  // Permission check
   const canGenerateReport = role === "master_admin" || role === "supervisor";
 
   return (
@@ -443,6 +628,9 @@ const ZReport = () => {
             <TabsTrigger value="outstanding" className="rounded-lg text-[12px] gap-1.5 data-[state=active]:bg-background">
               <DollarSign className="h-3.5 w-3.5" /> Outstanding
             </TabsTrigger>
+            <TabsTrigger value="products" className="rounded-lg text-[12px] gap-1.5 data-[state=active]:bg-background">
+              <ShoppingBag className="h-3.5 w-3.5" /> By Product
+            </TabsTrigger>
             <TabsTrigger value="expenses" className="rounded-lg text-[12px] gap-1.5 data-[state=active]:bg-background">
               <TrendingUp className="h-3.5 w-3.5" /> Expenses
             </TabsTrigger>
@@ -466,12 +654,12 @@ const ZReport = () => {
               {[
                 { label: "Total Sales", value: formatPrice(totalSales), icon: DollarSign },
                 { label: "Cash Sales", value: formatPrice(systemCash), icon: DollarSign },
+                { label: "Mobile Money", value: formatPrice(breakdown[1].amount), icon: DollarSign },
                 { label: "Partial Sales", value: formatPrice(partialSales.reduce((s, x) => s + x.total_amount, 0)), icon: TrendingUp },
                 { label: "Outstanding", value: formatPrice(totalOutstanding), icon: AlertTriangle },
                 { label: "Total Expenses", value: formatPrice(totalExpenses), icon: TrendingUp },
                 { label: "Inventory Changes", value: String(inventoryActivity.length), icon: Package },
                 { label: "Transactions", value: String(totalTxns), icon: BarChart3 },
-                { label: "Staff Logins", value: String(auditLogs.filter(l => l.action === "login").length), icon: Users },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
                   <div className="flex items-center gap-2 mb-1">
@@ -515,6 +703,36 @@ const ZReport = () => {
               </div>
             </div>
 
+            {/* Daily Financial Summary */}
+            <div className="glass-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-border/20">
+                <h3 className="font-semibold text-[15px] tracking-tight">Daily Financial Summary</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <tbody>
+                    {[
+                      { label: "Total Revenue", value: formatPrice(totalSales), color: "text-primary" },
+                      { label: "Total Expenses", value: `-${formatPrice(totalExpenses)}`, color: "text-destructive" },
+                      { label: "Outstanding Balances", value: `-${formatPrice(totalOutstanding)}`, color: "text-destructive" },
+                    ].map((row) => (
+                      <tr key={row.label} className="border-b border-border/10">
+                        <td className="py-3 px-6 text-[13px] font-medium">{row.label}</td>
+                        <td className={`py-3 px-6 text-[13px] font-semibold text-right ${row.color}`}>{row.value}</td>
+                      </tr>
+                    ))}
+                    <tr className="bg-secondary/20">
+                      <td className="py-3 px-6 text-[14px] font-bold">Net Cash Received</td>
+                      <td className={`py-3 px-6 text-[14px] font-bold text-right ${netCashReceived >= 0 ? "text-primary" : "text-destructive"}`}>{formatPrice(netCashReceived)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-6 py-2 text-[11px] text-muted-foreground border-t border-border/10">
+                Net Cash Received = Total Revenue − Outstanding Balances − Expenses
+              </div>
+            </div>
+
             {/* Cash Reconciliation & Close */}
             <div className="glass-card p-6">
               <h3 className="font-semibold text-[15px] tracking-tight mb-4">Cash Reconciliation</h3>
@@ -541,7 +759,7 @@ const ZReport = () => {
                   </div>
                 )}
                 <Button variant="outline" disabled={totalTxns === 0} className="gap-2 rounded-xl h-11 text-[13px] border-primary/30 text-primary" onClick={() => {
-                  const text = `*SUNBIRD ONLINE STORES*\n*Z-REPORT — ${format(new Date(), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(totalSales)}\nTransactions: ${totalTxns}\n\n${breakdown.map(b => `${b.method}: ${formatPrice(b.amount)} (${b.count} txns)`).join("\n")}\n\nExpenses: ${formatPrice(totalExpenses)}\nOutstanding: ${formatPrice(totalOutstanding)}\n\nSystem Cash: ${formatPrice(systemCash)}${physicalCash ? `\nPhysical Cash: ${formatPrice(Number(physicalCash))}\nDiff: ${formatPrice(Math.abs(diff))} ${diff > 0 ? "(over)" : diff < 0 ? "(short)" : "(balanced)"}` : ""}\n\nGenerated by: ${profile?.full_name || "N/A"}`;
+                  const text = `*SUNBIRD ONLINE STORES*\n*Z-REPORT — ${format(new Date(), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(totalSales)}\nTransactions: ${totalTxns}\n\n${breakdown.map(b => `${b.method}: ${formatPrice(b.amount)} (${b.count} txns)`).join("\n")}\n\nExpenses: ${formatPrice(totalExpenses)}\nOutstanding: ${formatPrice(totalOutstanding)}\nNet Cash: ${formatPrice(netCashReceived)}\n\nSystem Cash: ${formatPrice(systemCash)}${physicalCash ? `\nPhysical Cash: ${formatPrice(Number(physicalCash))}\nDiff: ${formatPrice(Math.abs(diff))} ${diff > 0 ? "(over)" : diff < 0 ? "(short)" : "(balanced)"}` : ""}\n\nGenerated by: ${profile?.full_name || "N/A"}`;
                   window.open(`https://wa.me/256704811097?text=${encodeURIComponent(text)}`, "_blank");
                 }}>
                   <MessageCircle className="h-4 w-4" /> WhatsApp
@@ -564,24 +782,40 @@ const ZReport = () => {
             ) : todaySales.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-[14px]">No sales today</div>
             ) : (
-              <div className="space-y-3">
-                {todaySales.map((sale) => (
-                  <div key={sale.id} className="glass-card p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Receipt className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium">{sale.sale_number}</p>
-                      <p className="text-[11px] text-muted-foreground">
-                        {sale.customer_name || "Walk-in"} · {sale.payment_method} · {sale.status} · {format(new Date(sale.created_at), "HH:mm")}
-                      </p>
-                    </div>
-                    <p className="text-[14px] font-semibold text-primary shrink-0">{formatPrice(sale.total_amount)}</p>
-                    <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-lg" onClick={() => setSelectedReceipt(sale)}>
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+              <div className="glass-card overflow-hidden">
+                <div className="px-6 py-4 border-b border-border/20">
+                  <h3 className="font-semibold text-[15px] tracking-tight">Detailed Sales ({todaySales.length})</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/20">
+                        {["Invoice", "Customer", "Payment", "Total", "Paid", "Balance", "Time"].map((h) => (
+                          <th key={h} className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-4">{h}</th>
+                        ))}
+                        <th className="py-3 px-4"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {todaySales.map((sale) => (
+                        <tr key={sale.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/20">
+                          <td className="py-3 px-4 text-[12px] font-mono font-medium text-primary">{sale.sale_number}</td>
+                          <td className="py-3 px-4 text-[12px]">{sale.customer_name || "Walk-in"}</td>
+                          <td className="py-3 px-4 text-[12px]">{sale.payment_method}</td>
+                          <td className="py-3 px-4 text-[12px] font-semibold">{formatPrice(sale.total_amount)}</td>
+                          <td className="py-3 px-4 text-[12px] text-success">{formatPrice(parsePaid(sale))}</td>
+                          <td className="py-3 px-4 text-[12px] font-semibold text-destructive">{formatPrice(parseBalance(sale))}</td>
+                          <td className="py-3 px-4 text-[12px] text-muted-foreground">{format(new Date(sale.created_at), "HH:mm")}</td>
+                          <td className="py-3 px-4">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => setSelectedReceipt(sale)}>
+                              <Eye className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </TabsContent>
@@ -624,6 +858,44 @@ const ZReport = () => {
               <div className="px-6 py-3 bg-secondary/20 border-t border-border/20 flex justify-between text-[13px] font-semibold">
                 <span>Total Outstanding</span>
                 <span className="text-destructive">{formatPrice(totalOutstanding)}</span>
+              </div>
+            </div>
+          </TabsContent>
+
+          {/* ═══ SALES BY PRODUCT TAB ═══ */}
+          <TabsContent value="products" className="mt-4">
+            <div className="glass-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-border/20">
+                <h3 className="font-semibold text-[15px] tracking-tight">Sales by Product</h3>
+              </div>
+              {productSales.length === 0 ? (
+                <div className="text-center py-12 text-muted-foreground text-[14px]">No products sold today</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/20">
+                        {["Product Name", "Quantity Sold", "Unit Price", "Total Revenue"].map((h) => (
+                          <th key={h} className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-4">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {productSales.map((p) => (
+                        <tr key={p.product_name} className="border-b border-border/10 last:border-0">
+                          <td className="py-3 px-4 text-[12px] font-medium">{p.product_name}</td>
+                          <td className="py-3 px-4 text-[12px]">{p.quantity}</td>
+                          <td className="py-3 px-4 text-[12px] text-muted-foreground">{formatPrice(p.unit_price)}</td>
+                          <td className="py-3 px-4 text-[12px] font-semibold text-primary">{formatPrice(p.total_revenue)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <div className="px-6 py-3 bg-secondary/20 border-t border-border/20 flex justify-between text-[13px] font-semibold">
+                <span>Total Products Sold: {productSales.reduce((s, p) => s + p.quantity, 0)}</span>
+                <span className="text-primary">{formatPrice(productSales.reduce((s, p) => s + p.total_revenue, 0))}</span>
               </div>
             </div>
           </TabsContent>
@@ -925,8 +1197,10 @@ const ZReport = () => {
             const snapInventory = snap?.inventory_activity || [];
             const snapStaff = snap?.staff_activity || [];
             const snapOutstanding = snap?.outstanding_balances || [];
+            const snapProductSales = snap?.product_sales || [];
             const snapTotalExp = snap?.total_expenses || 0;
             const snapTotalOut = snap?.total_outstanding || 0;
+            const snapNetCash = snap?.net_cash_received ?? (selectedReport.total_sales - snapTotalOut - snapTotalExp);
             const r = selectedReport;
 
             return (
@@ -945,7 +1219,7 @@ const ZReport = () => {
                     <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Total Sales</p><p className="text-[16px] font-semibold text-primary">{formatPrice(r.total_sales)}</p></div>
                     <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Transactions</p><p className="text-[16px] font-semibold">{r.total_transactions}</p></div>
                     <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Expenses</p><p className="text-[16px] font-semibold text-destructive">{formatPrice(snapTotalExp)}</p></div>
-                    <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Outstanding</p><p className="text-[16px] font-semibold text-destructive">{formatPrice(snapTotalOut)}</p></div>
+                    <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Net Cash</p><p className={`text-[16px] font-semibold ${snapNetCash >= 0 ? "text-primary" : "text-destructive"}`}>{formatPrice(snapNetCash)}</p></div>
                   </div>
                   <table className="w-full text-[12px] mt-3">
                     <thead><tr className="border-b border-border/20"><th className="text-left py-2 text-muted-foreground font-medium">Method</th><th className="text-left py-2 text-muted-foreground font-medium">Txns</th><th className="text-left py-2 text-muted-foreground font-medium">Amount</th></tr></thead>
@@ -969,16 +1243,37 @@ const ZReport = () => {
                     <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Outstanding Balances ({snapOutstanding.length})</h4>
                     <div className="overflow-x-auto rounded-xl border border-border/20">
                       <table className="w-full text-[12px]">
-                        <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Invoice</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Customer</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Product(s)</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Total</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Paid</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Balance</th></tr></thead>
+                        <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Invoice</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Customer</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Total</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Paid</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Balance</th></tr></thead>
                         <tbody>
                           {snapOutstanding.map((s: any, i: number) => (
                             <tr key={i} className="border-b border-border/10 last:border-0">
                               <td className="py-2 px-3 font-mono text-primary">{s.sale_number}</td>
                               <td className="py-2 px-3">{s.customer_name || "Walk-in"}</td>
-                              <td className="py-2 px-3 text-muted-foreground">{(s.items || []).join(", ")}</td>
                               <td className="py-2 px-3 font-semibold">{formatPrice(s.total_amount)}</td>
                               <td className="py-2 px-3 text-success">{formatPrice(s.amount_paid)}</td>
                               <td className="py-2 px-3 font-semibold text-destructive">{formatPrice(s.balance)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Sales by Product */}
+                {snapProductSales.length > 0 && (
+                  <div>
+                    <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><ShoppingBag className="h-3.5 w-3.5 text-primary" /> Sales by Product ({snapProductSales.length})</h4>
+                    <div className="overflow-x-auto rounded-xl border border-border/20">
+                      <table className="w-full text-[12px]">
+                        <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Product</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Qty</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Unit Price</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Revenue</th></tr></thead>
+                        <tbody>
+                          {snapProductSales.map((p: any, i: number) => (
+                            <tr key={i} className="border-b border-border/10 last:border-0">
+                              <td className="py-2 px-3 font-medium">{p.product_name}</td>
+                              <td className="py-2 px-3">{p.quantity}</td>
+                              <td className="py-2 px-3 text-muted-foreground">{formatPrice(p.unit_price)}</td>
+                              <td className="py-2 px-3 font-semibold text-primary">{formatPrice(p.total_revenue)}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -1058,7 +1353,22 @@ const ZReport = () => {
                   </div>
                 )}
 
-                {/* Sales list */}
+                {/* Financial Summary */}
+                <div>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><BarChart3 className="h-3.5 w-3.5 text-primary" /> Daily Financial Summary</h4>
+                  <div className="rounded-xl border border-border/20 overflow-hidden">
+                    <table className="w-full text-[12px]">
+                      <tbody>
+                        <tr className="border-b border-border/10"><td className="py-2.5 px-3 font-medium">Total Revenue</td><td className="py-2.5 px-3 text-right font-semibold text-primary">{formatPrice(r.total_sales)}</td></tr>
+                        <tr className="border-b border-border/10"><td className="py-2.5 px-3 font-medium">Total Expenses</td><td className="py-2.5 px-3 text-right font-semibold text-destructive">-{formatPrice(snapTotalExp)}</td></tr>
+                        <tr className="border-b border-border/10"><td className="py-2.5 px-3 font-medium">Outstanding Balances</td><td className="py-2.5 px-3 text-right font-semibold text-destructive">-{formatPrice(snapTotalOut)}</td></tr>
+                        <tr className="bg-secondary/20"><td className="py-2.5 px-3 font-bold">Net Cash Received</td><td className={`py-2.5 px-3 text-right font-bold ${snapNetCash >= 0 ? "text-primary" : "text-destructive"}`}>{formatPrice(snapNetCash)}</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* All Sales list */}
                 {snapSales.length > 0 && (
                   <div>
                     <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><Receipt className="h-3.5 w-3.5 text-primary" /> All Sales ({snapSales.length})</h4>
@@ -1095,8 +1405,10 @@ const ZReport = () => {
                     html += `<h2 style="text-align:center">Sunbird Online Stores</h2><p style="text-align:center;color:#666;">End-of-Day Report — ${format(new Date(r.report_date), "dd MMMM yyyy")}</p>`;
                     html += `<p style="text-align:center;color:#666;font-size:11px;">Closed by: ${r.closed_by_name || "N/A"} (${r.closed_by_role || "N/A"}) at ${r.closed_at ? format(new Date(r.closed_at), "HH:mm") : "N/A"}</p><hr>`;
                     html += `<h3>Sales Summary</h3><table><tr><th>Method</th><th>Txns</th><th>Amount</th></tr><tr><td>Cash</td><td>${r.cash_transactions}</td><td>UGX ${r.cash_sales.toLocaleString()}</td></tr><tr><td>Mobile Money</td><td>${r.mobile_money_transactions}</td><td>UGX ${r.mobile_money_sales.toLocaleString()}</td></tr><tr><td>Bank</td><td>${r.bank_transactions}</td><td>UGX ${r.bank_sales.toLocaleString()}</td></tr><tr><td>Split</td><td>${r.split_transactions}</td><td>UGX ${r.split_sales.toLocaleString()}</td></tr><tr class="total"><td>Total</td><td>${r.total_transactions}</td><td>UGX ${r.total_sales.toLocaleString()}</td></tr></table>`;
+                    if (snapProductSales.length > 0) { html += `<hr><h3>Sales by Product</h3><table><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Revenue</th></tr>${snapProductSales.map((p: any) => `<tr><td>${p.product_name}</td><td>${p.quantity}</td><td>UGX ${p.unit_price.toLocaleString()}</td><td>UGX ${p.total_revenue.toLocaleString()}</td></tr>`).join("")}</table>`; }
                     if (snapExpenses.length > 0) { html += `<hr><h3>Expenses</h3><table><tr><th>Name</th><th>Category</th><th>Amount</th><th>Staff</th></tr>${snapExpenses.map((e: any) => `<tr><td>${e.name}</td><td>${e.category}</td><td>UGX ${e.amount.toLocaleString()}</td><td>${e.staff_member || "—"}</td></tr>`).join("")}<tr class="total"><td colspan="3">Total</td><td>UGX ${snapTotalExp.toLocaleString()}</td></tr></table>`; }
                     if (snapOutstanding.length > 0) { html += `<hr><h3>Outstanding Balances</h3><table><tr><th>Invoice</th><th>Customer</th><th>Total</th><th>Balance</th></tr>${snapOutstanding.map((s: any) => `<tr><td>${s.sale_number}</td><td>${s.customer_name || "Walk-in"}</td><td>UGX ${s.total_amount.toLocaleString()}</td><td>UGX ${s.balance.toLocaleString()}</td></tr>`).join("")}</table>`; }
+                    html += `<hr><h3>Financial Summary</h3><table><tr><td>Total Revenue</td><td>UGX ${r.total_sales.toLocaleString()}</td></tr><tr><td>Total Expenses</td><td>-UGX ${snapTotalExp.toLocaleString()}</td></tr><tr><td>Outstanding</td><td>-UGX ${snapTotalOut.toLocaleString()}</td></tr><tr class="total"><td>Net Cash Received</td><td>UGX ${snapNetCash.toLocaleString()}</td></tr></table>`;
                     html += `</body></html>`;
                     printWindow.document.write(html);
                     printWindow.document.close(); printWindow.print();
@@ -1104,7 +1416,7 @@ const ZReport = () => {
                     <Printer className="h-4 w-4" /> Print
                   </Button>
                   <Button variant="outline" className="flex-1 rounded-xl gap-2 border-primary/30 text-primary" onClick={() => {
-                    const text = `*SUNBIRD ONLINE STORES*\n*END-OF-DAY REPORT — ${format(new Date(r.report_date), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(r.total_sales)}\nTransactions: ${r.total_transactions}\n\nCash: ${formatPrice(r.cash_sales)} (${r.cash_transactions} txns)\nMobile Money: ${formatPrice(r.mobile_money_sales)} (${r.mobile_money_transactions} txns)\nBank: ${formatPrice(r.bank_sales)} (${r.bank_transactions} txns)\nSplit: ${formatPrice(r.split_sales)} (${r.split_transactions} txns)\n\n*Expenses:* ${formatPrice(snapTotalExp)}\n*Outstanding:* ${snapOutstanding.length} sale(s) — ${formatPrice(snapTotalOut)}\n*Inventory Changes:* ${snapInventory.length}\n*Staff Activities:* ${snapStaff.length}\n\nClosed by: ${r.closed_by_name || "N/A"} (${r.closed_by_role || "N/A"})`;
+                    const text = `*SUNBIRD ONLINE STORES*\n*END-OF-DAY REPORT — ${format(new Date(r.report_date), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(r.total_sales)}\nTransactions: ${r.total_transactions}\n\nCash: ${formatPrice(r.cash_sales)} (${r.cash_transactions} txns)\nMobile Money: ${formatPrice(r.mobile_money_sales)} (${r.mobile_money_transactions} txns)\nBank: ${formatPrice(r.bank_sales)} (${r.bank_transactions} txns)\nSplit: ${formatPrice(r.split_sales)} (${r.split_transactions} txns)\n\n*Expenses:* ${formatPrice(snapTotalExp)}\n*Outstanding:* ${snapOutstanding.length} sale(s) — ${formatPrice(snapTotalOut)}\n*Net Cash:* ${formatPrice(snapNetCash)}\n*Inventory Changes:* ${snapInventory.length}\n*Staff Activities:* ${snapStaff.length}\n\nClosed by: ${r.closed_by_name || "N/A"} (${r.closed_by_role || "N/A"})`;
                     window.open(`https://wa.me/256704811097?text=${encodeURIComponent(text)}`, "_blank");
                   }}>
                     <MessageCircle className="h-4 w-4" /> WhatsApp
