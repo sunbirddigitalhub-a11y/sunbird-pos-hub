@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import {
@@ -5,6 +6,9 @@ import {
   Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const formatPrice = (currency: "usd" | "ugx", usd: number, ugx: number) =>
+  currency === "usd" ? `$${usd}` : `UGX ${ugx.toLocaleString()}`;
 
 const features = [
   { icon: ShoppingCart, title: "Smart Sales System", desc: "Process sales quickly with barcode scanning, split payments, and real-time receipts." },
@@ -24,6 +28,8 @@ const advantages = [
 ];
 
 const LandingPage = () => {
+  const [currency, setCurrency] = useState<"usd" | "ugx">("usd");
+
   return (
     <WebsiteLayout>
       {/* Hero */}
@@ -163,19 +169,44 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[hsl(220,15%,15%)]">Simple, Transparent Pricing</h2>
-            <p className="mt-4 text-lg text-[hsl(220,10%,45%)]">No hidden fees. Start free, upgrade when ready.</p>
+            <p className="mt-4 text-lg text-[hsl(220,10%,45%)] mb-6">No hidden fees. Start free, upgrade when ready.</p>
+            {/* Currency Toggle */}
+            <div className="inline-flex items-center rounded-full bg-[hsl(220,15%,92%)] p-1">
+              <button
+                onClick={() => setCurrency("usd")}
+                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                  currency === "usd"
+                    ? "bg-[hsl(211,80%,55%)] text-white shadow-md"
+                    : "text-[hsl(220,10%,40%)] hover:text-[hsl(220,15%,15%)]"
+                }`}
+              >
+                🇺🇸 USD
+              </button>
+              <button
+                onClick={() => setCurrency("ugx")}
+                className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                  currency === "ugx"
+                    ? "bg-[hsl(211,80%,55%)] text-white shadow-md"
+                    : "text-[hsl(220,10%,40%)] hover:text-[hsl(220,15%,15%)]"
+                }`}
+              >
+                🇺🇬 UGX
+              </button>
+            </div>
           </div>
           <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
             {[
-              { name: "Starter", price: "$12", features: ["Basic POS", "1 User", "Basic Reports", "Email Support"] },
-              { name: "Business", price: "$29", popular: true, features: ["Inventory Management", "Customer Management", "Up to 3 Users", "Advanced Reports", "Priority Support"] },
-              { name: "Enterprise", price: "$79", features: ["Unlimited Users", "Multi-Store Support", "Full Analytics", "Priority Support", "Custom Integrations"] },
+              { name: "Starter", usd: 12, ugx: 45000, features: ["Basic POS", "1 User", "Basic Reports", "Email Support"] },
+              { name: "Business", usd: 29, ugx: 105000, popular: true, features: ["Inventory Management", "Customer Management", "Up to 3 Users", "Advanced Reports", "Priority Support"] },
+              { name: "Enterprise", usd: 79, ugx: 290000, features: ["Unlimited Users", "Multi-Store Support", "Full Analytics", "Priority Support", "Custom Integrations"] },
             ].map((plan) => (
               <div key={plan.name} className={`rounded-2xl p-8 ${plan.popular ? "bg-[hsl(211,80%,8%)] text-white border-2 border-[hsl(211,80%,50%)] shadow-xl shadow-[hsl(211,80%,50%,0.15)] scale-105" : "bg-white border border-[hsl(220,15%,90%)]"}`}>
                 {plan.popular && <span className="text-xs font-semibold uppercase tracking-wider text-[hsl(211,80%,60%)]">Most Popular</span>}
                 <h3 className={`text-xl font-bold mt-2 ${plan.popular ? "text-white" : "text-[hsl(220,15%,15%)]"}`}>{plan.name}</h3>
                 <div className="mt-4 mb-6">
-                  <span className={`text-4xl font-bold ${plan.popular ? "text-white" : "text-[hsl(220,15%,15%)]"}`}>{plan.price}</span>
+                  <span className={`text-4xl font-bold ${plan.popular ? "text-white" : "text-[hsl(220,15%,15%)]"}`}>
+                    {formatPrice(currency, plan.usd, plan.ugx)}
+                  </span>
                   <span className={`text-sm ${plan.popular ? "text-[hsl(211,30%,65%)]" : "text-[hsl(220,10%,45%)]"}`}>/month</span>
                 </div>
                 <ul className="space-y-3 mb-8">
