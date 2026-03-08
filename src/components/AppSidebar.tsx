@@ -7,6 +7,7 @@ import {
   BarChart3,
   ClipboardList,
   BookOpen,
+  ScanBarcode,
   Users as UsersIcon,
   Settings,
   LogOut,
@@ -45,6 +46,7 @@ const navItems: NavItem[] = [
   { title: "Z-Report", url: "/z-report", icon: ClipboardList, roles: ["master_admin", "supervisor"] },
   { title: "Outstanding", url: "/outstanding", icon: AlertCircle, roles: ["master_admin", "supervisor"] },
   { title: "Customers", url: "/customers", icon: BookOpen, roles: ["master_admin", "supervisor"] },
+  { title: "Barcode", url: "/barcode", icon: ScanBarcode, roles: ["master_admin", "supervisor", "staff"] },
   { title: "Users", url: "/users", icon: UsersIcon, roles: ["master_admin"] },
   { title: "Settings", url: "/settings", icon: Settings, roles: ["master_admin"] },
 ];
