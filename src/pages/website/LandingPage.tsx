@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import {
   ShoppingCart, BarChart3, Cloud, Users, Store, Shield,
-  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star, Download, Share
+  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star, Download, Share,
+  Smartphone, CreditCard, Laptop, Car, Home as HomeIcon, Shirt, Wrench, Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePWAInstall } from "@/hooks/usePWAInstall";
@@ -14,6 +15,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+
 const formatPrice = (currency: "usd" | "ugx", usd: number, ugx: number) =>
   currency === "usd" ? `$${usd}` : `UGX ${ugx.toLocaleString()}`;
 
@@ -34,6 +36,26 @@ const advantages = [
   { icon: Globe, title: "Scalable", desc: "From one register to hundreds — SunbirdPOSHub grows with you." },
 ];
 
+const mobileCategories = [
+  { icon: Smartphone, label: "Phones" },
+  { icon: Laptop, label: "Laptops" },
+  { icon: Car, label: "Cars" },
+  { icon: HomeIcon, label: "Property" },
+  { icon: Shirt, label: "Fashion" },
+  { icon: Wrench, label: "Services" },
+  { icon: Package, label: "Electronics" },
+  { icon: CreditCard, label: "More" },
+];
+
+const mobileListings = [
+  { title: "Samsung Galaxy A54", price: "UGX 950,000", location: "Kampala", time: "2 hours ago" },
+  { title: "iPhone 15 Pro Max 256GB", price: "UGX 4,200,000", location: "Entebbe", time: "5 hours ago" },
+  { title: "HP Laptop EliteBook 840", price: "UGX 1,800,000", location: "Jinja", time: "1 day ago" },
+  { title: "Google Pixel 8 Pro", price: "UGX 2,100,000", location: "Kampala", time: "3 hours ago" },
+  { title: "MacBook Air M2 2023", price: "UGX 5,500,000", location: "Kampala", time: "6 hours ago" },
+  { title: "Samsung Galaxy S24 Ultra", price: "UGX 3,800,000", location: "Mukono", time: "1 hour ago" },
+];
+
 const LandingPage = () => {
   const [currency, setCurrency] = useState<"usd" | "ugx">("usd");
   const { canInstall, isInstalled, install, showIOSPrompt } = usePWAInstall();
@@ -48,10 +70,96 @@ const LandingPage = () => {
   };
 
   const showInstallButton = (canInstall || showIOSPrompt) && !isInstalled;
+
   return (
     <WebsiteLayout>
+      {/* ===== MOBILE VIEW: Dubizzle-style marketplace ===== */}
+      <div className="md:hidden">
+        {/* Mobile Category Grid */}
+        <div className="bg-white">
+          <div className="mobile-category-grid">
+            {mobileCategories.map((cat) => (
+              <div key={cat.label} className="mobile-category-item">
+                <div className="mobile-category-icon">
+                  <cat.icon className="h-6 w-6 text-[#2563EB]" />
+                </div>
+                <span className="mobile-category-label">{cat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Featured Listings */}
+        <div className="bg-[#F5F5F5]">
+          <h2 className="mobile-section-title">Featured Listings</h2>
+          <div className="mobile-product-grid">
+            {mobileListings.map((item, i) => (
+              <Link to="/register" key={i} className="mobile-product-card">
+                <div className="mobile-product-image flex items-center justify-center bg-gradient-to-br from-[#E0E7FF] to-[#F0F7FF]">
+                  <Package className="h-10 w-10 text-[#93A3B8]" />
+                </div>
+                <div className="mobile-product-info">
+                  <div className="mobile-product-price">{item.price}</div>
+                  <div className="mobile-product-title">{item.title}</div>
+                  <div className="mobile-product-meta">
+                    <span>{item.location}</span>
+                    <span>{item.time}</span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile CTA Banner */}
+        <div className="bg-white px-4 py-8 text-center">
+          <h2 className="text-xl font-bold text-[#111111] mb-2">Start Your Business POS</h2>
+          <p className="text-sm text-[#6B7280] mb-5">Manage sales, inventory & staff from your phone.</p>
+          <div className="flex flex-col gap-3">
+            <Link to="/register">
+              <Button className="w-full mobile-marketplace-btn mobile-marketplace-btn-primary h-12 rounded-xl text-base font-semibold bg-[#2563EB] hover:bg-[#1D4ED8] text-white">
+                Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </Link>
+            <Link to="/login">
+              <Button variant="outline" className="w-full h-12 rounded-xl text-base font-semibold border-[#2563EB] text-[#2563EB] hover:bg-[#EFF6FF]">
+                Login to POS
+              </Button>
+            </Link>
+          </div>
+          {showInstallButton && (
+            <Button
+              onClick={handleInstallClick}
+              className="w-full mt-3 h-12 rounded-xl text-base font-semibold bg-[#059669] hover:bg-[#047857] text-white"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download App
+            </Button>
+          )}
+        </div>
+
+        {/* Mobile Features List */}
+        <div className="bg-[#F5F5F5] px-4 py-6">
+          <h2 className="mobile-section-title px-0">Why SunbirdPOSHub?</h2>
+          <div className="space-y-3">
+            {advantages.map((a) => (
+              <div key={a.title} className="flex items-start gap-3 bg-white rounded-xl p-4 border border-[#F3F4F6] shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center flex-shrink-0">
+                  <a.icon className="h-5 w-5 text-[#2563EB]" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-[#111111]">{a.title}</h3>
+                  <p className="text-xs text-[#6B7280] mt-0.5">{a.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ===== DESKTOP VIEW: Original design ===== */}
       {/* Hero */}
-      <section className="relative overflow-hidden py-20 md:py-32">
+      <section className="relative overflow-hidden py-20 md:py-32 hidden md:block">
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(211,80%,12%)] via-[hsl(211,70%,8%)] to-[hsl(220,60%,5%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,hsl(211,80%,55%,0.15),transparent_60%)]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -80,8 +188,6 @@ const LandingPage = () => {
               </Button>
             </Link>
           </div>
-
-          {/* Install App Button — visible on mobile/tablet */}
           {showInstallButton && (
             <div className="mt-6 flex justify-center">
               <Button
@@ -96,8 +202,8 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20 bg-[hsl(220,15%,97%)]">
+      {/* Features — Desktop only */}
+      <section id="features" className="py-20 bg-[hsl(220,15%,97%)] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[hsl(220,15%,15%)]">
@@ -121,8 +227,8 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* POS Preview */}
-      <section className="py-20 bg-gradient-to-b from-[hsl(211,80%,8%)] to-[hsl(220,60%,5%)]">
+      {/* POS Preview — Desktop only */}
+      <section className="py-20 bg-gradient-to-b from-[hsl(211,80%,8%)] to-[hsl(220,60%,5%)] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-white">
@@ -173,8 +279,8 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Why Choose */}
-      <section className="py-20 bg-white">
+      {/* Why Choose — Desktop only */}
+      <section className="py-20 bg-white hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[hsl(220,15%,15%)]">
@@ -195,13 +301,12 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="py-20 bg-[hsl(220,15%,97%)]">
+      {/* Pricing — Desktop only */}
+      <section id="pricing" className="py-20 bg-[hsl(220,15%,97%)] hidden md:block">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-[hsl(220,15%,15%)]">Simple, Transparent Pricing</h2>
             <p className="mt-4 text-lg text-[hsl(220,10%,45%)] mb-6">No hidden fees. Start free, upgrade when ready.</p>
-            {/* Currency Toggle */}
             <div className="inline-flex items-center rounded-full bg-[hsl(220,15%,92%)] p-1">
               <button
                 onClick={() => setCurrency("usd")}
@@ -259,8 +364,8 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-gradient-to-r from-[hsl(211,80%,45%)] to-[hsl(211,80%,55%)]">
+      {/* CTA — Desktop only */}
+      <section className="py-20 bg-gradient-to-r from-[hsl(211,80%,45%)] to-[hsl(211,80%,55%)] hidden md:block">
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Start Your Free POS Today</h2>
           <p className="text-lg text-[hsl(211,30%,90%)] mb-8">Join hundreds of businesses already using SunbirdPOSHub.</p>
@@ -271,6 +376,7 @@ const LandingPage = () => {
           </Link>
         </div>
       </section>
+
       {/* iOS Install Instructions Dialog */}
       <Dialog open={showIOSDialog} onOpenChange={setShowIOSDialog}>
         <DialogContent className="sm:max-w-md">
