@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera } from "lucide-react";
+import { Search, Plus, ShoppingCart, X, CreditCard, Smartphone, Banknote, Building2, User, Check, Loader2, Printer, MessageCircle, Camera, Barcode } from "lucide-react";
 import html2canvas from "html2canvas";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ interface InventoryItem {
   supplier: string | null;
   product_name?: string;
   category?: string;
+  barcode?: string | null;
 }
 
 interface CartItem {
@@ -80,6 +81,10 @@ const POS = () => {
   const [processCustomerPhone, setProcessCustomerPhone] = useState("");
   const [processPayment, setProcessPayment] = useState("Cash");
 
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const barcodeBufferRef = useRef("");
+  const barcodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const fetchInventory = async () => {
     const { data, error } = await supabase
       .from("inventory")
@@ -88,13 +93,14 @@ const POS = () => {
 
     if (error) { console.error("Error fetching inventory:", error); return; }
 
-    const { data: products } = await supabase.from("products").select("id, name, category");
+    const { data: products } = await supabase.from("products").select("id, name, category, barcode");
     const productMap = new Map((products as any[] || []).map((p: any) => [p.id, p]));
 
     const items = ((data as any[]) || []).map((item: any) => ({
       ...item,
       product_name: productMap.get(item.product_id)?.name || "Unknown",
       category: productMap.get(item.product_id)?.category || "Other",
+      barcode: productMap.get(item.product_id)?.barcode || null,
     }));
 
     setInventory(items);
@@ -108,12 +114,73 @@ const POS = () => {
 
   useEffect(() => { fetchInventory(); fetchCustomers(); }, []);
 
+  // Barcode scanner detection: scanners send characters rapidly followed by Enter
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only intercept when search input is focused or no input is focused
+      const active = document.activeElement;
+      const isInputFocused = active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA");
+      
+      // If a dialog is open, don't intercept
+      if (showProcessSale || showReceipt || showCustomerDialog || showNewCustomer) return;
+
+      if (e.key === "Enter" && barcodeBufferRef.current.length >= 5) {
+        e.preventDefault();
+        const scannedCode = barcodeBufferRef.current.trim();
+        barcodeBufferRef.current = "";
+        handleBarcodeScanned(scannedCode);
+        return;
+      }
+
+      // Only capture printable single characters (barcode scanner behavior)
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        barcodeBufferRef.current += e.key;
+        
+        if (barcodeTimerRef.current) clearTimeout(barcodeTimerRef.current);
+        barcodeTimerRef.current = setTimeout(() => {
+          // If buffer has accumulated but no Enter, it's manual typing - clear
+          barcodeBufferRef.current = "";
+        }, 100); // Scanners type within 50-100ms
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [inventory, cart, showProcessSale, showReceipt, showCustomerDialog, showNewCustomer]);
+
+  const handleBarcodeScanned = (code: string) => {
+    // Search inventory by barcode
+    const matchingItems = inventory.filter(
+      (item) => item.barcode === code && !cart.some((c) => c.imei === item.imei)
+    );
+
+    if (matchingItems.length > 0) {
+      const item = matchingItems[0];
+      addToCart(item);
+      toast({ title: "Item scanned", description: `${item.product_name} added to cart` });
+    } else {
+      // Also search by IMEI
+      const imeiMatch = inventory.find(
+        (item) => item.imei === code && !cart.some((c) => c.imei === item.imei)
+      );
+      if (imeiMatch) {
+        addToCart(imeiMatch);
+        toast({ title: "Item scanned", description: `${imeiMatch.product_name} added to cart` });
+      } else {
+        toast({ title: "Not found", description: `No in-stock item found for: ${code}`, variant: "destructive" });
+      }
+    }
+    // Clear search field
+    setSearch("");
+  };
+
   const cartImeis = new Set(cart.map((c) => c.imei));
   const available = useMemo(
     () => inventory.filter(
       (item) => !cartImeis.has(item.imei) &&
         (item.product_name?.toLowerCase().includes(search.toLowerCase()) ||
-          item.imei.toLowerCase().includes(search.toLowerCase()))
+          item.imei.toLowerCase().includes(search.toLowerCase()) ||
+          (item.barcode && item.barcode.toLowerCase().includes(search.toLowerCase())))
     ),
     [inventory, search, cartImeis]
   );
@@ -170,7 +237,6 @@ const POS = () => {
   const findOrCreateCustomer = async (name: string, phone: string): Promise<string | null> => {
     if (!name || name === "Walk-in Customer") return null;
     
-    // Try to find existing customer by phone or name
     let customerId: string | null = selectedCustomer?.id || null;
     
     if (!customerId && phone) {
@@ -209,7 +275,6 @@ const POS = () => {
     try {
       const saleNumber = `SL-${Date.now().toString(36).toUpperCase()}`;
       
-      // Find or create customer (especially important for partial payments)
       const customerId = await findOrCreateCustomer(custName, custPhone);
 
       const { data: sale, error: saleError } = await supabase
@@ -244,7 +309,6 @@ const POS = () => {
         await supabase.from("inventory").update({ status: "Sold" } as any).eq("id", item.inventory_id);
       }
 
-      // Update customer: add total_spent and set balance for partial payments
       if (customerId) {
         const { data: cust } = await supabase.from("customers").select("total_spent, balance").eq("id", customerId).single();
         if (cust) {
@@ -304,92 +368,100 @@ const POS = () => {
     (c) => c.name.toLowerCase().includes(customerSearch.toLowerCase()) || (c.phone && c.phone.includes(customerSearch))
   );
 
-  const generateReceiptHTML = () => {
+  const generateReceiptHTML = (paperWidth: "80mm" | "58mm" = "80mm") => {
     if (!lastSale) return "";
     const receiptId = lastSale.saleNumber.replace("SL-", "").slice(0, 8).toUpperCase();
     const warrantyDate = new Date(lastSale.date);
     warrantyDate.setMonth(warrantyDate.getMonth() + lastSale.warranty);
+    const maxWidth = paperWidth === "80mm" ? "72mm" : "48mm";
+    const fontSize = paperWidth === "80mm" ? "12px" : "10px";
+    const titleSize = paperWidth === "80mm" ? "16px" : "13px";
 
     return `
-      <div style="font-family: 'Georgia', serif; max-width: 500px; margin: 0 auto; padding: 30px; background: white; color: #222;">
-        <div style="text-align: center; margin-bottom: 20px;">
-          <img src="/images/sunbird-logo.png" style="width: 40px; height: 40px; border-radius: 8px; margin-bottom: 8px;" />
-          <h1 style="margin: 0; font-size: 28px; color: #C8982C; letter-spacing: 3px;">SUNBIRD</h1>
-          <p style="margin: 4px 0 0; font-size: 13px; color: #888;">Online Stores — Quality Phones from Dubai</p>
-          <h2 style="margin: 15px 0 0; font-size: 16px; letter-spacing: 4px; color: #333;">S A L E S   R E C E I P T</h2>
+      <div style="font-family: 'Courier New', monospace; max-width: ${maxWidth}; margin: 0 auto; padding: 8px; background: white; color: #000; font-size: ${fontSize}; line-height: 1.4;">
+        <div style="text-align: center; margin-bottom: 8px;">
+          <p style="margin: 0; font-size: ${titleSize}; font-weight: bold; letter-spacing: 2px;">SUNBIRD</p>
+          <p style="margin: 2px 0; font-size: ${fontSize};">Online Stores</p>
+          <p style="margin: 2px 0; font-size: ${fontSize};">Quality Phones from Dubai</p>
         </div>
-        <hr style="border: none; border-top: 2px solid #C8982C; margin: 15px 0;" />
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
         
-        <div style="margin: 20px 0;">
-          <p style="font-size: 11px; color: #C8982C; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">CUSTOMER DETAILS</p>
-          <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-            <span>Name</span><span style="font-weight: bold;">${lastSale.customer}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-            <span>Phone</span><span style="font-weight: bold;">${lastSale.customerPhone || "N/A"}</span>
-          </div>
-          <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-            <span>Date</span><span style="font-weight: bold;">${format(lastSale.date, "dd MMM yyyy, hh:mm a")}</span>
-          </div>
-        </div>
-        <hr style="border: none; border-top: 1px dashed #ccc; margin: 15px 0;" />
-
-        <div style="margin: 20px 0;">
-          <p style="font-size: 11px; color: #C8982C; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">PRODUCT DETAILS</p>
+        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Invoice:</b> ${lastSale.saleNumber}</p>
+        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Date:</b> ${format(lastSale.date, "dd/MM/yyyy hh:mm a")}</p>
+        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Customer:</b> ${lastSale.customer}</p>
+        <p style="margin: 4px 0; font-size: ${fontSize};"><b>Phone:</b> ${lastSale.customerPhone || "N/A"}</p>
+        
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+        <table style="width: 100%; border-collapse: collapse; font-size: ${fontSize};">
+          <tr style="border-bottom: 1px dashed #000;">
+            <th style="text-align: left; padding: 2px 0;">Item</th>
+            <th style="text-align: center; padding: 2px 0;">Qty</th>
+            <th style="text-align: right; padding: 2px 0;">Price</th>
+            <th style="text-align: right; padding: 2px 0;">Total</th>
+          </tr>
           ${lastSale.items.map((item) => `
-            <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-              <span>Device</span><span style="font-weight: bold;">${item.product_name}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-              <span>IMEI</span><span style="font-weight: bold;">${item.imei}</span>
-            </div>
+            <tr>
+              <td style="text-align: left; padding: 3px 0;">${item.product_name}</td>
+              <td style="text-align: center; padding: 3px 0;">1</td>
+              <td style="text-align: right; padding: 3px 0;">${item.price.toLocaleString()}</td>
+              <td style="text-align: right; padding: 3px 0;">${item.price.toLocaleString()}</td>
+            </tr>
+            <tr>
+              <td colspan="4" style="font-size: 10px; color: #555; padding: 0 0 3px;">IMEI: ${item.imei}</td>
+            </tr>
           `).join("")}
+        </table>
+        
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
+          <span>Subtotal:</span><span>${formatPrice(lastSale.total)}</span>
         </div>
-        <hr style="border: none; border-top: 1px dashed #ccc; margin: 15px 0;" />
-
-        <div style="margin: 20px 0;">
-          <p style="font-size: 11px; color: #C8982C; font-weight: bold; letter-spacing: 2px; margin-bottom: 10px;">PAYMENT</p>
-          <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-            <span>Payment Method</span><span style="font-weight: bold;">${lastSale.payment}</span>
-          </div>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold; font-size: ${paperWidth === "80mm" ? "14px" : "12px"};">
+          <span>TOTAL:</span><span>${formatPrice(lastSale.total)}</span>
         </div>
-        <hr style="border: none; border-top: 2px solid #C8982C; margin: 15px 0;" />
-
-        <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: #C8982C; margin: 15px 0;">
-          <span>Total Price</span><span>${formatPrice(lastSale.total)}</span>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
+          <span>Payment:</span><span>${lastSale.payment}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0;">
-          <span>Amount Paid</span><span style="font-weight: bold;">${formatPrice(lastSale.amountPaid)}</span>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0;">
+          <span>Amount Paid:</span><span>${formatPrice(lastSale.amountPaid)}</span>
         </div>
         ${lastSale.balance > 0 ? `
-        <div style="display: flex; justify-content: space-between; font-size: 14px; margin: 6px 0; color: #e65100;">
-          <span>Outstanding Balance</span><span style="font-weight: bold;">${formatPrice(lastSale.balance)}</span>
+        <div style="display: flex; justify-content: space-between; margin: 3px 0; font-weight: bold;">
+          <span>Balance Due:</span><span>${formatPrice(lastSale.balance)}</span>
         </div>
         ` : ""}
-
-        <div style="margin: 25px 0; padding: 15px; border: 1px solid #C8982C; border-radius: 10px; text-align: center; background: #FFFBF0;">
-          <p style="font-size: 11px; color: #C8982C; font-weight: bold; letter-spacing: 2px; margin: 0;">WARRANTY VALID UNTIL</p>
-          <p style="font-size: 20px; font-weight: bold; margin: 5px 0; color: #333;">${format(warrantyDate, "dd MMM yyyy")}</p>
-          <p style="font-size: 12px; color: #888; margin: 0;">${lastSale.warranty} months from purchase</p>
+        
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+        <div style="text-align: center; margin: 4px 0;">
+          <p style="margin: 2px 0;"><b>Warranty: ${lastSale.warranty} months</b></p>
+          <p style="margin: 2px 0;">Valid until: ${format(warrantyDate, "dd MMM yyyy")}</p>
         </div>
-
-        <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-        <div style="font-size: 11px; color: #666; line-height: 1.6;">
-          <p style="font-weight: bold; margin-bottom: 5px;">Terms & Conditions:</p>
-          <p>1. Warranty covers manufacturer defects only. Physical/water damage excluded.</p>
-          <p>2. Warranty void if device is opened by unauthorized personnel.</p>
-          <p>3. For installment purchases: device remains property of Sunbird Online Stores until full payment.</p>
-          <p>4. Late payments may attract additional charges.</p>
-          <p>5. Refunds are not available after 24 hours of purchase.</p>
-          <p>Receipt ID: ${receiptId}</p>
+        
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+        <div style="font-size: ${paperWidth === "80mm" ? "10px" : "9px"}; line-height: 1.3; margin: 4px 0;">
+          <p style="margin: 2px 0;">Terms & Conditions:</p>
+          <p style="margin: 1px 0;">1. Warranty covers manufacturer defects only.</p>
+          <p style="margin: 1px 0;">2. Physical/water damage excluded.</p>
+          <p style="margin: 1px 0;">3. Warranty void if opened by unauthorized personnel.</p>
+          <p style="margin: 1px 0;">4. No refunds after 24 hours.</p>
         </div>
-
-        <div style="text-align: center; margin-top: 25px;">
-          <p style="font-size: 16px; color: #C8982C; font-weight: bold;">Thank you for choosing Sunbird! 🐦</p>
-          <p style="font-size: 12px; color: #888;">📞 Contact us for support</p>
+        
+        <div style="border-top: 1px dashed #000; margin: 6px 0;"></div>
+        <div style="text-align: center; margin: 8px 0;">
+          <p style="margin: 2px 0; font-weight: bold;">Thank you for shopping with us!</p>
+          <p style="margin: 2px 0;">Receipt #${receiptId}</p>
         </div>
       </div>
     `;
+  };
+
+  const handlePrintReceipt = (paperWidth: "80mm" | "58mm" = "80mm") => {
+    const html = generateReceiptHTML(paperWidth);
+    const w = window.open("", "_blank", "width=400,height=700");
+    if (!w) return;
+    w.document.write(`<html><head><title>Receipt</title><style>@page { margin: 0; } body { margin: 0; padding: 0; } @media print { body { width: ${paperWidth}; } }</style></head><body>${html}</body></html>`);
+    w.document.close();
+    setTimeout(() => w.print(), 300);
   };
 
   const sendReceiptWhatsApp = () => {
@@ -401,11 +473,9 @@ const POS = () => {
     window.open(`https://wa.me/256704811097?text=${encoded}`, "_blank");
   };
 
-  // Compute remaining balance for Process Sale dialog
   const processBalance = Math.max(0, (Number(salePrice) || 0) - (Number(amountPaid) || 0));
 
   const receiptRef = useRef<HTMLDivElement>(null);
-
   const [savingScreenshot, setSavingScreenshot] = useState(false);
 
   const captureAndUploadReceipt = useCallback(async () => {
@@ -440,19 +510,34 @@ const POS = () => {
     }
   }, [lastSale]);
 
-  // No auto-capture — user clicks the camera button manually
-
   return (
     <div className="flex flex-col lg:flex-row gap-5 h-[calc(100vh-6rem)] animate-fade-in">
       {/* Product Grid */}
       <div className="flex-1 flex flex-col min-w-0">
         <h1 className="text-[28px] font-bold tracking-tight mb-5">Point of Sale</h1>
         <div className="relative mb-4">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Barcode className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Scan IMEI or search by brand/model..."
+            ref={searchInputRef}
+            placeholder="Search or scan barcode / IMEI / product name..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && search.trim().length >= 3) {
+                e.preventDefault();
+                // Check if search matches a barcode or IMEI exactly
+                const exactMatch = inventory.find(
+                  (item) =>
+                    !cart.some((c) => c.imei === item.imei) &&
+                    (item.barcode === search.trim() || item.imei === search.trim())
+                );
+                if (exactMatch) {
+                  addToCart(exactMatch);
+                  setSearch("");
+                  toast({ title: "Item added", description: `${exactMatch.product_name} added to cart` });
+                }
+              }
+            }}
             className="pl-10 h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
             autoFocus
           />
@@ -479,6 +564,11 @@ const POS = () => {
                 </div>
                 <p className="text-[13px] font-medium truncate">{item.product_name}</p>
                 <p className="text-[11px] text-muted-foreground font-mono mt-1">{item.imei}</p>
+                {item.barcode && (
+                  <p className="text-[10px] text-muted-foreground font-mono mt-0.5 flex items-center gap-1">
+                    <Barcode className="h-3 w-3" /> {item.barcode}
+                  </p>
+                )}
                 <p className="text-[14px] font-semibold text-primary mt-2">{formatPrice(item.selling_price)}</p>
               </button>
             ))}
@@ -517,7 +607,7 @@ const POS = () => {
           {cart.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <ShoppingCart className="h-10 w-10 mb-3 opacity-20" />
-              <p className="text-[13px]">Tap a product to add it</p>
+              <p className="text-[13px]">Tap a product or scan a barcode</p>
             </div>
           ) : (
             cart.map((item) => (
@@ -614,7 +704,6 @@ const POS = () => {
                 </div>
               </div>
 
-              {/* Balance indicator */}
               {processBalance > 0 && (
                 <div className="p-3 rounded-xl bg-warning/10 border border-warning/20 flex justify-between items-center">
                   <span className="text-[12px] text-warning font-medium uppercase tracking-wider">Outstanding Balance</span>
@@ -717,16 +806,16 @@ const POS = () => {
                 <Button
                   variant="outline"
                   className="flex-1 rounded-xl gap-2 border-border/30"
-                  onClick={() => {
-                    const html = generateReceiptHTML();
-                    const w = window.open("", "_blank", "width=600,height=900");
-                    if (!w) return;
-                    w.document.write(`<html><head><title>Receipt</title></head><body style="margin:0;padding:0;">${html}</body></html>`);
-                    w.document.close();
-                    w.print();
-                  }}
+                  onClick={() => handlePrintReceipt("80mm")}
                 >
-                  <Printer className="h-4 w-4" /> Print
+                  <Printer className="h-4 w-4" /> 80mm
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex-1 rounded-xl gap-2 border-border/30"
+                  onClick={() => handlePrintReceipt("58mm")}
+                >
+                  <Printer className="h-4 w-4" /> 58mm
                 </Button>
                 <Button
                   variant="outline"
@@ -735,14 +824,14 @@ const POS = () => {
                   disabled={savingScreenshot}
                 >
                   {savingScreenshot ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                  {savingScreenshot ? "Saving..." : "📷 Save"}
+                  {savingScreenshot ? "..." : "📷"}
                 </Button>
                 <Button
                   variant="outline"
                   className="flex-1 rounded-xl gap-2 border-primary/30 text-primary"
                   onClick={sendReceiptWhatsApp}
                 >
-                  <MessageCircle className="h-4 w-4" /> WhatsApp
+                  <MessageCircle className="h-4 w-4" />
                 </Button>
               </div>
               <Button className="w-full rounded-xl bg-primary text-primary-foreground" onClick={() => setShowReceipt(false)}>
