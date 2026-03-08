@@ -10,8 +10,6 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { MessageSquare, FileText } from "lucide-react";
 
 const monthlyData = [
   { month: "Jul", revenue: 42000000, profit: 8400000 },
@@ -45,16 +43,6 @@ const Reports = () => {
         <div>
           <h1 className="text-[28px] font-bold tracking-tight">Reports</h1>
           <p className="text-muted-foreground text-[14px] mt-1">Business analytics & daily accountability</p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="gap-2 border-border/30 rounded-xl h-10 text-[13px]">
-            <FileText className="h-4 w-4" />
-            Z-Report
-          </Button>
-          <Button className="gap-2 bg-success text-success-foreground hover:bg-success/90 rounded-xl h-10 text-[13px] font-semibold">
-            <MessageSquare className="h-4 w-4" />
-            WhatsApp Summary
-          </Button>
         </div>
       </div>
 
