@@ -21,6 +21,17 @@ import SettingsPage from "./pages/SettingsPage";
 import OutstandingBalances from "./pages/OutstandingBalances";
 import NotFound from "./pages/NotFound";
 
+// Website pages
+import LandingPage from "./pages/website/LandingPage";
+import FeaturesPage from "./pages/website/FeaturesPage";
+import PricingPage from "./pages/website/PricingPage";
+import AboutPage from "./pages/website/AboutPage";
+import ContactPage from "./pages/website/ContactPage";
+import IndustriesPage from "./pages/website/IndustriesPage";
+import RegisterPage from "./pages/website/RegisterPage";
+import ForgotPasswordPage from "./pages/website/ForgotPasswordPage";
+import ResetPasswordPage from "./pages/website/ResetPasswordPage";
+
 const queryClient = new QueryClient();
 
 function AppRoutes() {
@@ -31,20 +42,46 @@ function AppRoutes() {
   if (!user) {
     return (
       <Routes>
+        {/* Marketing website */}
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/features" element={<FeaturesPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/industries" element={<IndustriesPage />} />
+
+        {/* Auth */}
         <Route path="/login" element={<LoginPage />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+
+        {/* Catch-all for unauthenticated */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     );
   }
 
   // Staff defaults to POS
-  const defaultRoute = role === "staff" ? "/pos" : "/";
+  const defaultRoute = role === "staff" ? "/pos" : "/dashboard";
 
   return (
     <AppLayout>
       <Routes>
+        {/* Redirect marketing/auth pages to POS for logged-in users */}
+        <Route path="/" element={<Navigate to={defaultRoute} replace />} />
         <Route path="/login" element={<Navigate to={defaultRoute} replace />} />
-        <Route path="/" element={
+        <Route path="/register" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/features" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/pricing" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/about" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/contact" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/industries" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/forgot-password" element={<Navigate to={defaultRoute} replace />} />
+        <Route path="/reset-password" element={<Navigate to={defaultRoute} replace />} />
+
+        {/* POS Routes — unchanged */}
+        <Route path="/dashboard" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
             <Dashboard />
           </ProtectedRoute>
@@ -114,4 +151,3 @@ const App = () => (
 );
 
 export default App;
-

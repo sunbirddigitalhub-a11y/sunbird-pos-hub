@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Loader2, LogIn } from "lucide-react";
@@ -22,54 +24,44 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="glass-card w-full max-w-sm p-8 space-y-6">
-        <div className="flex flex-col items-center gap-3">
-          <img src="/images/sunbird-logo.png" alt="Sunbird" className="w-14 h-14 rounded-2xl apple-shadow object-cover" />
-          <div className="text-center">
-            <h1 className="text-xl font-bold gold-gradient-text">Sunbird POS</h1>
-            <p className="text-[12px] text-muted-foreground mt-1">Sign in to your account</p>
+    <WebsiteLayout>
+      <section className="py-20 bg-[hsl(220,15%,97%)] min-h-[80vh] flex items-center">
+        <div className="max-w-md mx-auto px-4 w-full">
+          <div className="bg-white rounded-2xl p-8 border border-[hsl(220,15%,92%)] shadow-sm">
+            <div className="text-center mb-8">
+              <img src="/images/sunbird-logo.png" alt="SunbirdPOSHub" className="w-12 h-12 rounded-xl mx-auto mb-3 object-cover" />
+              <h1 className="text-2xl font-bold text-[hsl(220,15%,15%)]">Welcome Back</h1>
+              <p className="text-sm text-[hsl(220,10%,45%)] mt-1">Sign in to your POS dashboard</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-[hsl(220,15%,15%)] block mb-1.5">Email</label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required placeholder="you@sunbird.ug" className="rounded-lg h-11" />
+              </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-[hsl(220,15%,15%)]">Password</label>
+                  <Link to="/forgot-password" className="text-xs text-[hsl(211,80%,50%)] hover:underline">
+                    Forgot Password?
+                  </Link>
+                </div>
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required placeholder="••••••••" className="rounded-lg h-11" />
+              </div>
+              <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl bg-[hsl(211,80%,55%)] hover:bg-[hsl(211,80%,48%)] text-white font-semibold gap-2">
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+                {loading ? "Signing in..." : "Sign In"}
+              </Button>
+            </form>
+
+            <p className="text-sm text-[hsl(220,10%,45%)] text-center mt-6">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-[hsl(211,80%,50%)] hover:underline font-medium">Start Free Trial</Link>
+            </p>
           </div>
         </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-2">Email</label>
-            <Input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
-              placeholder="you@sunbird.ug"
-            />
-          </div>
-          <div>
-            <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-2">Password</label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring"
-              placeholder="••••••••"
-            />
-          </div>
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 gap-2 h-11 rounded-xl text-[13px] font-semibold active:scale-[0.97] transition-all"
-          >
-            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-            {loading ? "Signing in..." : "Sign In"}
-          </Button>
-        </form>
-
-        <p className="text-[11px] text-muted-foreground text-center">
-          Sunbird Online Stores &copy; {new Date().getFullYear()}
-        </p>
-      </div>
-    </div>
+      </section>
+    </WebsiteLayout>
   );
 };
 
