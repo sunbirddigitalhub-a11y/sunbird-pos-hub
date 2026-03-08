@@ -54,7 +54,7 @@ function useNavItems(): NavItem[] {
     { title: "Users", url: "/users", icon: UsersIcon, feature: "users", section: "Management" },
     { title: t.stores, url: "/stores", icon: Store, feature: "stores", section: "Management" },
     // System
-    { title: "Integrations", url: "/integrations", icon: Plug, feature: "integrations", section: "System" },
+    
     { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
   ];
 }
@@ -141,6 +141,18 @@ export function AppSidebar() {
                     >
                       <CreditCard className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span className="flex-1">Subscriptions</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/integrations"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
+                      activeClassName="bg-primary/10 border border-primary/25"
+                    >
+                      <Plug className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
+                      <span className="flex-1">Integrations</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

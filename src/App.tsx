@@ -204,10 +204,9 @@ function AppRoutes() {
 
         {/* System */}
         <Route path="/integrations" element={
-          <ProtectedRoute allowedRoles={["master_admin"]}>
-            <FeatureLock feature="integrations">
-              <IntegrationsPage />
-            </FeatureLock>
+          <ProtectedRoute>
+            {/* Grandmaster-only: non-grandmasters get redirected */}
+            <IntegrationsPage />
           </ProtectedRoute>
         } />
         <Route path="/settings" element={
