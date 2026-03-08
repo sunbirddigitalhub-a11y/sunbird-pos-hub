@@ -25,7 +25,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   if (allowedRoles && role && !allowedRoles.includes(role)) {
     // Staff goes to POS, others go to dashboard
     if (role === "staff") return <Navigate to="/pos" replace />;
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

@@ -36,7 +36,7 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: LayoutGrid, roles: ["master_admin", "supervisor"] },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, roles: ["master_admin", "supervisor"] },
   { title: "Point of Sale", url: "/pos", icon: ShoppingCart, roles: ["master_admin", "supervisor", "staff"] },
   { title: "Inventory", url: "/inventory", icon: Globe, roles: ["master_admin", "supervisor"] },
   { title: "Products", url: "/products", icon: Smartphone, roles: ["master_admin", "supervisor", "staff"] },
