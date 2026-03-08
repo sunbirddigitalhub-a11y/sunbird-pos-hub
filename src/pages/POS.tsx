@@ -650,8 +650,9 @@ const POS = () => {
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Mobile Money">Mobile Money</SelectItem>
-                      <SelectItem value="Bank">Bank</SelectItem>
+                      <SelectItem value="MTN MoMo">MTN MoMo</SelectItem>
+                      <SelectItem value="Airtel Pay">Airtel Pay</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="Split">Split</SelectItem>
                     </SelectContent>
                   </Select>
