@@ -44,7 +44,7 @@ const navItems: NavItem[] = [
   { title: "Reports", url: "/reports", icon: BarChart3, roles: ["master_admin", "supervisor"] },
   { title: "Z-Report", url: "/z-report", icon: ClipboardList, roles: ["master_admin", "supervisor"] },
   { title: "Outstanding", url: "/outstanding", icon: AlertCircle, roles: ["master_admin", "supervisor"] },
-  { title: "Customer Ledger", url: "/customer-ledger", icon: BookOpen, roles: ["master_admin"] },
+  { title: "Customers", url: "/customers", icon: BookOpen, roles: ["master_admin", "supervisor"] },
   { title: "Users", url: "/users", icon: UsersIcon, roles: ["master_admin"] },
   { title: "Settings", url: "/settings", icon: Settings, roles: ["master_admin"] },
 ];

@@ -71,9 +71,9 @@ function AppRoutes() {
             <ZReport />
           </ProtectedRoute>
         } />
-        <Route path="/customer-ledger" element={
-          <ProtectedRoute allowedRoles={["master_admin"]}>
-            <CustomerLedger />
+        <Route path="/customers" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <CustomersPage />
           </ProtectedRoute>
         } />
         <Route path="/outstanding" element={
