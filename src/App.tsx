@@ -19,6 +19,7 @@ import CustomersPage from "./pages/CustomersPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import OutstandingBalances from "./pages/OutstandingBalances";
+import BarcodePage from "./pages/BarcodePage";
 import NotFound from "./pages/NotFound";
 
 // Website pages
