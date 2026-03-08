@@ -18,6 +18,7 @@ import ZReport from "./pages/ZReport";
 import CustomerLedger from "./pages/CustomerLedger";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
+import OutstandingBalances from "./pages/OutstandingBalances";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
