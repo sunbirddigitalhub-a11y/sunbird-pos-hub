@@ -15,7 +15,7 @@ import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import Reports from "./pages/Reports";
 import ZReport from "./pages/ZReport";
-import CustomerLedger from "./pages/CustomerLedger";
+import CustomersPage from "./pages/CustomersPage";
 import UsersPage from "./pages/UsersPage";
 import SettingsPage from "./pages/SettingsPage";
 import OutstandingBalances from "./pages/OutstandingBalances";
@@ -71,9 +71,9 @@ function AppRoutes() {
             <ZReport />
           </ProtectedRoute>
         } />
-        <Route path="/customer-ledger" element={
-          <ProtectedRoute allowedRoles={["master_admin"]}>
-            <CustomerLedger />
+        <Route path="/customers" element={
+          <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
+            <CustomersPage />
           </ProtectedRoute>
         } />
         <Route path="/outstanding" element={
