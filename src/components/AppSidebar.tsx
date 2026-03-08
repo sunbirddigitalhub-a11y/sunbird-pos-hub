@@ -2,7 +2,7 @@ import {
   LayoutGrid, ShoppingCart, Globe, Smartphone, DollarSign, BarChart3,
   ClipboardList, BookOpen, ScanBarcode, Users as UsersIcon, Settings,
   LogOut, AlertCircle, Lock, Crown, Truck, ShoppingBag, FileText,
-  TrendingUp, UserCog, Store, Wallet, Plug, ScrollText,
+  TrendingUp, UserCog, Store, Wallet, Plug, ScrollText, CreditCard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
