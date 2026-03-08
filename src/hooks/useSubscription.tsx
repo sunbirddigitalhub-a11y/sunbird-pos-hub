@@ -169,8 +169,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     return hasFeatureAccess(feature);
   };
 
-  const planFeatures = isGrandmaster || (isTrial && !trialExpired)
-    ? Object.fromEntries(Object.keys(PLAN_FEATURES.enterprise).map(k => [k, true])) as PlanFeatures
+  const planFeatures: PlanFeatures = isGrandmaster || (isTrial && !trialExpired)
+    ? PLAN_FEATURES.enterprise
     : PLAN_FEATURES[plan];
 
   return (
