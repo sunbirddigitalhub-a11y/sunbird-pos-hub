@@ -138,17 +138,17 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl">
+    <div className="space-y-5 md:space-y-6 animate-fade-in max-w-7xl">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-[28px] font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground text-[14px] mt-1">Welcome back. Here's your business overview.</p>
+          <h1 className="text-[22px] md:text-[28px] font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground text-[13px] md:text-[14px] mt-0.5">Welcome back. Here's your business overview.</p>
         </div>
         <div className="flex gap-2">
-          <Button size="sm" onClick={() => navigate("/pos")} className="rounded-xl h-9 text-[13px]">
+          <Button size="sm" onClick={() => navigate("/pos")} className="rounded-xl h-10 md:h-9 text-[13px] min-w-[44px]">
             <Plus className="h-3.5 w-3.5 mr-1.5" /> New Sale
           </Button>
-          <Button size="sm" variant="outline" onClick={() => navigate("/products")} className="rounded-xl h-9 text-[13px]">
+          <Button size="sm" variant="outline" onClick={() => navigate("/products")} className="rounded-xl h-10 md:h-9 text-[13px] min-w-[44px]">
             <Package className="h-3.5 w-3.5 mr-1.5" /> Add Product
           </Button>
         </div>
