@@ -41,8 +41,9 @@ const formatPrice = (n: number) => `UGX ${n.toLocaleString()}`;
 
 const paymentMethods = [
   { id: "Cash", icon: Banknote, label: "Cash" },
-  { id: "Mobile Money", icon: Smartphone, label: "Mobile Money" },
-  { id: "Bank", icon: Building2, label: "Bank" },
+  { id: "MTN MoMo", icon: Smartphone, label: "MTN MoMo" },
+  { id: "Airtel Pay", icon: Smartphone, label: "Airtel Pay" },
+  { id: "Bank Transfer", icon: Building2, label: "Bank Transfer" },
   { id: "Split", icon: CreditCard, label: "Split" },
 ];
 
@@ -649,8 +650,9 @@ const POS = () => {
                     <SelectTrigger className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Mobile Money">Mobile Money</SelectItem>
-                      <SelectItem value="Bank">Bank</SelectItem>
+                      <SelectItem value="MTN MoMo">MTN MoMo</SelectItem>
+                      <SelectItem value="Airtel Pay">Airtel Pay</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
                       <SelectItem value="Split">Split</SelectItem>
                     </SelectContent>
                   </Select>
