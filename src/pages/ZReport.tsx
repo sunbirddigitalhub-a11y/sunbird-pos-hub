@@ -250,10 +250,12 @@ const ZReport = () => {
   const partialSales = todaySales.filter(s => s.status === "Partial");
   const outstandingSales = todaySales.filter(s => s.status === "Partial");
 
+  const isMobileMoney = (m: string) => ["Mobile Money", "MTN MoMo", "Airtel Pay"].includes(m);
+  const isBank = (m: string) => ["Bank", "Bank Transfer"].includes(m);
   const breakdown = [
     { method: "Cash", amount: todaySales.filter(s => s.payment_method === "Cash").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Cash").length },
-    { method: "Mobile Money", amount: todaySales.filter(s => s.payment_method === "Mobile Money").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Mobile Money").length },
-    { method: "Bank", amount: todaySales.filter(s => s.payment_method === "Bank").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Bank").length },
+    { method: "Mobile Money", amount: todaySales.filter(s => isMobileMoney(s.payment_method)).reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => isMobileMoney(s.payment_method)).length },
+    { method: "Bank", amount: todaySales.filter(s => isBank(s.payment_method)).reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => isBank(s.payment_method)).length },
     { method: "Split", amount: todaySales.filter(s => s.payment_method === "Split").reduce((a, s) => a + s.total_amount, 0), count: todaySales.filter(s => s.payment_method === "Split").length },
   ];
   const totalSales = breakdown.reduce((s, b) => s + b.amount, 0);
