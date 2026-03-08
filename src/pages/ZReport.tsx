@@ -267,6 +267,17 @@ const ZReport = () => {
   }, 0);
   const netCashReceived = totalSales - totalOutstanding - totalExpenses;
 
+  // Outstanding balance activity
+  const paymentsCollectedToday = todayPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+  const newOutstandingToday = outstandingSales.reduce((s, sale) => {
+    const match = sale.notes?.match(/Balance:\s*([\d,]+)/);
+    return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
+  }, 0);
+  const totalRemainingOutstanding = allOutstandingSales.reduce((s: number, sale: any) => {
+    const match = sale.notes?.match(/Balance:\s*([\d,]+)/);
+    return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
+  }, 0);
+
   // Sales by product aggregation
   const productSales: ProductSale[] = (() => {
     const map = new Map<string, ProductSale>();
