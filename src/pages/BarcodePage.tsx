@@ -8,8 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import JsBarcode from "jsbarcode";
 import {
   ScanBarcode,
   Printer,
@@ -25,6 +27,8 @@ import {
   VolumeX,
   Tag,
   Trash2,
+  Download,
+  Eye,
 } from "lucide-react";
 
 interface Product {
