@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 
 const RegisterPage = () => {
   const { signUp } = useAuth();
+  const navigate = useNavigate();
   const [form, setForm] = useState({ fullName: "", email: "", phone: "", password: "", confirmPassword: "" });
   const [loading, setLoading] = useState(false);
 
