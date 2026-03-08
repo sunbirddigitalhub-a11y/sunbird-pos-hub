@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [isGrandmaster, setIsGrandmaster] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const inactivityTimer = useRef<ReturnType<typeof setTimeout>>();
 
