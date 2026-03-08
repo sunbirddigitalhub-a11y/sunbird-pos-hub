@@ -88,28 +88,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfileAndRole(session.user.id);
+        // Use setTimeout to avoid Supabase auth deadlock
+        setProfileLoading(true);
+        setTimeout(() => {
+          fetchProfileAndRole(session.user.id).finally(() => setProfileLoading(false));
+        }, 0);
       } else {
         setProfile(null);
         setRole(null);
         setBusinessId(null);
         setIsGrandmaster(false);
         setOnboardingCompleted(false);
+        setProfileLoading(false);
       }
-      setLoading(false);
+      setAuthLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        await fetchProfileAndRole(session.user.id);
+        fetchProfileAndRole(session.user.id).finally(() => {
+          setProfileLoading(false);
+          setAuthLoading(false);
+        });
+      } else {
+        setProfileLoading(false);
+        setAuthLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
