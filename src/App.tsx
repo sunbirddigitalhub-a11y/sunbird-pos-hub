@@ -119,6 +119,7 @@ function AppRoutes() {
             <OutstandingBalances />
           </ProtectedRoute>
         } />
+        <Route path="/barcode" element={<BarcodePage />} />
         <Route path="/users" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <UsersPage />
