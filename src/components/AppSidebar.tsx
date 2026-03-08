@@ -13,6 +13,16 @@ import {
   LogOut,
   AlertCircle,
   Lock,
+  Crown,
+} from "lucide-react";
+  ClipboardList,
+  BookOpen,
+  ScanBarcode,
+  Users as UsersIcon,
+  Settings,
+  LogOut,
+  AlertCircle,
+  Lock,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
