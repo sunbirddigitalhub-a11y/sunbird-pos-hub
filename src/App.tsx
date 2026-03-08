@@ -180,9 +180,7 @@ function AppRoutes() {
         {/* Management */}
         <Route path="/staff-management" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="staffManagement">
-              <ComingSoonPage title="Staff Management" description="Manage staff schedules, performance, and attendance tracking." featureName="staffManagement" />
-            </FeatureLock>
+            <FeatureLock feature="staffManagement"><StaffManagementPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/users" element={
@@ -192,9 +190,7 @@ function AppRoutes() {
         } />
         <Route path="/stores" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
-            <FeatureLock feature="stores">
-              <ComingSoonPage title="Stores & Branches" description="Manage multiple store locations and branch operations." featureName="stores" />
-            </FeatureLock>
+            <FeatureLock feature="stores"><StoresPage /></FeatureLock>
           </ProtectedRoute>
         } />
 
