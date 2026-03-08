@@ -3,10 +3,17 @@ import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import {
   ShoppingCart, BarChart3, Cloud, Users, Store, Shield,
-  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star
+  Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star, Download, Share
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
+import { usePWAInstall } from "@/hooks/usePWAInstall";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 const formatPrice = (currency: "usd" | "ugx", usd: number, ugx: number) =>
   currency === "usd" ? `$${usd}` : `UGX ${ugx.toLocaleString()}`;
 
@@ -29,7 +36,18 @@ const advantages = [
 
 const LandingPage = () => {
   const [currency, setCurrency] = useState<"usd" | "ugx">("usd");
+  const { canInstall, isInstalled, install, showIOSPrompt } = usePWAInstall();
+  const [showIOSDialog, setShowIOSDialog] = useState(false);
 
+  const handleInstallClick = async () => {
+    if (canInstall) {
+      await install();
+    } else if (showIOSPrompt) {
+      setShowIOSDialog(true);
+    }
+  };
+
+  const showInstallButton = (canInstall || showIOSPrompt) && !isInstalled;
   return (
     <WebsiteLayout>
       {/* Hero */}
@@ -62,6 +80,19 @@ const LandingPage = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Install App Button — visible on mobile/tablet */}
+          {showInstallButton && (
+            <div className="mt-6 flex justify-center">
+              <Button
+                onClick={handleInstallClick}
+                className="h-12 px-6 text-sm font-semibold rounded-xl bg-[hsl(130,55%,40%)] hover:bg-[hsl(130,55%,35%)] text-white shadow-lg shadow-[hsl(130,55%,40%,0.3)] gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download App
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -240,6 +271,43 @@ const LandingPage = () => {
           </Link>
         </div>
       </section>
+      {/* iOS Install Instructions Dialog */}
+      <Dialog open={showIOSDialog} onOpenChange={setShowIOSDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Install SunbirdPOSHub</DialogTitle>
+            <DialogDescription>
+              To install the app on your device, follow these steps:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[hsl(211,80%,55%,0.1)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-[hsl(211,80%,50%)]">1</span>
+              </div>
+              <p className="text-sm text-[hsl(220,10%,35%)]">
+                Tap the <Share className="inline h-4 w-4 mx-1" /> <strong>Share</strong> button in your browser
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[hsl(211,80%,55%,0.1)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-[hsl(211,80%,50%)]">2</span>
+              </div>
+              <p className="text-sm text-[hsl(220,10%,35%)]">
+                Scroll down and tap <strong>"Add to Home Screen"</strong>
+              </p>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-[hsl(211,80%,55%,0.1)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                <span className="text-sm font-bold text-[hsl(211,80%,50%)]">3</span>
+              </div>
+              <p className="text-sm text-[hsl(220,10%,35%)]">
+                Tap <strong>"Add"</strong> to install the app
+              </p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </WebsiteLayout>
   );
 };
