@@ -204,7 +204,7 @@ function AppRoutes() {
         <Route path="/integrations" element={
           <ProtectedRoute allowedRoles={["master_admin"]}>
             <FeatureLock feature="integrations">
-              <ComingSoonPage title="Integrations" description="Connect with third-party services, APIs, and automation tools." featureName="integrations" />
+              <IntegrationsPage />
             </FeatureLock>
           </ProtectedRoute>
         } />
