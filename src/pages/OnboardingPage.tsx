@@ -193,6 +193,7 @@ const OnboardingPage = () => {
     if (!businessId) return;
     setLoading(true);
     await supabase.from("businesses").update({ onboarding_completed: true } as any).eq("id", businessId);
+    await refreshProfile();
     navigate("/dashboard");
     setLoading(false);
   };
