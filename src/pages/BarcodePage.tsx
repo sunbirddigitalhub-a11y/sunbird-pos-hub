@@ -263,22 +263,28 @@ export default function BarcodePage() {
     }
 
     const sizes = {
-      small: { w: 120, h: 60, fontSize: 10 },
-      medium: { w: 200, h: 100, fontSize: 13 },
-      large: { w: 300, h: 150, fontSize: 16 },
+      small: { w: 160, h: 90, fontSize: 9, barcodeH: 30, barcodeW: 1.2 },
+      medium: { w: 240, h: 130, fontSize: 12, barcodeH: 45, barcodeW: 1.6 },
+      large: { w: 340, h: 180, fontSize: 15, barcodeH: 65, barcodeW: 2 },
     };
     const s = sizes[labelSize];
 
     const labelsHtml = toPrint
-      .flatMap((p) =>
-        Array.from({ length: printQty }, () => `
-          <div style="width:${s.w}px;height:${s.h}px;border:1px solid #333;padding:8px;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;margin:4px;font-family:monospace;text-align:center;">
+      .flatMap((p) => {
+        const svgStr = generateBarcodeSVG(p.barcode!, {
+          width: s.barcodeW,
+          height: s.barcodeH,
+          fontSize: s.fontSize,
+          displayValue: true,
+        });
+        return Array.from({ length: printQty }, () => `
+          <div style="width:${s.w}px;height:${s.h}px;border:1px solid #ccc;padding:8px;display:inline-flex;flex-direction:column;justify-content:center;align-items:center;margin:4px;font-family:sans-serif;text-align:center;border-radius:6px;">
             <div style="font-size:${s.fontSize}px;font-weight:700;margin-bottom:4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:${s.w - 16}px;">${p.name}</div>
-            <div style="font-size:${s.fontSize + 4}px;letter-spacing:3px;font-weight:900;margin:4px 0;">${p.barcode}</div>
-            <div style="font-size:${s.fontSize - 2}px;color:#555;">${formatPrice(p.base_price)}</div>
+            ${svgStr}
+            <div style="font-size:${s.fontSize - 2}px;color:#555;margin-top:2px;">${formatPrice(p.base_price)}</div>
           </div>
-        `)
-      )
+        `);
+      })
       .join("");
 
     const win = window.open("", "_blank");
