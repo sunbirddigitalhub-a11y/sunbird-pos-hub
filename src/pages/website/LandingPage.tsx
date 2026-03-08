@@ -32,7 +32,6 @@ const LandingPage = () => {
 
   return (
     <WebsiteLayout>
-    <WebsiteLayout>
       {/* Hero */}
       <section className="relative overflow-hidden py-20 md:py-32">
         <div className="absolute inset-0 bg-gradient-to-br from-[hsl(211,80%,12%)] via-[hsl(211,70%,8%)] to-[hsl(220,60%,5%)]" />
