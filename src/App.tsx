@@ -28,6 +28,8 @@ import UpgradePage from "./pages/UpgradePage";
 import ReferralPage from "./pages/ReferralPage";
 import ComingSoonPage from "./pages/ComingSoonPage";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
+import AnalyticsPage from "./pages/AnalyticsPage";
+import IntegrationsPage from "./pages/IntegrationsPage";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
