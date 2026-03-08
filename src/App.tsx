@@ -129,16 +129,12 @@ function AppRoutes() {
         } />
         <Route path="/invoices" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="invoices">
-              <ComingSoonPage title="Invoices" description="Generate and manage professional invoices for your customers." featureName="invoices" />
-            </FeatureLock>
+            <FeatureLock feature="invoices"><InvoicesPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/expenses" element={
           <ProtectedRoute allowedRoles={["master_admin", "supervisor"]}>
-            <FeatureLock feature="expenses">
-              <ComingSoonPage title="Expenses" description="Track business expenses and manage your spending." featureName="expenses" />
-            </FeatureLock>
+            <FeatureLock feature="expenses"><ExpensesPage /></FeatureLock>
           </ProtectedRoute>
         } />
         <Route path="/outstanding" element={
