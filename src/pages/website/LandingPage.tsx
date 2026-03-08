@@ -80,6 +80,19 @@ const LandingPage = () => {
               </Button>
             </Link>
           </div>
+
+          {/* Install App Button — visible on mobile/tablet */}
+          {showInstallButton && (
+            <div className="mt-6 flex justify-center">
+              <Button
+                onClick={handleInstallClick}
+                className="h-12 px-6 text-sm font-semibold rounded-xl bg-[hsl(130,55%,40%)] hover:bg-[hsl(130,55%,35%)] text-white shadow-lg shadow-[hsl(130,55%,40%,0.3)] gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Download App
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
