@@ -29,25 +29,29 @@ export interface PlanFeatures {
 
 const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
   basic: {
-    dashboard: true, pos: true, inventory: false, products: true, sales: false,
-    reports: false, zReport: false, outstanding: false, customers: false,
-    barcode: true, users: false, settings: false,
+    dashboard: true, pos: true, products: true, inventory: true, customers: true,
+    sales: true, barcode: true, reports: true,
+    // Locked in Basic
+    zReport: false, outstanding: false, users: false, settings: false,
     suppliers: false, purchases: false, invoices: false, analytics: false,
     staffManagement: false, stores: false, expenses: false, integrations: false,
   },
   business: {
-    dashboard: true, pos: true, inventory: true, products: true, sales: true,
-    reports: true, zReport: false, outstanding: true, customers: true,
-    barcode: true, users: false, settings: false,
-    suppliers: true, purchases: true, invoices: true, analytics: false,
-    staffManagement: false, stores: false, expenses: true, integrations: false,
+    dashboard: true, pos: true, products: true, inventory: true, customers: true,
+    sales: true, barcode: true, reports: true,
+    zReport: true, outstanding: true, expenses: true,
+    suppliers: true, purchases: true, invoices: true,
+    staffManagement: true, users: true, settings: true,
+    // Locked in Business
+    analytics: false, stores: false, integrations: false,
   },
   enterprise: {
-    dashboard: true, pos: true, inventory: true, products: true, sales: true,
-    reports: true, zReport: true, outstanding: true, customers: true,
-    barcode: true, users: true, settings: true,
-    suppliers: true, purchases: true, invoices: true, analytics: true,
-    staffManagement: true, stores: true, expenses: true, integrations: true,
+    dashboard: true, pos: true, products: true, inventory: true, customers: true,
+    sales: true, barcode: true, reports: true,
+    zReport: true, outstanding: true, expenses: true,
+    suppliers: true, purchases: true, invoices: true,
+    staffManagement: true, users: true, settings: true,
+    analytics: true, stores: true, integrations: true,
   },
 };
 
