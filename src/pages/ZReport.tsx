@@ -214,6 +214,26 @@ const ZReport = () => {
     finally { setLoadingImages(false); }
   };
 
+  const fetchTodayPayments = async () => {
+    const startOfDay = `${today}T00:00:00`;
+    const endOfDay = `${today}T23:59:59`;
+    const { data } = await supabase
+      .from("payment_history" as any).select("*")
+      .gte("created_at", startOfDay).lte("created_at", endOfDay)
+      .order("created_at", { ascending: false });
+    setTodayPayments((data as any[]) || []);
+  };
+
+  // Fetch all outstanding sales (not just today's)
+  const [allOutstandingSales, setAllOutstandingSales] = useState<any[]>([]);
+  const fetchAllOutstanding = async () => {
+    const { data } = await supabase
+      .from("sales" as any).select("*")
+      .eq("status", "Partial")
+      .order("created_at", { ascending: false });
+    setAllOutstandingSales((data as any[]) || []);
+  };
+
   useEffect(() => {
     fetchTodaySales();
     fetchPastReports();
@@ -221,6 +241,8 @@ const ZReport = () => {
     fetchExpenses();
     fetchAuditLogs();
     fetchInventoryActivity();
+    fetchTodayPayments();
+    fetchAllOutstanding();
   }, []);
 
   // ─── Computed values ─────────────────────────
