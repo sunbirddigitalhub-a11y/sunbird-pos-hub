@@ -30,6 +30,12 @@ import ComingSoonPage from "./pages/ComingSoonPage";
 import SubscriptionManagement from "./pages/SubscriptionManagement";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import IntegrationsPage from "./pages/IntegrationsPage";
+import InvoicesPage from "./pages/InvoicesPage";
+import ExpensesPage from "./pages/ExpensesPage";
+import SuppliersPage from "./pages/SuppliersPage";
+import PurchasesPage from "./pages/PurchasesPage";
+import StaffManagementPage from "./pages/StaffManagementPage";
+import StoresPage from "./pages/StoresPage";
 
 // Website pages
 import LandingPage from "./pages/website/LandingPage";
