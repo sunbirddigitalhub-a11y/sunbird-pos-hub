@@ -59,8 +59,8 @@ const ContactPage = () => {
               </div>
               <div>
                 <p className="font-semibold text-[hsl(220,15%,10%)] text-base">Email</p>
-                <a href="mailto:support@sunbirdgroup.xyz" className="text-base font-medium text-[hsl(211,80%,45%)] hover:underline">
-                  support@sunbirdgroup.xyz
+                <a href="mailto:sunbirdpossupport@gmail.com" className="text-base font-medium text-[hsl(211,80%,45%)] hover:underline">
+                  sunbirdpossupport@gmail.com
                 </a>
                 <p className="text-sm text-[hsl(220,10%,35%)] mt-0.5">We reply within 24 hours</p>
               </div>
