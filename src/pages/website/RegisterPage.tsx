@@ -31,7 +31,8 @@ const RegisterPage = () => {
     if (error) {
       toast({ title: "Registration failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Account created!", description: "Please check your email to verify your account before logging in." });
+      toast({ title: "Account created!", description: "You can now sign in with your credentials." });
+      navigate("/login");
     }
     setLoading(false);
   };
