@@ -111,6 +111,12 @@ const ZReport = () => {
   const [loadingImages, setLoadingImages] = useState(false);
   const [selectedImage, setSelectedImage] = useState<ReceiptFile | null>(null);
 
+  // Stored report details (for history drill-down)
+  const [reportExpenses, setReportExpenses] = useState<Expense[]>([]);
+  const [reportAuditLogs, setReportAuditLogs] = useState<AuditEntry[]>([]);
+  const [reportInventory, setReportInventory] = useState<any[]>([]);
+  const [reportOutstandings, setReportOutstandings] = useState<SaleRecord[]>([]);
+
   const today = format(new Date(), "yyyy-MM-dd");
 
   // ─── Data fetching ───────────────────────────
@@ -230,6 +236,32 @@ const ZReport = () => {
       salesWithItems.push({ ...sale, items: (items as any[]) || [] });
     }
     setReportSales(salesWithItems);
+  };
+
+  const fetchReportDetails = async (date: string) => {
+    const startOfDay = `${date}T00:00:00`;
+    const endOfDay = `${date}T23:59:59`;
+    // Expenses for that date
+    const { data: expData } = await supabase.from("expenses" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).order("created_at", { ascending: false });
+    setReportExpenses((expData as any[]) || []);
+    // Audit logs for that date
+    const { data: auditData } = await supabase.from("audit_logs" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).order("created_at", { ascending: false });
+    setReportAuditLogs((auditData as any[]) || []);
+    // Inventory activity for that date
+    const { data: invAdded } = await supabase.from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id").gte("created_at", startOfDay).lte("created_at", endOfDay);
+    const { data: invUpdated } = await supabase.from("inventory" as any).select("id, imei, status, created_at, updated_at, quantity, product_id").gte("updated_at", startOfDay).lte("updated_at", endOfDay);
+    const { data: prods } = await supabase.from("products" as any).select("id, name");
+    const pMap = new Map((prods as any[] || []).map((p: any) => [p.id, p.name]));
+    const allInv = new Map<string, any>();
+    for (const item of (invAdded as any[] || [])) { allInv.set(item.id, { ...item, product_name: pMap.get(item.product_id) || "Unknown", action: "Added" }); }
+    for (const item of (invUpdated as any[] || [])) { if (!allInv.has(item.id)) { allInv.set(item.id, { ...item, product_name: pMap.get(item.product_id) || "Unknown", action: item.status === "Sold" ? "Sold" : "Updated" }); } }
+    setReportInventory(Array.from(allInv.values()));
+    // Outstanding sales for that date
+    const { data: outSales } = await supabase.from("sales" as any).select("*").gte("created_at", startOfDay).lte("created_at", endOfDay).eq("status", "Partial").order("created_at", { ascending: false });
+    const outArr = (outSales as any[]) || [];
+    const outWithItems: SaleRecord[] = [];
+    for (const sale of outArr) { const { data: items } = await supabase.from("sale_items" as any).select("product_name, imei, unit_price").eq("sale_id", sale.id); outWithItems.push({ ...sale, items: (items as any[]) || [] }); }
+    setReportOutstandings(outWithItems);
   };
 
   useEffect(() => {
@@ -758,24 +790,43 @@ const ZReport = () => {
             </div>
           </TabsContent>
 
-          {/* ═══ HISTORY TAB ═══ */}
-          <TabsContent value="history" className="mt-4">
+          {/* ═══ STORED REPORTS TAB ═══ */}
+          <TabsContent value="history" className="mt-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-[15px] tracking-tight flex items-center gap-2">
+                <History className="h-4 w-4 text-primary" /> Stored End-of-Day Reports
+              </h3>
+              <span className="text-[12px] text-muted-foreground">{pastReports.length} report(s)</span>
+            </div>
             {pastReports.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground text-[14px]">No past reports yet</div>
+              <div className="text-center py-12 text-muted-foreground text-[14px]">
+                <FileText className="h-10 w-10 mx-auto mb-3 opacity-20" />
+                <p>No reports stored yet. Close the day from the Summary tab to save a report.</p>
+              </div>
             ) : (
               <div className="space-y-3">
                 {pastReports.map((report) => (
                   <div key={report.id} className="glass-card p-4 flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center shrink-0">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${report.status === "Closed" ? "bg-success/10" : "bg-warning/10"}`}>
+                      {report.status === "Closed" ? <CheckCircle className="h-5 w-5 text-success" /> : <Clock className="h-5 w-5 text-warning" />}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-medium">{format(new Date(report.report_date), "dd MMM yyyy")}</p>
-                      <p className="text-[11px] text-muted-foreground">{report.total_transactions} txns · {report.status}</p>
+                      <p className="text-[13px] font-medium">{format(new Date(report.report_date), "EEEE, dd MMM yyyy")}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {report.total_transactions} transactions · {report.status}
+                        {report.closed_at && ` · Closed at ${format(new Date(report.closed_at), "HH:mm")}`}
+                      </p>
                     </div>
-                    <p className="text-[14px] font-semibold text-primary shrink-0">{formatPrice(report.total_sales)}</p>
-                    <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8 rounded-lg" onClick={() => { setSelectedReport(report); fetchSalesForDate(report.report_date); }}>
-                      <Eye className="h-4 w-4" />
+                    <div className="text-right shrink-0">
+                      <p className="text-[14px] font-semibold text-primary">{formatPrice(report.total_sales)}</p>
+                      {report.physical_cash !== null && (
+                        <p className={`text-[10px] font-medium ${report.cash_difference === 0 ? "text-success" : "text-destructive"}`}>
+                          {report.cash_difference === 0 ? "Balanced" : `${formatPrice(Math.abs(report.cash_difference))} ${(report.cash_difference ?? 0) > 0 ? "over" : "short"}`}
+                        </p>
+                      )}
+                    </div>
+                    <Button variant="outline" size="sm" className="shrink-0 rounded-lg gap-1.5 border-primary/30 text-primary text-[12px]" onClick={() => { setSelectedReport(report); fetchSalesForDate(report.report_date); fetchReportDetails(report.report_date); }}>
+                      <Eye className="h-3.5 w-3.5" /> View
                     </Button>
                   </div>
                 ))}
@@ -854,33 +905,130 @@ const ZReport = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Past Report Detail */}
-      <Dialog open={!!selectedReport} onOpenChange={() => { setSelectedReport(null); setReportSales([]); }}>
-        <DialogContent className="glass-card border-border/30 max-w-lg max-h-[80vh] overflow-auto">
-          <DialogHeader><DialogTitle className="text-[16px] font-semibold">Z-Report — {selectedReport && format(new Date(selectedReport.report_date), "dd MMM yyyy")}</DialogTitle></DialogHeader>
+      {/* Past Report Full Detail */}
+      <Dialog open={!!selectedReport} onOpenChange={() => { setSelectedReport(null); setReportSales([]); setReportExpenses([]); setReportAuditLogs([]); setReportInventory([]); setReportOutstandings([]); }}>
+        <DialogContent className="glass-card border-border/30 max-w-2xl max-h-[85vh] overflow-auto">
+          <DialogHeader><DialogTitle className="text-[16px] font-semibold">End-of-Day Report — {selectedReport && format(new Date(selectedReport.report_date), "EEEE, dd MMM yyyy")}</DialogTitle></DialogHeader>
           {selectedReport && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Total Sales</p><p className="text-[18px] font-semibold text-primary">{formatPrice(selectedReport.total_sales)}</p></div>
-                <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Transactions</p><p className="text-[18px] font-semibold">{selectedReport.total_transactions}</p></div>
+            <div className="space-y-5">
+              {/* Sales Summary */}
+              <div>
+                <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><DollarSign className="h-3.5 w-3.5 text-primary" /> Sales Summary</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Total Sales</p><p className="text-[18px] font-semibold text-primary">{formatPrice(selectedReport.total_sales)}</p></div>
+                  <div className="stat-card p-3"><p className="text-[11px] text-muted-foreground">Transactions</p><p className="text-[18px] font-semibold">{selectedReport.total_transactions}</p></div>
+                </div>
+                <table className="w-full text-[12px] mt-3">
+                  <thead><tr className="border-b border-border/20"><th className="text-left py-2 text-muted-foreground font-medium">Method</th><th className="text-left py-2 text-muted-foreground font-medium">Txns</th><th className="text-left py-2 text-muted-foreground font-medium">Amount</th></tr></thead>
+                  <tbody>
+                    <tr className="border-b border-border/10"><td className="py-2">Cash</td><td>{selectedReport.cash_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.cash_sales)}</td></tr>
+                    <tr className="border-b border-border/10"><td className="py-2">Mobile Money</td><td>{selectedReport.mobile_money_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.mobile_money_sales)}</td></tr>
+                    <tr className="border-b border-border/10"><td className="py-2">Bank</td><td>{selectedReport.bank_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.bank_sales)}</td></tr>
+                    <tr className="border-b border-border/10"><td className="py-2">Split</td><td>{selectedReport.split_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.split_sales)}</td></tr>
+                  </tbody>
+                </table>
+                {selectedReport.physical_cash !== null && (
+                  <div className={`rounded-xl p-3 text-[13px] font-medium mt-3 ${selectedReport.cash_difference === 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
+                    Physical Cash: {formatPrice(selectedReport.physical_cash)} · Difference: {formatPrice(Math.abs(selectedReport.cash_difference))} {selectedReport.cash_difference > 0 ? "over" : selectedReport.cash_difference < 0 ? "short" : "balanced"}
+                  </div>
+                )}
               </div>
-              <table className="w-full text-[12px]">
-                <thead><tr className="border-b border-border/20"><th className="text-left py-2 text-muted-foreground font-medium">Method</th><th className="text-left py-2 text-muted-foreground font-medium">Txns</th><th className="text-left py-2 text-muted-foreground font-medium">Amount</th></tr></thead>
-                <tbody>
-                  <tr className="border-b border-border/10"><td className="py-2">Cash</td><td>{selectedReport.cash_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.cash_sales)}</td></tr>
-                  <tr className="border-b border-border/10"><td className="py-2">Mobile Money</td><td>{selectedReport.mobile_money_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.mobile_money_sales)}</td></tr>
-                  <tr className="border-b border-border/10"><td className="py-2">Bank</td><td>{selectedReport.bank_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.bank_sales)}</td></tr>
-                  <tr className="border-b border-border/10"><td className="py-2">Split</td><td>{selectedReport.split_transactions}</td><td className="text-primary font-semibold">{formatPrice(selectedReport.split_sales)}</td></tr>
-                </tbody>
-              </table>
-              {selectedReport.physical_cash !== null && (
-                <div className={`rounded-xl p-3 text-[13px] font-medium ${selectedReport.cash_difference === 0 ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}>
-                  Physical: {formatPrice(selectedReport.physical_cash)} · Diff: {formatPrice(Math.abs(selectedReport.cash_difference))} {selectedReport.cash_difference > 0 ? "over" : selectedReport.cash_difference < 0 ? "short" : "balanced"}
+
+              {/* Outstanding Balances */}
+              {reportOutstandings.length > 0 && (
+                <div>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Outstanding Balances ({reportOutstandings.length})</h4>
+                  <div className="overflow-x-auto rounded-xl border border-border/20">
+                    <table className="w-full text-[12px]">
+                      <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Invoice</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Customer</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Total</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Balance</th></tr></thead>
+                      <tbody>
+                        {reportOutstandings.map(s => (
+                          <tr key={s.id} className="border-b border-border/10 last:border-0">
+                            <td className="py-2 px-3 font-mono text-primary">{s.sale_number}</td>
+                            <td className="py-2 px-3">{s.customer_name || "Walk-in"}</td>
+                            <td className="py-2 px-3 font-semibold">{formatPrice(s.total_amount)}</td>
+                            <td className="py-2 px-3 font-semibold text-destructive">{formatPrice(parseBalance(s))}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
+
+              {/* Expenses */}
+              {reportExpenses.length > 0 && (
+                <div>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><TrendingUp className="h-3.5 w-3.5 text-destructive" /> Expenses ({reportExpenses.length})</h4>
+                  <div className="overflow-x-auto rounded-xl border border-border/20">
+                    <table className="w-full text-[12px]">
+                      <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Name</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Category</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Amount</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Staff</th></tr></thead>
+                      <tbody>
+                        {reportExpenses.map(exp => (
+                          <tr key={exp.id} className="border-b border-border/10 last:border-0">
+                            <td className="py-2 px-3 font-medium">{exp.name}</td>
+                            <td className="py-2 px-3"><span className="px-2 py-0.5 rounded-md bg-secondary/60 text-[11px]">{exp.category}</span></td>
+                            <td className="py-2 px-3 font-semibold text-destructive">{formatPrice(exp.amount)}</td>
+                            <td className="py-2 px-3 text-muted-foreground">{exp.staff_member || "—"}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="px-3 py-2 bg-secondary/20 border-t border-border/20 flex justify-between text-[12px] font-semibold">
+                      <span>Total</span><span className="text-destructive">{formatPrice(reportExpenses.reduce((s, e) => s + e.amount, 0))}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Inventory Activity */}
+              {reportInventory.length > 0 && (
+                <div>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><Package className="h-3.5 w-3.5 text-primary" /> Inventory Changes ({reportInventory.length})</h4>
+                  <div className="overflow-x-auto rounded-xl border border-border/20">
+                    <table className="w-full text-[12px]">
+                      <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Product</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">IMEI</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Action</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Status</th></tr></thead>
+                      <tbody>
+                        {reportInventory.map((item: any) => (
+                          <tr key={item.id} className="border-b border-border/10 last:border-0">
+                            <td className="py-2 px-3 font-medium">{item.product_name}</td>
+                            <td className="py-2 px-3 font-mono text-muted-foreground">{item.imei}</td>
+                            <td className="py-2 px-3"><span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${item.action === "Added" ? "bg-success/10 text-success" : item.action === "Sold" ? "bg-primary/10 text-primary" : "bg-warning/10 text-warning"}`}>{item.action}</span></td>
+                            <td className="py-2 px-3">{item.status}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Staff Activity */}
+              {reportAuditLogs.length > 0 && (
+                <div>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><Users className="h-3.5 w-3.5 text-primary" /> Staff Activity ({reportAuditLogs.length})</h4>
+                  <div className="overflow-x-auto rounded-xl border border-border/20">
+                    <table className="w-full text-[12px]">
+                      <thead><tr className="border-b border-border/20 bg-secondary/20"><th className="text-left py-2 px-3 text-muted-foreground font-medium">Action</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Staff</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Role</th><th className="text-left py-2 px-3 text-muted-foreground font-medium">Time</th></tr></thead>
+                      <tbody>
+                        {reportAuditLogs.map(log => (
+                          <tr key={log.id} className="border-b border-border/10 last:border-0">
+                            <td className="py-2 px-3"><span className={`px-2 py-0.5 rounded-md text-[11px] font-medium ${log.action === "login" ? "bg-success/10 text-success" : log.action === "logout" ? "bg-destructive/10 text-destructive" : "bg-secondary/60"}`}>{log.action}</span></td>
+                            <td className="py-2 px-3 font-medium">{(log.details as any)?.email || log.performed_by?.slice(0, 8) || "—"}</td>
+                            <td className="py-2 px-3">{log.user_role || "—"}</td>
+                            <td className="py-2 px-3 text-muted-foreground">{format(new Date(log.created_at), "HH:mm:ss")}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Sales list */}
               {reportSales.length > 0 && (
                 <div>
-                  <h4 className="text-[13px] font-semibold mb-2">Receipts ({reportSales.length})</h4>
+                  <h4 className="text-[13px] font-semibold mb-2 flex items-center gap-2"><Receipt className="h-3.5 w-3.5 text-primary" /> Sales ({reportSales.length})</h4>
                   <div className="space-y-2 max-h-48 overflow-auto">
                     {reportSales.map((sale) => (
                       <button key={sale.id} onClick={() => { setSelectedReport(null); setSelectedReceipt(sale); }} className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-secondary/30 hover:bg-secondary/50 transition-colors text-left">
@@ -895,13 +1043,20 @@ const ZReport = () => {
                   </div>
                 </div>
               )}
+
+              {/* Actions */}
               <div className="flex gap-2">
                 <Button className="flex-1 rounded-xl gap-2 bg-primary text-primary-foreground" onClick={() => {
                   if (!selectedReport) return;
                   const r = selectedReport;
                   const printWindow = window.open("", "_blank", "width=600,height=800");
                   if (!printWindow) return;
-                  printWindow.document.write(`<html><head><title>Z-Report ${r.report_date}</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:20px;max-width:500px;margin:0 auto;}h2{text-align:center;}table{width:100%;border-collapse:collapse;margin:10px 0;}th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;}.total td{font-weight:bold;border-top:2px solid #333;}</style></head><body><h2>Sunbird Online Stores</h2><p style="text-align:center;color:#666;">${format(new Date(r.report_date), "dd MMMM yyyy")}</p><table><tr><th>Method</th><th>Txns</th><th>Amount</th></tr><tr><td>Cash</td><td>${r.cash_transactions}</td><td>UGX ${r.cash_sales.toLocaleString()}</td></tr><tr><td>Mobile Money</td><td>${r.mobile_money_transactions}</td><td>UGX ${r.mobile_money_sales.toLocaleString()}</td></tr><tr><td>Bank</td><td>${r.bank_transactions}</td><td>UGX ${r.bank_sales.toLocaleString()}</td></tr><tr><td>Split</td><td>${r.split_transactions}</td><td>UGX ${r.split_sales.toLocaleString()}</td></tr><tr class="total"><td>Total</td><td>${r.total_transactions}</td><td>UGX ${r.total_sales.toLocaleString()}</td></tr></table></body></html>`);
+                  let html = `<html><head><title>Z-Report ${r.report_date}</title><style>body{font-family:Arial,sans-serif;font-size:13px;padding:20px;max-width:600px;margin:0 auto;}h2,h3{margin:8px 0;}table{width:100%;border-collapse:collapse;margin:10px 0;}th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left;}.total td{font-weight:bold;border-top:2px solid #333;}hr{border:none;border-top:1px solid #ddd;margin:16px 0;}</style></head><body>`;
+                  html += `<h2 style="text-align:center">Sunbird Online Stores</h2><p style="text-align:center;color:#666;">End-of-Day Report — ${format(new Date(r.report_date), "dd MMMM yyyy")}</p><hr>`;
+                  html += `<h3>Sales Summary</h3><table><tr><th>Method</th><th>Txns</th><th>Amount</th></tr><tr><td>Cash</td><td>${r.cash_transactions}</td><td>UGX ${r.cash_sales.toLocaleString()}</td></tr><tr><td>Mobile Money</td><td>${r.mobile_money_transactions}</td><td>UGX ${r.mobile_money_sales.toLocaleString()}</td></tr><tr><td>Bank</td><td>${r.bank_transactions}</td><td>UGX ${r.bank_sales.toLocaleString()}</td></tr><tr><td>Split</td><td>${r.split_transactions}</td><td>UGX ${r.split_sales.toLocaleString()}</td></tr><tr class="total"><td>Total</td><td>${r.total_transactions}</td><td>UGX ${r.total_sales.toLocaleString()}</td></tr></table>`;
+                  if (reportExpenses.length > 0) { html += `<hr><h3>Expenses</h3><table><tr><th>Name</th><th>Category</th><th>Amount</th></tr>${reportExpenses.map(e => `<tr><td>${e.name}</td><td>${e.category}</td><td>UGX ${e.amount.toLocaleString()}</td></tr>`).join("")}<tr class="total"><td colspan="2">Total</td><td>UGX ${reportExpenses.reduce((s, e) => s + e.amount, 0).toLocaleString()}</td></tr></table>`; }
+                  html += `</body></html>`;
+                  printWindow.document.write(html);
                   printWindow.document.close(); printWindow.print();
                 }}>
                   <Printer className="h-4 w-4" /> Print
@@ -909,7 +1064,8 @@ const ZReport = () => {
                 <Button variant="outline" className="flex-1 rounded-xl gap-2 border-primary/30 text-primary" onClick={() => {
                   if (!selectedReport) return;
                   const r = selectedReport;
-                  const text = `*SUNBIRD ONLINE STORES*\n*Z-REPORT — ${format(new Date(r.report_date), "dd MMM yyyy")}*\n\nTotal Sales: ${formatPrice(r.total_sales)}\nTransactions: ${r.total_transactions}\n\nCash: ${formatPrice(r.cash_sales)} (${r.cash_transactions} txns)\nMobile Money: ${formatPrice(r.mobile_money_sales)} (${r.mobile_money_transactions} txns)\nBank: ${formatPrice(r.bank_sales)} (${r.bank_transactions} txns)\nSplit: ${formatPrice(r.split_sales)} (${r.split_transactions} txns)`;
+                  const repExp = reportExpenses.reduce((s, e) => s + e.amount, 0);
+                  const text = `*SUNBIRD ONLINE STORES*\n*END-OF-DAY REPORT — ${format(new Date(r.report_date), "dd MMM yyyy")}*\n\n*Sales Summary*\nTotal Sales: ${formatPrice(r.total_sales)}\nTransactions: ${r.total_transactions}\n\nCash: ${formatPrice(r.cash_sales)} (${r.cash_transactions} txns)\nMobile Money: ${formatPrice(r.mobile_money_sales)} (${r.mobile_money_transactions} txns)\nBank: ${formatPrice(r.bank_sales)} (${r.bank_transactions} txns)\nSplit: ${formatPrice(r.split_sales)} (${r.split_transactions} txns)\n\n*Expenses:* ${formatPrice(repExp)}\n*Outstanding:* ${reportOutstandings.length} sale(s)\n*Inventory Changes:* ${reportInventory.length}\n*Staff Activities:* ${reportAuditLogs.length}`;
                   window.open(`https://wa.me/256704811097?text=${encodeURIComponent(text)}`, "_blank");
                 }}>
                   <MessageCircle className="h-4 w-4" /> WhatsApp
