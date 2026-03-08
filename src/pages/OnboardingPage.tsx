@@ -183,6 +183,7 @@ const OnboardingPage = () => {
       toast({ title: "Failed to save", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Welcome aboard! 🎉", description: "Your business is set up and ready to go." });
+      await refreshProfile();
       navigate("/dashboard");
     }
     setLoading(false);
