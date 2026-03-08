@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import {
   FileText, Printer, AlertTriangle, CheckCircle, History, Receipt, Loader2,
   Calendar, Eye, MessageCircle, Image, Camera, Download, Plus, Trash2,
-  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck, ShoppingBag
+  Package, Users, DollarSign, TrendingUp, BarChart3, Clock, ShieldCheck, ShoppingBag, CreditCard
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
@@ -115,6 +115,9 @@ const ZReport = () => {
   // Inventory activity
   const [inventoryActivity, setInventoryActivity] = useState<any[]>([]);
 
+  // Payment history (outstanding balance activity)
+  const [todayPayments, setTodayPayments] = useState<any[]>([]);
+
   // Receipt screenshots
   const [receiptImages, setReceiptImages] = useState<ReceiptFile[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
@@ -211,6 +214,26 @@ const ZReport = () => {
     finally { setLoadingImages(false); }
   };
 
+  const fetchTodayPayments = async () => {
+    const startOfDay = `${today}T00:00:00`;
+    const endOfDay = `${today}T23:59:59`;
+    const { data } = await supabase
+      .from("payment_history" as any).select("*")
+      .gte("created_at", startOfDay).lte("created_at", endOfDay)
+      .order("created_at", { ascending: false });
+    setTodayPayments((data as any[]) || []);
+  };
+
+  // Fetch all outstanding sales (not just today's)
+  const [allOutstandingSales, setAllOutstandingSales] = useState<any[]>([]);
+  const fetchAllOutstanding = async () => {
+    const { data } = await supabase
+      .from("sales" as any).select("*")
+      .eq("status", "Partial")
+      .order("created_at", { ascending: false });
+    setAllOutstandingSales((data as any[]) || []);
+  };
+
   useEffect(() => {
     fetchTodaySales();
     fetchPastReports();
@@ -218,6 +241,8 @@ const ZReport = () => {
     fetchExpenses();
     fetchAuditLogs();
     fetchInventoryActivity();
+    fetchTodayPayments();
+    fetchAllOutstanding();
   }, []);
 
   // ─── Computed values ─────────────────────────
@@ -241,6 +266,17 @@ const ZReport = () => {
     return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
   }, 0);
   const netCashReceived = totalSales - totalOutstanding - totalExpenses;
+
+  // Outstanding balance activity
+  const paymentsCollectedToday = todayPayments.reduce((s: number, p: any) => s + (p.amount || 0), 0);
+  const newOutstandingToday = outstandingSales.reduce((s, sale) => {
+    const match = sale.notes?.match(/Balance:\s*([\d,]+)/);
+    return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
+  }, 0);
+  const totalRemainingOutstanding = allOutstandingSales.reduce((s: number, sale: any) => {
+    const match = sale.notes?.match(/Balance:\s*([\d,]+)/);
+    return s + (match ? parseInt(match[1].replace(/,/g, "")) : 0);
+  }, 0);
 
   // Sales by product aggregation
   const productSales: ProductSale[] = (() => {
@@ -288,6 +324,16 @@ const ZReport = () => {
           created_at: s.created_at, items: s.items.map(i => i.product_name),
         })),
         product_sales: productSales,
+        outstanding_activity: {
+          new_outstanding_today: newOutstandingToday,
+          payments_collected_today: paymentsCollectedToday,
+          payments_count_today: todayPayments.length,
+          remaining_outstanding_total: totalRemainingOutstanding,
+          payments: todayPayments.map((p: any) => ({
+            amount: p.amount, payment_method: p.payment_method,
+            staff_name: p.staff_name, created_at: p.created_at, notes: p.notes,
+          })),
+        },
         total_expenses: totalExpenses,
         total_outstanding: totalOutstanding,
         net_cash_received: netCashReceived,
@@ -657,8 +703,8 @@ const ZReport = () => {
                 { label: "Mobile Money", value: formatPrice(breakdown[1].amount), icon: DollarSign },
                 { label: "Partial Sales", value: formatPrice(partialSales.reduce((s, x) => s + x.total_amount, 0)), icon: TrendingUp },
                 { label: "Outstanding", value: formatPrice(totalOutstanding), icon: AlertTriangle },
+                { label: "Payments Collected", value: formatPrice(paymentsCollectedToday), icon: CreditCard },
                 { label: "Total Expenses", value: formatPrice(totalExpenses), icon: TrendingUp },
-                { label: "Inventory Changes", value: String(inventoryActivity.length), icon: Package },
                 { label: "Transactions", value: String(totalTxns), icon: BarChart3 },
               ].map((s) => (
                 <div key={s.label} className="stat-card">
@@ -821,13 +867,73 @@ const ZReport = () => {
           </TabsContent>
 
           {/* ═══ OUTSTANDING BALANCES TAB ═══ */}
-          <TabsContent value="outstanding" className="mt-4">
+          <TabsContent value="outstanding" className="mt-4 space-y-4">
+            {/* Outstanding Balance Activity Summary */}
             <div className="glass-card overflow-hidden">
               <div className="px-6 py-4 border-b border-border/20">
-                <h3 className="font-semibold text-[15px] tracking-tight">Outstanding Balances</h3>
+                <h3 className="font-semibold text-[15px] tracking-tight">Outstanding Balance Activity</h3>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4">
+                <div className="stat-card p-3">
+                  <p className="text-[11px] text-muted-foreground">New Outstanding (Today)</p>
+                  <p className="text-[18px] font-semibold text-warning">{formatPrice(newOutstandingToday)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{outstandingSales.length} new credit sales</p>
+                </div>
+                <div className="stat-card p-3">
+                  <p className="text-[11px] text-muted-foreground">Payments Collected (Today)</p>
+                  <p className="text-[18px] font-semibold text-success">{formatPrice(paymentsCollectedToday)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{todayPayments.length} payments received</p>
+                </div>
+                <div className="stat-card p-3">
+                  <p className="text-[11px] text-muted-foreground">Total Remaining Outstanding</p>
+                  <p className="text-[18px] font-semibold text-destructive">{formatPrice(totalRemainingOutstanding)}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{allOutstandingSales.length} unpaid invoices</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Payments Collected */}
+            {todayPayments.length > 0 && (
+              <div className="glass-card overflow-hidden">
+                <div className="px-6 py-4 border-b border-border/20">
+                  <h3 className="font-semibold text-[15px] tracking-tight">Payments Collected Today ({todayPayments.length})</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border/20">
+                        {["Time", "Amount", "Method", "Staff", "Notes"].map((h) => (
+                          <th key={h} className="text-left text-[10px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-4">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {todayPayments.map((p: any) => (
+                        <tr key={p.id} className="border-b border-border/10 last:border-0">
+                          <td className="py-3 px-4 text-[12px] text-muted-foreground">{format(new Date(p.created_at), "HH:mm")}</td>
+                          <td className="py-3 px-4 text-[12px] font-semibold text-success">{formatPrice(p.amount)}</td>
+                          <td className="py-3 px-4 text-[12px]">{p.payment_method}</td>
+                          <td className="py-3 px-4 text-[12px]">{p.staff_name || "N/A"}</td>
+                          <td className="py-3 px-4 text-[12px] text-muted-foreground max-w-[200px] truncate">{p.notes || "—"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div className="px-6 py-3 bg-secondary/20 border-t border-border/20 flex justify-between text-[13px] font-semibold">
+                  <span>Total Collected</span>
+                  <span className="text-success">{formatPrice(paymentsCollectedToday)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Today's New Outstanding Sales */}
+            <div className="glass-card overflow-hidden">
+              <div className="px-6 py-4 border-b border-border/20">
+                <h3 className="font-semibold text-[15px] tracking-tight">New Credit Sales Today</h3>
               </div>
               {outstandingSales.length === 0 ? (
-                <div className="text-center py-12 text-muted-foreground text-[14px]">No outstanding balances today</div>
+                <div className="text-center py-12 text-muted-foreground text-[14px]">No new credit sales today</div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -856,7 +962,7 @@ const ZReport = () => {
                 </div>
               )}
               <div className="px-6 py-3 bg-secondary/20 border-t border-border/20 flex justify-between text-[13px] font-semibold">
-                <span>Total Outstanding</span>
+                <span>Today's Outstanding</span>
                 <span className="text-destructive">{formatPrice(totalOutstanding)}</span>
               </div>
             </div>
