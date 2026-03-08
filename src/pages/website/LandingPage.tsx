@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import {
@@ -5,6 +6,9 @@ import {
   Zap, Lock, Globe, DollarSign, ArrowRight, CheckCircle2, Star
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const formatPrice = (currency: "usd" | "ugx", usd: number, ugx: number) =>
+  currency === "usd" ? `$${usd}` : `UGX ${ugx.toLocaleString()}`;
 
 const features = [
   { icon: ShoppingCart, title: "Smart Sales System", desc: "Process sales quickly with barcode scanning, split payments, and real-time receipts." },
