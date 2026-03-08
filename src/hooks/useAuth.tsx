@@ -21,6 +21,7 @@ interface AuthContextType {
   role: AppRole | null;
   businessId: string | null;
   isGrandmaster: boolean;
+  onboardingCompleted: boolean;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: any }>;
@@ -40,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [isGrandmaster, setIsGrandmaster] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
   const inactivityTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -72,6 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const p = profileRes.data as any;
       setProfile(p as Profile);
       setBusinessId(p.business_id || null);
+      // Check onboarding status
+      if (p.business_id) {
+        const { data: biz } = await supabase.from("businesses").select("onboarding_completed").eq("id", p.business_id).single();
+        setOnboardingCompleted(!!(biz as any)?.onboarding_completed);
+      }
     }
     if (roleRes.data) setRole((roleRes.data as any).role as AppRole);
     setIsGrandmaster(!!(gmRes.data));
@@ -88,6 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRole(null);
         setBusinessId(null);
         setIsGrandmaster(false);
+        setOnboardingCompleted(false);
       }
       setLoading(false);
     });
@@ -147,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdminOrSupervisor = () => role === "master_admin" || role === "supervisor";
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, role, businessId, isGrandmaster, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor }}>
+    <AuthContext.Provider value={{ user, session, profile, role, businessId, isGrandmaster, onboardingCompleted, loading, signIn, signUp, signOut, hasRole, isAdminOrSupervisor }}>
       {children}
     </AuthContext.Provider>
   );
