@@ -2,7 +2,7 @@ import {
   LayoutGrid, ShoppingCart, Globe, Smartphone, DollarSign, BarChart3,
   ClipboardList, BookOpen, ScanBarcode, Users as UsersIcon, Settings,
   LogOut, AlertCircle, Lock, Crown, Truck, ShoppingBag, FileText,
-  TrendingUp, UserCog, Store, Wallet, Plug, ScrollText,
+  TrendingUp, UserCog, Store, Wallet, Plug, ScrollText, CreditCard,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useAuth } from "@/hooks/useAuth";
@@ -127,6 +127,18 @@ export function AppSidebar() {
                     >
                       <Crown className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span className="flex-1">Platform Overview</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/subscriptions"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
+                      activeClassName="bg-primary/10 border border-primary/25"
+                    >
+                      <CreditCard className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
+                      <span className="flex-1">Subscriptions</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
