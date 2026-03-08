@@ -872,6 +872,7 @@ const ZReport = () => {
                       <p className="text-[11px] text-muted-foreground">
                         {report.total_transactions} transactions · {report.status}
                         {report.closed_at && ` · Closed at ${format(new Date(report.closed_at), "HH:mm")}`}
+                        {report.closed_by_name && ` by ${report.closed_by_name}`}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
@@ -882,7 +883,7 @@ const ZReport = () => {
                         </p>
                       )}
                     </div>
-                    <Button variant="outline" size="sm" className="shrink-0 rounded-lg gap-1.5 border-primary/30 text-primary text-[12px]" onClick={() => { setSelectedReport(report); fetchSalesForDate(report.report_date); fetchReportDetails(report.report_date); }}>
+                    <Button variant="outline" size="sm" className="shrink-0 rounded-lg gap-1.5 border-primary/30 text-primary text-[12px]" onClick={() => setSelectedReport(report)}>
                       <Eye className="h-3.5 w-3.5" /> View
                     </Button>
                   </div>
