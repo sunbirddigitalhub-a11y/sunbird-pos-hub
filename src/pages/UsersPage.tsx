@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { Plus, Shield, ShieldCheck, User, Pencil, Trash2, RotateCcw, UserCheck, UserX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -20,6 +21,25 @@ interface UserRecord {
   created_at: string;
   role: AppRole;
 }
+
+const ALL_MODULES = [
+  { key: "dashboard", label: "Dashboard" },
+  { key: "pos", label: "POS" },
+  { key: "sales", label: "Sales" },
+  { key: "products", label: "Products" },
+  { key: "inventory", label: "Inventory" },
+  { key: "customers", label: "Customers" },
+  { key: "suppliers", label: "Suppliers" },
+  { key: "outstanding", label: "Outstanding Payments" },
+  { key: "invoices", label: "Invoices" },
+  { key: "expenses", label: "Expenses" },
+  { key: "reports", label: "Reports" },
+  { key: "analytics", label: "Analytics" },
+  { key: "z-report", label: "Z-Report" },
+  { key: "settings", label: "Settings" },
+  { key: "stores", label: "Stores" },
+  { key: "barcode", label: "Barcode Scanner" },
+];
 
 const roleStyles: Record<string, string> = {
   master_admin: "bg-primary/10 text-primary",
@@ -40,39 +60,39 @@ const roleIcons: Record<string, typeof Shield> = {
 };
 
 const UsersPage = () => {
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, businessId } = useAuth();
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editing, setEditing] = useState<UserRecord | null>(null);
 
-  // Form state
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPhone, setFormPhone] = useState("");
   const [formRole, setFormRole] = useState<AppRole>("staff");
   const [formPassword, setFormPassword] = useState("");
+  const [formPermissions, setFormPermissions] = useState<Record<string, boolean>>({});
   const [saving, setSaving] = useState(false);
 
-  const { businessId } = useAuth();
+  const getDefaultPermissions = (role: AppRole): Record<string, boolean> => {
+    const perms: Record<string, boolean> = {};
+    ALL_MODULES.forEach((m) => {
+      if (role === "master_admin") {
+        perms[m.key] = true;
+      } else if (role === "supervisor") {
+        perms[m.key] = m.key !== "settings";
+      } else {
+        perms[m.key] = ["pos", "sales", "barcode"].includes(m.key);
+      }
+    });
+    return perms;
+  };
 
   const fetchUsers = useCallback(async () => {
-    // Always scope users to the caller's own business — even Grandmaster
-    if (!businessId) {
-      setLoading(false);
-      return;
-    }
-
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("business_id", businessId);
-
-    if (!profiles) {
-      setLoading(false);
-      return;
-    }
+    if (!businessId) { setLoading(false); return; }
+    const { data: profiles } = await supabase.from("profiles").select("*").eq("business_id", businessId);
+    if (!profiles) { setLoading(false); return; }
 
     const profileUserIds = (profiles as any[]).map((p) => p.user_id);
     const { data: roles } = profileUserIds.length
@@ -96,39 +116,74 @@ const UsersPage = () => {
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
+  const loadPermissions = async (userId: string, role: AppRole) => {
+    const { data } = await supabase
+      .from("staff_permissions" as any)
+      .select("module, allowed")
+      .eq("user_id", userId);
+    
+    const defaults = getDefaultPermissions(role);
+    if (data && (data as any[]).length > 0) {
+      (data as any[]).forEach((p: any) => { defaults[p.module] = p.allowed; });
+    }
+    setFormPermissions(defaults);
+  };
+
   const openNew = () => {
     setEditing(null);
     setFormName(""); setFormEmail(""); setFormPhone(""); setFormRole("staff"); setFormPassword("");
+    setFormPermissions(getDefaultPermissions("staff"));
     setDialogOpen(true);
   };
 
-  const openEdit = (u: UserRecord) => {
+  const openEdit = async (u: UserRecord) => {
     setEditing(u);
     setFormName(u.full_name); setFormEmail(u.email); setFormPhone(u.phone || ""); setFormRole(u.role); setFormPassword("");
+    await loadPermissions(u.user_id, u.role);
     setDialogOpen(true);
+  };
+
+  const togglePermission = (moduleKey: string) => {
+    setFormPermissions((prev) => ({ ...prev, [moduleKey]: !prev[moduleKey] }));
+  };
+
+  const handleRoleChange = (newRole: AppRole) => {
+    setFormRole(newRole);
+    setFormPermissions(getDefaultPermissions(newRole));
+  };
+
+  const savePermissions = async (userId: string) => {
+    // Delete existing permissions
+    await supabase.from("staff_permissions" as any).delete().eq("user_id", userId);
+    // Insert new permissions
+    const rows = Object.entries(formPermissions).map(([module, allowed]) => ({
+      user_id: userId,
+      module,
+      allowed,
+    }));
+    if (rows.length > 0) {
+      await supabase.from("staff_permissions" as any).insert(rows as any);
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       if (editing) {
-        // Update profile
-        await supabase.from("profiles").update({
-          full_name: formName,
-          phone: formPhone || null,
-        } as any).eq("user_id", editing.user_id);
-
-        // Update role
+        await supabase.from("profiles").update({ full_name: formName, phone: formPhone || null } as any).eq("user_id", editing.user_id);
         await supabase.from("user_roles").update({ role: formRole } as any).eq("user_id", editing.user_id);
-
+        await savePermissions(editing.user_id);
         toast({ title: "User updated" });
       } else {
-        // Create new user via edge function
         const { data, error } = await supabase.functions.invoke("manage-users", {
           body: { action: "create", email: formEmail, password: formPassword, full_name: formName, phone: formPhone, role: formRole },
         });
         if (error) throw error;
         if (data?.error) throw new Error(data.error);
+        // Save permissions for the new user
+        if (data?.user_id) {
+          await savePermissions(data.user_id);
+        }
         toast({ title: "User created", description: "They can now sign in." });
       }
       setDialogOpen(false);
@@ -143,9 +198,7 @@ const UsersPage = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      const { error } = await supabase.functions.invoke("manage-users", {
-        body: { action: "delete", user_id: deleteId },
-      });
+      const { error } = await supabase.functions.invoke("manage-users", { body: { action: "delete", user_id: deleteId } });
       if (error) throw error;
       toast({ title: "User deleted" });
       fetchUsers();
@@ -164,9 +217,7 @@ const UsersPage = () => {
 
   const resetPassword = async (u: UserRecord) => {
     try {
-      const { error } = await supabase.functions.invoke("manage-users", {
-        body: { action: "reset_password", user_id: u.user_id, email: u.email },
-      });
+      const { error } = await supabase.functions.invoke("manage-users", { body: { action: "reset_password", user_id: u.user_id, email: u.email } });
       if (error) throw error;
       toast({ title: "Password reset email sent", description: `Sent to ${u.email}` });
     } catch (err: any) {
@@ -280,7 +331,7 @@ const UsersPage = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass-card border-border/40 max-w-md">
+        <DialogContent className="glass-card border-border/40 max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[16px] font-semibold">{editing ? "Edit User" : "Create User"}</DialogTitle>
           </DialogHeader>
@@ -301,7 +352,7 @@ const UsersPage = () => {
             </div>
             <div>
               <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-2">Role</label>
-              <Select value={formRole} onValueChange={(v) => setFormRole(v as AppRole)}>
+              <Select value={formRole} onValueChange={(v) => handleRoleChange(v as AppRole)}>
                 <SelectTrigger className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -318,6 +369,26 @@ const UsersPage = () => {
                 <Input type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} className="h-11 bg-secondary/50 border-border/30 rounded-xl text-[14px] apple-ring" placeholder="Min 6 characters" />
               </div>
             )}
+
+            {/* Module Permissions */}
+            <div className="pt-2 border-t border-border/20">
+              <label className="text-[12px] text-muted-foreground uppercase tracking-wider block mb-3">Module Access</label>
+              <div className="grid grid-cols-2 gap-2">
+                {ALL_MODULES.map((m) => (
+                  <div key={m.key} className="flex items-center justify-between py-1.5 px-3 rounded-lg bg-secondary/30">
+                    <span className="text-[12px] font-medium">{m.label}</span>
+                    <Switch
+                      checked={formPermissions[m.key] ?? false}
+                      onCheckedChange={() => togglePermission(m.key)}
+                      disabled={formRole === "master_admin"}
+                    />
+                  </div>
+                ))}
+              </div>
+              {formRole === "master_admin" && (
+                <p className="text-[11px] text-muted-foreground mt-2">Master Admins have full access to all modules.</p>
+              )}
+            </div>
           </div>
           <DialogFooter>
             <Button onClick={handleSave} disabled={saving} className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2 rounded-xl h-10 text-[13px] font-semibold">
