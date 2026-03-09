@@ -1,8 +1,20 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /*__lovable*
+Disallow: /*lovableproject*
+Disallow: /*lovable*
+Disallow: /*vercel*
+Disallow: /*github*
+Disallow: /*supabase*
 
 User-agent: Bingbot
 Allow: /
+Disallow: /*__lovable*
+Disallow: /*lovableproject*
+Disallow: /*lovable*
+Disallow: /*vercel*
+Disallow: /*github*
+Disallow: /*supabase*
 
 User-agent: Twitterbot
 Allow: /
@@ -12,10 +24,11 @@ Allow: /
 
 User-agent: *
 Allow: /
-
-Sitemap: https://sunbirdgroup.xyz/sitemap.xml
-
-# Block development/preview URLs
 Disallow: /*__lovable*
 Disallow: /*lovableproject*
+Disallow: /*lovable*
 Disallow: /*vercel*
+Disallow: /*github*
+Disallow: /*supabase*
+
+Sitemap: https://sunbirdgroup.xyz/sitemap.xml
