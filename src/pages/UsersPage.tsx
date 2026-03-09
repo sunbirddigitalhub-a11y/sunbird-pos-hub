@@ -58,12 +58,9 @@ const UsersPage = () => {
   const { businessId, isGrandmaster } = useAuth();
 
   const fetchUsers = useCallback(async () => {
-    // Scope users to the same business (grandmaster sees all)
-    let profilesQuery = supabase.from("profiles").select("*");
-    if (!isGrandmaster && businessId) {
-      profilesQuery = profilesQuery.eq("business_id", businessId);
-    }
-    const { data: profiles } = await profilesQuery;
+    // Always scope users to the caller's own business — even Grandmaster
+    if (!businessId) { setLoading(false); return; }
+    const { data: profiles } = await supabase.from("profiles").select("*").eq("business_id", businessId);
     const { data: roles } = await supabase.from("user_roles").select("*");
     if (profiles && roles) {
       const roleMap = new Map(roles.map((r: any) => [r.user_id, r.role]));
