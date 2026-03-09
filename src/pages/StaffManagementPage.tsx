@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { Search, Loader2, UserCog, Shield, User, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -36,14 +36,19 @@ const roleColors: Record<AppRole, string> = {
 };
 
 export default function StaffManagementPage() {
+  const { businessId } = useAuth();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
-  useEffect(() => { fetchStaff(); }, []);
+  useEffect(() => { if (businessId) fetchStaff(); else setLoading(false); }, [businessId]);
 
   const fetchStaff = async () => {
-    const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, email, status, created_at");
+    if (!businessId) return;
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, full_name, email, status, created_at")
+      .eq("business_id", businessId);
     const { data: roles } = await supabase.from("user_roles").select("user_id, role");
 
     if (!profiles) { setLoading(false); return; }
