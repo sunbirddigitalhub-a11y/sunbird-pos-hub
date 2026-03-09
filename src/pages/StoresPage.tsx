@@ -15,7 +15,7 @@ interface StoreLocation {
 
 export default function StoresPage() {
   const [stores, setStores] = useState<StoreLocation[]>([
-    { id: "1", name: "Main Branch", address: "Kampala Road, Kampala", phone: "+256 700 123 456", status: "active" },
+    { id: "1", name: "My Store", address: "Not Set", phone: "071-2345678", status: "active" },
   ]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState({ name: "", address: "", phone: "" });
