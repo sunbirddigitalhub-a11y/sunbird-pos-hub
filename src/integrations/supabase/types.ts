@@ -147,6 +147,7 @@ export type Database = {
           phone: string | null
           total_spent: number
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           address?: string | null
@@ -160,6 +161,7 @@ export type Database = {
           phone?: string | null
           total_spent?: number
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           address?: string | null
@@ -173,6 +175,7 @@ export type Database = {
           phone?: string | null
           total_spent?: number
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -180,6 +183,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "customers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -195,6 +205,7 @@ export type Database = {
           name: string
           staff_member: string | null
           staff_user_id: string | null
+          workspace_id: string | null
         }
         Insert: {
           amount?: number
@@ -206,6 +217,7 @@ export type Database = {
           name: string
           staff_member?: string | null
           staff_user_id?: string | null
+          workspace_id?: string | null
         }
         Update: {
           amount?: number
@@ -217,6 +229,7 @@ export type Database = {
           name?: string
           staff_member?: string | null
           staff_user_id?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -224,6 +237,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -259,6 +279,7 @@ export type Database = {
           status: string
           supplier: string | null
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -272,6 +293,7 @@ export type Database = {
           status?: string
           supplier?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -285,6 +307,7 @@ export type Database = {
           status?: string
           supplier?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -299,6 +322,13 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -316,6 +346,7 @@ export type Database = {
           sale_id: string
           staff_name: string | null
           staff_user_id: string | null
+          workspace_id: string | null
         }
         Insert: {
           amount?: number
@@ -329,6 +360,7 @@ export type Database = {
           sale_id: string
           staff_name?: string | null
           staff_user_id?: string | null
+          workspace_id?: string | null
         }
         Update: {
           amount?: number
@@ -342,6 +374,7 @@ export type Database = {
           sale_id?: string
           staff_name?: string | null
           staff_user_id?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -365,6 +398,13 @@ export type Database = {
             referencedRelation: "sales"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payment_history_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       products: {
@@ -382,6 +422,7 @@ export type Database = {
           supplier: string | null
           updated_at: string
           variants: string | null
+          workspace_id: string | null
         }
         Insert: {
           barcode?: string | null
@@ -397,6 +438,7 @@ export type Database = {
           supplier?: string | null
           updated_at?: string
           variants?: string | null
+          workspace_id?: string | null
         }
         Update: {
           barcode?: string | null
@@ -412,6 +454,7 @@ export type Database = {
           supplier?: string | null
           updated_at?: string
           variants?: string | null
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -419,6 +462,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "products_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -436,6 +486,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -449,6 +500,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -462,6 +514,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -469,6 +522,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -521,6 +581,7 @@ export type Database = {
           sale_id: string
           total_price: number
           unit_price: number
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -533,6 +594,7 @@ export type Database = {
           sale_id: string
           total_price?: number
           unit_price?: number
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -545,6 +607,7 @@ export type Database = {
           sale_id?: string
           total_price?: number
           unit_price?: number
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -568,6 +631,13 @@ export type Database = {
             referencedRelation: "sales"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sale_items_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sales: {
@@ -583,6 +653,7 @@ export type Database = {
           sold_by: string | null
           status: string
           total_amount: number
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -596,6 +667,7 @@ export type Database = {
           sold_by?: string | null
           status?: string
           total_amount?: number
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -609,6 +681,7 @@ export type Database = {
           sold_by?: string | null
           status?: string
           total_amount?: number
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -625,6 +698,13 @@ export type Database = {
             referencedRelation: "customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sales_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
         ]
       }
       settings: {
@@ -635,6 +715,7 @@ export type Database = {
           key: string
           updated_at: string
           value: string
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -643,6 +724,7 @@ export type Database = {
           key: string
           updated_at?: string
           value?: string
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -651,6 +733,7 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -658,6 +741,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -674,6 +764,7 @@ export type Database = {
           trial_start: string
           updated_at: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           business_id?: string | null
@@ -686,6 +777,7 @@ export type Database = {
           trial_start?: string
           updated_at?: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           business_id?: string | null
@@ -698,6 +790,7 @@ export type Database = {
           trial_start?: string
           updated_at?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -705,6 +798,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -726,6 +826,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      workspaces: {
+        Row: {
+          business_id: string
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          owner_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_id: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          owner_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_id?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          owner_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspaces_business_id_fkey"
+            columns: ["business_id"]
+            isOneToOne: false
+            referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       z_reports: {
         Row: {
@@ -752,6 +890,7 @@ export type Database = {
           status: string
           total_sales: number
           total_transactions: number
+          workspace_id: string | null
         }
         Insert: {
           bank_sales?: number
@@ -777,6 +916,7 @@ export type Database = {
           status?: string
           total_sales?: number
           total_transactions?: number
+          workspace_id?: string | null
         }
         Update: {
           bank_sales?: number
@@ -802,6 +942,7 @@ export type Database = {
           status?: string
           total_sales?: number
           total_transactions?: number
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -809,6 +950,13 @@ export type Database = {
             columns: ["business_id"]
             isOneToOne: false
             referencedRelation: "businesses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "z_reports_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -823,6 +971,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      get_user_workspace_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
