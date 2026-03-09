@@ -204,8 +204,7 @@ function AppRoutes() {
 
         {/* System */}
         <Route path="/integrations" element={
-          <ProtectedRoute>
-            {/* Grandmaster-only: non-grandmasters get redirected */}
+          <ProtectedRoute grandmasterOnly>
             <IntegrationsPage />
           </ProtectedRoute>
         } />

@@ -7,9 +7,10 @@ type AppRole = "master_admin" | "supervisor" | "staff";
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: AppRole[];
+  grandmasterOnly?: boolean;
 }
 
-export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+export function ProtectedRoute({ children, allowedRoles, grandmasterOnly = false }: ProtectedRouteProps) {
   const { user, role, isGrandmaster, loading } = useAuth();
 
   if (loading) {
@@ -21,6 +22,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   if (!user) return <Navigate to="/login" replace />;
+
+  if (grandmasterOnly && !isGrandmaster) {
+    if (role === "staff") return <Navigate to="/pos" replace />;
+    return <Navigate to="/dashboard" replace />;
+  }
 
   // Grandmaster always has access
   if (isGrandmaster) return <>{children}</>;
