@@ -59,27 +59,40 @@ const UsersPage = () => {
 
   const fetchUsers = useCallback(async () => {
     // Always scope users to the caller's own business — even Grandmaster
-    if (!businessId) { setLoading(false); return; }
-    const { data: profiles } = await supabase.from("profiles").select("*").eq("business_id", businessId);
-    const { data: roles } = await supabase.from("user_roles").select("*");
-    if (profiles && roles) {
-      const roleMap = new Map(roles.map((r: any) => [r.user_id, r.role]));
-      const merged: UserRecord[] = (profiles as any[])
-        // Filter out grandmaster accounts from normal user views
-        .filter((p) => isGrandmaster || !roleMap.has(p.user_id) || true)
-        .map((p) => ({
-          user_id: p.user_id,
-          full_name: p.full_name,
-          email: p.email,
-          phone: p.phone,
-          status: p.status,
-          created_at: p.created_at,
-          role: (roleMap.get(p.user_id) as AppRole) || "staff",
-        }));
-      setUsers(merged);
+    if (!businessId) {
+      setLoading(false);
+      return;
     }
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("business_id", businessId);
+
+    if (!profiles) {
+      setLoading(false);
+      return;
+    }
+
+    const profileUserIds = (profiles as any[]).map((p) => p.user_id);
+    const { data: roles } = profileUserIds.length
+      ? await supabase.from("user_roles").select("*").in("user_id", profileUserIds)
+      : { data: [] as any[] };
+
+    const roleMap = new Map((roles || []).map((r: any) => [r.user_id, r.role]));
+    const merged: UserRecord[] = (profiles as any[]).map((p) => ({
+      user_id: p.user_id,
+      full_name: p.full_name,
+      email: p.email,
+      phone: p.phone,
+      status: p.status,
+      created_at: p.created_at,
+      role: (roleMap.get(p.user_id) as AppRole) || "staff",
+    }));
+
+    setUsers(merged);
     setLoading(false);
-  }, [businessId, isGrandmaster]);
+  }, [businessId]);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 

@@ -45,13 +45,21 @@ export default function StaffManagementPage() {
 
   const fetchStaff = async () => {
     if (!businessId) return;
+
     const { data: profiles } = await supabase
       .from("profiles")
       .select("user_id, full_name, email, status, created_at")
       .eq("business_id", businessId);
-    const { data: roles } = await supabase.from("user_roles").select("user_id, role");
 
-    if (!profiles) { setLoading(false); return; }
+    if (!profiles) {
+      setLoading(false);
+      return;
+    }
+
+    const profileUserIds = (profiles as any[]).map((p) => p.user_id);
+    const { data: roles } = profileUserIds.length
+      ? await supabase.from("user_roles").select("user_id, role").in("user_id", profileUserIds)
+      : { data: [] as any[] };
 
     const roleMap = new Map<string, AppRole>();
     ((roles as any[]) || []).forEach((r) => roleMap.set(r.user_id, r.role));
