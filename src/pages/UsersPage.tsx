@@ -55,7 +55,7 @@ const UsersPage = () => {
   const [formPassword, setFormPassword] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const { businessId, isGrandmaster } = useAuth();
+  const { businessId } = useAuth();
 
   const fetchUsers = useCallback(async () => {
     // Always scope users to the caller's own business — even Grandmaster
