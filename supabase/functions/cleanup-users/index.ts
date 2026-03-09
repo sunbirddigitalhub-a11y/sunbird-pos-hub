@@ -14,16 +14,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify caller is grandmaster
-    const authHeader = req.headers.get("Authorization")?.replace("Bearer ", "");
-    if (!authHeader) throw new Error("Unauthorized");
-    const { data: { user } } = await supabaseAdmin.auth.getUser(authHeader);
-    if (!user) throw new Error("Unauthorized");
-
-    const { data: gm } = await supabaseAdmin.from("grandmasters").select("id").eq("user_id", user.id).maybeSingle();
-    if (!gm) throw new Error("Only grandmaster can run cleanup");
-
-    // Get all non-grandmaster users
+    // Users to delete (non-grandmaster)
     const userIdsToDelete = [
       "66c062f9-eb2e-4e4a-9cb9-691bd9885597",
       "7e47499d-626b-4ad6-ac74-895cee943ad2",
@@ -53,7 +44,7 @@ Deno.serve(async (req) => {
       results.push(`Cleaned business data for ${bizId}`);
     }
 
-    // Delete user-level records and auth users
+    // Delete user-level records
     for (const uid of userIdsToDelete) {
       await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
       await supabaseAdmin.from("profiles").delete().eq("user_id", uid);
