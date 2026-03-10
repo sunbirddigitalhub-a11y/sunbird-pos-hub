@@ -312,7 +312,9 @@ const OutstandingBalances = () => {
 
       canvas.toBlob(async (blob) => {
         if (!blob) return;
-        const fileName = `payment_${sale.sale_number}_${Date.now()}.png`;
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const userFolder = currentUser?.id || "unknown";
+        const fileName = `${userFolder}/payment_${sale.sale_number}_${Date.now()}.png`;
         await supabase.storage.from("payment-receipts").upload(fileName, blob, { contentType: "image/png" });
       }, "image/png");
     } catch (err) {
