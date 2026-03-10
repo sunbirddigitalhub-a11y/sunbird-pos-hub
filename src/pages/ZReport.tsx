@@ -199,16 +199,20 @@ const ZReport = () => {
   const fetchReceiptImages = async () => {
     setLoadingImages(true);
     try {
-      const { data, error } = await supabase.storage.from("receipts").list("", {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      const userFolder = currentUser?.id || "unknown";
+      const { data, error } = await supabase.storage.from("receipts").list(userFolder, {
         limit: 100, sortBy: { column: "created_at", order: "desc" },
       });
       if (error) throw error;
-      const files: ReceiptFile[] = (data || [])
-        .filter((f) => f.name.endsWith(".png"))
-        .map((f) => {
-          const { data: urlData } = supabase.storage.from("receipts").getPublicUrl(f.name);
-          return { name: f.name, url: urlData.publicUrl, created_at: f.created_at || "" };
-        });
+      const files: ReceiptFile[] = await Promise.all(
+        (data || [])
+          .filter((f) => f.name.endsWith(".png"))
+          .map(async (f) => {
+            const { data: urlData } = await supabase.storage.from("receipts").createSignedUrl(`${userFolder}/${f.name}`, 3600);
+            return { name: f.name, url: urlData?.signedUrl || "", created_at: f.created_at || "" };
+          })
+      );
       setReceiptImages(files);
     } catch (err) { console.error("Error loading receipt images:", err); }
     finally { setLoadingImages(false); }

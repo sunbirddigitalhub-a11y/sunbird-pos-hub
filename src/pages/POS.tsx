@@ -428,7 +428,9 @@ const POS = () => {
       const canvas = await html2canvas(receiptRef.current, { backgroundColor: "#ffffff", scale: 2, useCORS: true, logging: false });
       canvas.toBlob(async (blob) => {
         if (!blob) { setSavingScreenshot(false); return; }
-        const fileName = `${lastSale.saleNumber}_${Date.now()}.png`;
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        const userFolder = currentUser?.id || "unknown";
+        const fileName = `${userFolder}/${lastSale.saleNumber}_${Date.now()}.png`;
         const { error } = await supabase.storage.from("receipts").upload(fileName, blob, { contentType: "image/png", upsert: true });
         setSavingScreenshot(false);
         if (error) {
