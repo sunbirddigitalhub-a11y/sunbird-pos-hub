@@ -1,14 +1,6 @@
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
 } from "recharts";
 
 const monthlyData = [
@@ -28,10 +20,10 @@ const paymentMix = [
 ];
 
 const COLORS = [
-  "hsl(43, 72%, 55%)",
-  "hsl(142, 60%, 45%)",
-  "hsl(211, 80%, 55%)",
-  "hsl(280, 55%, 60%)",
+  "hsl(186, 96%, 21%)",
+  "hsl(155, 71%, 48%)",
+  "hsl(189, 34%, 41%)",
+  "hsl(280, 55%, 55%)",
 ];
 
 const formatM = (v: number) => `${(v / 1000000).toFixed(0)}M`;
@@ -55,7 +47,7 @@ const Reports = () => {
         ].map((s) => (
           <div key={s.label} className="stat-card">
             <p className="text-[13px] text-muted-foreground">{s.label}</p>
-            <p className="text-[24px] font-semibold text-success tracking-tight mt-1">{s.value}</p>
+            <p className="text-[24px] font-bold text-success tracking-tight mt-1">{s.value}</p>
             <p className="text-[12px] text-muted-foreground mt-1">{s.sub}</p>
           </div>
         ))}
@@ -66,22 +58,23 @@ const Reports = () => {
           <h3 className="font-semibold text-[15px] mb-5 tracking-tight">6-Month Revenue vs Profit</h3>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 14%)" vertical={false} />
-              <XAxis dataKey="month" stroke="hsl(220, 5%, 40%)" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="hsl(220, 5%, 40%)" fontSize={12} tickFormatter={formatM} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(210, 18%, 90%)" vertical={false} />
+              <XAxis dataKey="month" stroke="hsl(220, 9%, 46%)" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(220, 9%, 46%)" fontSize={12} tickFormatter={formatM} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
-                  border: "1px solid hsl(220, 8%, 18%)",
+                  backgroundColor: "hsl(0, 0%, 100%)",
+                  border: "1px solid hsl(210, 18%, 90%)",
                   borderRadius: "12px",
-                  color: "hsl(0, 0%, 98%)",
+                  color: "hsl(213, 29%, 17%)",
                   fontSize: "13px",
                   padding: "10px 14px",
+                  boxShadow: "0 4px 12px hsla(0, 0%, 0%, 0.08)",
                 }}
                 formatter={(v: number) => [`UGX ${v.toLocaleString()}`, ""]}
               />
-              <Bar dataKey="revenue" fill="hsl(43, 72%, 55%)" radius={[6, 6, 0, 0]} name="Revenue" />
-              <Bar dataKey="profit" fill="hsl(142, 60%, 45%)" radius={[6, 6, 0, 0]} name="Profit" />
+              <Bar dataKey="revenue" fill="hsl(186, 96%, 21%)" radius={[6, 6, 0, 0]} name="Revenue" />
+              <Bar dataKey="profit" fill="hsl(155, 71%, 48%)" radius={[6, 6, 0, 0]} name="Profit" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -97,11 +90,12 @@ const Reports = () => {
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
-                  border: "1px solid hsl(220, 8%, 18%)",
+                  backgroundColor: "hsl(0, 0%, 100%)",
+                  border: "1px solid hsl(210, 18%, 90%)",
                   borderRadius: "12px",
-                  color: "hsl(0, 0%, 98%)",
+                  color: "hsl(213, 29%, 17%)",
                   fontSize: "13px",
+                  boxShadow: "0 4px 12px hsla(0, 0%, 0%, 0.08)",
                 }}
               />
             </PieChart>

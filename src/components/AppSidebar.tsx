@@ -29,37 +29,28 @@ interface NavItem {
 function useNavItems(): NavItem[] {
   const t = useBusinessTerminology();
   return [
-    // Core
     { title: "Dashboard", url: "/dashboard", icon: LayoutGrid, feature: "dashboard", section: t.sectionCore },
     { title: t.pos, url: "/pos", icon: ShoppingCart, feature: "pos", section: t.sectionCore },
     { title: t.products, url: "/products", icon: Smartphone, feature: "products", section: t.sectionCore },
     { title: t.inventory, url: "/inventory", icon: Globe, feature: "inventory", section: t.sectionCore },
     { title: t.customers, url: "/customers", icon: BookOpen, feature: "customers", section: t.sectionCore },
-    // Sales & Finance
     { title: t.sales, url: "/sales", icon: DollarSign, feature: "sales", section: t.sectionSalesFinance },
     { title: t.invoices, url: "/invoices", icon: FileText, feature: "invoices", section: t.sectionSalesFinance },
     { title: t.expenses, url: "/expenses", icon: Wallet, feature: "expenses", section: t.sectionSalesFinance },
     { title: t.outstanding, url: "/outstanding", icon: AlertCircle, feature: "outstanding", section: t.sectionSalesFinance },
-    // Supply Chain
     { title: t.suppliers, url: "/suppliers", icon: Truck, feature: "suppliers", section: t.sectionSupplyChain },
     { title: t.purchases, url: "/purchases", icon: ShoppingBag, feature: "purchases", section: t.sectionSupplyChain },
-    // Reports & Analytics
     { title: "Reports", url: "/reports", icon: BarChart3, feature: "reports", section: "Reports" },
     { title: "Analytics", url: "/analytics", icon: TrendingUp, feature: "analytics", section: "Reports" },
     { title: "Z-Report", url: "/z-report", icon: ClipboardList, feature: "zReport", section: "Reports" },
-    // Tools
     { title: t.barcode, url: "/barcode", icon: ScanBarcode, feature: "barcode", section: "Tools" },
-    // Management
     { title: t.staff + " Management", url: "/staff-management", icon: UserCog, feature: "staffManagement", section: "Management" },
     { title: "Users", url: "/users", icon: UsersIcon, feature: "users", section: "Management" },
     { title: t.stores, url: "/stores", icon: Store, feature: "stores", section: "Management" },
-    // System
-    
     { title: "Settings", url: "/settings", icon: Settings, feature: "settings", section: "System" },
   ];
 }
 
-// Role-based visibility
 const roleRestrictions: Record<string, AppRole[]> = {
   "/users": ["master_admin"],
   "/settings": ["master_admin"],
@@ -103,12 +94,12 @@ export function AppSidebar() {
     .toUpperCase() || "U";
 
   return (
-    <Sidebar className="border-r border-border/30">
+    <Sidebar className="border-r border-border">
       <SidebarHeader className="p-5 pb-6">
         <div className="flex items-center gap-3">
           <img src="/images/sunbird-logo.png" alt="Sunbird Logo" className="w-9 h-9 rounded-xl apple-shadow object-cover" />
           <div>
-            <h2 className="text-[15px] font-semibold tracking-tight gold-gradient-text">Sunbird</h2>
+            <h2 className="text-[15px] font-bold tracking-tight text-foreground">Sunbird</h2>
             <p className="text-[11px] text-muted-foreground tracking-wide">Online Stores</p>
           </div>
         </div>
@@ -123,8 +114,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to="/grandmaster"
-                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
-                      activeClassName="bg-primary/10 border border-primary/25"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/8"
+                      activeClassName="bg-primary/10 text-primary font-semibold"
                     >
                       <Crown className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span className="flex-1">Platform Overview</span>
@@ -135,8 +126,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to="/subscriptions"
-                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
-                      activeClassName="bg-primary/10 border border-primary/25"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/8"
+                      activeClassName="bg-primary/10 text-primary font-semibold"
                     >
                       <CreditCard className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span className="flex-1">Subscriptions</span>
@@ -147,8 +138,8 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink
                       to="/integrations"
-                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/10"
-                      activeClassName="bg-primary/10 border border-primary/25"
+                      className="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[14px] font-medium transition-all duration-200 text-primary hover:bg-primary/8"
+                      activeClassName="bg-primary/10 text-primary font-semibold"
                     >
                       <Plug className="h-[18px] w-[18px] shrink-0" strokeWidth={1.8} />
                       <span className="flex-1">Integrations</span>
@@ -179,10 +170,10 @@ export function AppSidebar() {
                           end={item.url === "/"}
                           className={`flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-200 ${
                             accessible
-                              ? "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                              ? "text-muted-foreground hover:text-foreground hover:bg-secondary"
                               : "text-muted-foreground/40 cursor-not-allowed"
                           }`}
-                          activeClassName={accessible ? "bg-primary/10 text-primary border border-primary/25" : ""}
+                          activeClassName={accessible ? "bg-primary/10 text-primary font-semibold" : ""}
                           onClick={(e: React.MouseEvent) => {
                             if (!accessible) {
                               e.preventDefault();
@@ -203,10 +194,10 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="p-4 border-t border-border/20">
+      <SidebarFooter className="p-4 border-t border-border">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/80 to-primary/40 flex items-center justify-center">
-            <span className="text-[11px] font-semibold text-primary-foreground">{initials}</span>
+          <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center">
+            <span className="text-[11px] font-semibold text-primary">{initials}</span>
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-medium truncate">{profile?.full_name || "User"}</p>
