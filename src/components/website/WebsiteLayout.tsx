@@ -17,15 +17,14 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar — responsive */}
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[hsl(220,15%,92%)]">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-[hsl(210,18%,92%)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14 md:h-16">
           <Link to="/" className="flex items-center gap-2.5">
             <img src="/images/sunbird-logo.png" alt="SunbirdPOSHub" className="w-8 h-8 rounded-lg object-cover" />
-            <span className="font-bold text-lg text-[hsl(220,15%,15%)]">SunbirdPOSHub</span>
+            <span className="font-bold text-lg text-[hsl(213,29%,17%)]">SunbirdPOSHub</span>
           </Link>
 
-          {/* Desktop nav links */}
           <div className="hidden md:flex items-center gap-1">
             {navLinks.map((l) => (
               <Link
@@ -33,8 +32,8 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
                 to={l.href}
                 className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                   location.pathname === l.href
-                    ? "text-[hsl(211,80%,50%)] bg-[hsl(211,80%,55%,0.08)]"
-                    : "text-[hsl(220,10%,40%)] hover:text-[hsl(220,15%,15%)] hover:bg-[hsl(220,15%,96%)]"
+                    ? "text-[hsl(186,96%,21%)] bg-[hsl(186,96%,21%,0.08)]"
+                    : "text-[hsl(220,9%,46%)] hover:text-[hsl(213,29%,17%)] hover:bg-[hsl(192,16%,96%)]"
                 }`}
               >
                 {l.label}
@@ -42,33 +41,30 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
             ))}
           </div>
 
-          {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-3">
             <Link to="/login">
-              <Button variant="ghost" className="text-sm font-medium text-[hsl(220,10%,35%)] hover:text-[hsl(220,15%,15%)]">
+              <Button variant="ghost" className="text-sm font-medium text-[hsl(220,9%,46%)] hover:text-[hsl(213,29%,17%)]">
                 Login
               </Button>
             </Link>
             <Link to="/register">
-              <Button className="text-sm font-semibold rounded-lg bg-[hsl(211,80%,55%)] hover:bg-[hsl(211,80%,48%)] text-white px-5">
+              <Button className="text-sm font-semibold rounded-lg bg-[hsl(186,96%,21%)] hover:bg-[hsl(186,90%,25%)] text-white px-5">
                 Start Free Trial
               </Button>
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[hsl(220,15%,96%)] transition-colors"
+            className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg hover:bg-[hsl(192,16%,96%)] transition-colors"
             aria-label="Toggle menu"
           >
             {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
 
-        {/* Mobile dropdown menu */}
         {mobileOpen && (
-          <div className="md:hidden border-t border-[hsl(220,15%,92%)] bg-white/95 backdrop-blur-xl animate-in slide-in-from-top-2 duration-200">
+          <div className="md:hidden border-t border-[hsl(210,18%,92%)] bg-white/95 backdrop-blur-xl animate-in slide-in-from-top-2 duration-200">
             <div className="px-4 py-3 space-y-1">
               {navLinks.map((l) => (
                 <Link
@@ -77,21 +73,21 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
                   onClick={() => setMobileOpen(false)}
                   className={`block px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${
                     location.pathname === l.href
-                      ? "text-[hsl(211,80%,50%)] bg-[hsl(211,80%,55%,0.08)]"
-                      : "text-[hsl(220,10%,35%)] hover:bg-[hsl(220,15%,96%)]"
+                      ? "text-[hsl(186,96%,21%)] bg-[hsl(186,96%,21%,0.08)]"
+                      : "text-[hsl(220,9%,46%)] hover:bg-[hsl(192,16%,96%)]"
                   }`}
                 >
                   {l.label}
                 </Link>
               ))}
-              <div className="pt-3 border-t border-[hsl(220,15%,92%)] space-y-2">
+              <div className="pt-3 border-t border-[hsl(210,18%,92%)] space-y-2">
                 <Link to="/login" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" className="w-full h-11 rounded-xl text-sm font-semibold border-[hsl(220,15%,88%)]">
+                  <Button variant="outline" className="w-full h-11 rounded-xl text-sm font-semibold border-[hsl(210,18%,88%)]">
                     Login
                   </Button>
                 </Link>
                 <Link to="/register" onClick={() => setMobileOpen(false)}>
-                  <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-[hsl(211,80%,55%)] hover:bg-[hsl(211,80%,48%)] text-white">
+                  <Button className="w-full h-11 rounded-xl text-sm font-semibold bg-[hsl(186,96%,21%)] hover:bg-[hsl(186,90%,25%)] text-white">
                     Start Free Trial
                   </Button>
                 </Link>
@@ -101,11 +97,10 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
         )}
       </nav>
 
-      {/* Content */}
       <main>{children}</main>
 
       {/* Footer */}
-      <footer className="bg-[hsl(220,15%,8%)] text-[hsl(220,10%,55%)] py-10 md:py-16">
+      <footer className="bg-[hsl(213,29%,10%)] text-[hsl(220,9%,55%)] py-10 md:py-16">
         <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10 md:mb-12">
             <div className="col-span-2 sm:col-span-1">
@@ -138,7 +133,7 @@ export function WebsiteLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
           </div>
-          <div className="border-t border-[hsl(220,10%,18%)] pt-6 md:pt-8 text-sm text-center">
+          <div className="border-t border-white/10 pt-6 md:pt-8 text-sm text-center">
             Sunbird Online Stores &copy; {new Date().getFullYear()} — sunbirdgroup.xyz
           </div>
         </div>

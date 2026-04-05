@@ -57,7 +57,6 @@ const Dashboard = () => {
 
       const lowStock = products.filter(p => p.in_stock > 0 && p.in_stock <= 5);
 
-      // Weekly chart data
       const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const weeklyData: { name: string; sales: number }[] = [];
       for (let i = 6; i >= 0; i--) {
@@ -71,7 +70,6 @@ const Dashboard = () => {
         });
       }
 
-      // Top products by revenue
       const productMap = new Map<string, { units: number; revenue: number }>();
       saleItems.forEach((si: any) => {
         const existing = productMap.get(si.product_name) || { units: 0, revenue: 0 };
@@ -160,12 +158,12 @@ const Dashboard = () => {
           <div key={stat.label} className="stat-card min-h-[100px]" style={{ animationDelay: `${i * 80}ms` }}>
             <div className="flex items-center justify-between mb-3 md:mb-4">
               <span className="text-muted-foreground text-[11px] sm:text-[13px] leading-tight">{stat.label}</span>
-              <div className="w-8 h-8 rounded-xl bg-secondary/80 flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                 <stat.icon className="h-4 w-4 text-primary" />
               </div>
             </div>
             <div className="flex flex-col sm:flex-row sm:items-end gap-1 sm:gap-2">
-              <span className="text-[16px] sm:text-[24px] font-semibold tracking-tight leading-none">{stat.value}</span>
+              <span className="text-[16px] sm:text-[24px] font-bold tracking-tight leading-none">{stat.value}</span>
               <span className={`text-[10px] sm:text-[11px] font-medium flex items-center gap-0.5 ${stat.up ? "text-success" : "text-destructive"}`}>
                 {stat.up ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
                 {stat.change}
@@ -199,27 +197,27 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={240}>
             <AreaChart data={stats.weeklyData}>
               <defs>
-                <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0.25} />
-                  <stop offset="100%" stopColor="hsl(43, 72%, 55%)" stopOpacity={0} />
+                <linearGradient id="tealGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="hsl(186, 96%, 21%)" stopOpacity={0.15} />
+                  <stop offset="100%" stopColor="hsl(186, 96%, 21%)" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 14%)" vertical={false} />
-              <XAxis dataKey="name" stroke="hsl(220, 5%, 40%)" fontSize={12} tickLine={false} axisLine={false} />
-              <YAxis stroke="hsl(220, 5%, 40%)" fontSize={12} tickFormatter={formatUGX} tickLine={false} axisLine={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(210, 18%, 90%)" vertical={false} />
+              <XAxis dataKey="name" stroke="hsl(220, 9%, 46%)" fontSize={12} tickLine={false} axisLine={false} />
+              <YAxis stroke="hsl(220, 9%, 46%)" fontSize={12} tickFormatter={formatUGX} tickLine={false} axisLine={false} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: "hsla(220, 10%, 10%, 0.9)",
-                  border: "1px solid hsl(220, 8%, 18%)",
+                  backgroundColor: "hsl(0, 0%, 100%)",
+                  border: "1px solid hsl(210, 18%, 90%)",
                   borderRadius: "12px",
-                  color: "hsl(0, 0%, 98%)",
-                  backdropFilter: "blur(20px)",
+                  color: "hsl(213, 29%, 17%)",
                   fontSize: "13px",
                   padding: "10px 14px",
+                  boxShadow: "0 4px 12px hsla(0, 0%, 0%, 0.08)",
                 }}
                 formatter={(value: number) => [formatPrice(value), "Sales"]}
               />
-              <Area type="monotone" dataKey="sales" stroke="hsl(43, 72%, 55%)" fill="url(#goldGradient)" strokeWidth={2} />
+              <Area type="monotone" dataKey="sales" stroke="hsl(186, 96%, 21%)" fill="url(#tealGradient)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -249,7 +247,7 @@ const Dashboard = () => {
 
       {/* Recent Transactions */}
       <div className="glass-card overflow-hidden">
-        <div className="px-6 py-4 border-b border-border/30 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-border flex items-center justify-between">
           <h3 className="font-semibold text-[15px] tracking-tight">Today's Transactions</h3>
           <Button size="sm" variant="ghost" onClick={() => navigate("/sales")} className="text-[12px] text-primary">
             View All
@@ -259,7 +257,7 @@ const Dashboard = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border/20">
+                <tr className="border-b border-border">
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Sale #</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Customer</th>
                   <th className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider py-3 px-6">Amount</th>
@@ -269,7 +267,7 @@ const Dashboard = () => {
               </thead>
               <tbody>
                 {stats.recentSales.map((sale) => (
-                  <tr key={sale.id} className="border-b border-border/10 last:border-0 hover:bg-secondary/20 transition-colors duration-200">
+                  <tr key={sale.id} className="border-b border-border/50 last:border-0 hover:bg-secondary/50 transition-colors duration-200">
                     <td className="py-3 px-6 text-[13px] font-mono text-muted-foreground">{sale.sale_number}</td>
                     <td className="py-3 px-6 text-[13px] font-medium">{sale.customer_name}</td>
                     <td className="py-3 px-6 text-[13px] font-medium text-primary">{formatPrice(sale.total_amount)}</td>
