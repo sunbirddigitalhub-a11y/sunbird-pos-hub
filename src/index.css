@@ -174,6 +174,13 @@
     @apply tracking-tight;
     font-weight: 700;
   }
+
+  /* Editorial display font for hero/page titles — like the reference "Level 01: Ideation" */
+  .font-display {
+    font-family: 'Fraunces', 'Inter', Georgia, serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
+  }
 }
 
 @layer base {
