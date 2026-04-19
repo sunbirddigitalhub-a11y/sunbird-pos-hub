@@ -8,154 +8,150 @@
 @layer base {
   :root,
   .light {
-    /* Warm off-white background — Medium/Dorm style */
-    --background: 60 11% 96%;
-    --foreground: 0 0% 7%;
+    /* Cool pale blue-gray background — WHTrade dashboard style */
+    --background: 222 25% 95%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 7%;
+    --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 7%;
+    --popover-foreground: 222 47% 11%;
 
-    /* Primary = pure black for CTAs (like the dark pill in reference) */
-    --primary: 0 0% 8%;
-    --primary-foreground: 60 11% 96%;
-    --primary-glow: 0 0% 20%;
+    /* Vivid trading blue */
+    --primary: 230 100% 62%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 230 100% 72%;
 
-    --secondary: 60 9% 92%;
-    --secondary-foreground: 0 0% 7%;
+    --secondary: 222 20% 92%;
+    --secondary-foreground: 222 47% 11%;
 
-    --muted: 60 9% 93%;
-    --muted-foreground: 0 0% 40%;
+    --muted: 222 20% 94%;
+    --muted-foreground: 222 15% 45%;
 
-    /* Pastel peach accent (like the "24" date highlight) */
-    --accent: 18 100% 88%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 230 100% 96%;
+    --accent-foreground: 230 100% 50%;
 
-    /* Pastel pops from reference image */
-    --cyan-accent: 200 60% 85%;
-    --orange-accent: 18 100% 82%;
-    --pink-accent: 340 70% 88%;
+    --cyan-accent: 195 90% 55%;
+    --orange-accent: 25 95% 60%;
+    --pink-accent: 340 80% 65%;
 
-    --destructive: 4 76% 56%;
+    --destructive: 4 80% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Mint/lime — like the completed task chip */
-    --success: 80 55% 78%;
-    --success-foreground: 0 0% 12%;
+    /* Trading green for gains */
+    --success: 145 75% 42%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 7%;
+    --warning: 38 95% 55%;
+    --warning-foreground: 222 47% 11%;
 
-    --info: 0 0% 8%;
+    --info: 230 100% 62%;
     --info-foreground: 0 0% 100%;
 
-    --border: 60 6% 88%;
-    --input: 60 6% 88%;
-    --ring: 0 0% 8%;
+    --border: 222 20% 88%;
+    --input: 222 20% 88%;
+    --ring: 230 100% 62%;
 
     --radius: 1rem;
 
-    --sidebar-background: 60 11% 96%;
-    --sidebar-foreground: 0 0% 30%;
-    --sidebar-primary: 0 0% 8%;
-    --sidebar-primary-foreground: 60 11% 96%;
-    --sidebar-accent: 18 100% 88%;
-    --sidebar-accent-foreground: 0 0% 7%;
-    --sidebar-border: 60 6% 88%;
-    --sidebar-ring: 0 0% 8%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 15% 40%;
+    --sidebar-primary: 230 100% 62%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 230 100% 96%;
+    --sidebar-accent-foreground: 230 100% 50%;
+    --sidebar-border: 222 20% 90%;
+    --sidebar-ring: 230 100% 62%;
 
-    --chart-1: 0 0% 8%;
-    --chart-2: 18 100% 75%;
-    --chart-3: 80 55% 70%;
-    --chart-4: 280 40% 75%;
-    --chart-5: 200 60% 75%;
+    --chart-1: 230 100% 62%;       /* primary blue line */
+    --chart-2: 145 75% 42%;        /* gain green */
+    --chart-3: 4 80% 58%;          /* loss red */
+    --chart-4: 195 90% 55%;        /* cyan */
+    --chart-5: 25 95% 60%;         /* orange */
 
-    --gradient-primary: linear-gradient(135deg, hsl(0 0% 8%), hsl(0 0% 25%));
-    --gradient-cyan: linear-gradient(135deg, hsl(200 60% 85%), hsl(280 40% 85%));
-    --gradient-warm: linear-gradient(135deg, hsl(18 100% 88%), hsl(340 70% 88%));
-    --gradient-subtle: linear-gradient(135deg, hsl(18 100% 88% / 0.4), hsl(80 55% 78% / 0.4), hsl(280 40% 85% / 0.4));
-    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.04), 0 2px 8px hsl(0 0% 0% / 0.04);
-    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.06), 0 8px 24px -4px hsl(0 0% 0% / 0.05);
-    --shadow-glow: 0 8px 24px -8px hsl(0 0% 0% / 0.25);
+    --gradient-primary: linear-gradient(135deg, hsl(230 100% 62%), hsl(250 90% 65%));
+    --gradient-cyan: linear-gradient(135deg, hsl(195 90% 55%), hsl(230 100% 62%));
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 60%), hsl(340 80% 65%));
+    --gradient-subtle: linear-gradient(180deg, hsl(222 25% 95%), hsl(222 25% 97%));
+    --shadow-soft: 0 1px 2px hsl(222 47% 11% / 0.04), 0 2px 8px hsl(222 47% 11% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(222 47% 11% / 0.06), 0 8px 24px -4px hsl(222 47% 11% / 0.05);
+    --shadow-glow: 0 8px 24px -8px hsl(230 100% 62% / 0.4);
 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
   .dark {
-    /* True deep black — editorial dark mode */
-    --background: 0 0% 7%;
-    --foreground: 60 11% 96%;
+    /* Deep navy trading terminal */
+    --background: 222 40% 8%;
+    --foreground: 210 40% 98%;
 
-    --card: 0 0% 11%;
-    --card-foreground: 60 11% 96%;
+    --card: 222 35% 12%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 0 0% 11%;
-    --popover-foreground: 60 11% 96%;
+    --popover: 222 35% 12%;
+    --popover-foreground: 210 40% 98%;
 
-    /* Primary = warm off-white pill for CTAs in dark */
-    --primary: 60 11% 96%;
-    --primary-foreground: 0 0% 7%;
-    --primary-glow: 60 11% 80%;
+    --primary: 230 100% 68%;
+    --primary-foreground: 222 47% 11%;
+    --primary-glow: 230 100% 75%;
 
-    --secondary: 0 0% 14%;
-    --secondary-foreground: 60 11% 96%;
+    --secondary: 222 30% 16%;
+    --secondary-foreground: 210 40% 95%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 222 30% 16%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 18 80% 70%;
-    --accent-foreground: 0 0% 7%;
+    --accent: 230 60% 22%;
+    --accent-foreground: 230 100% 80%;
 
-    --cyan-accent: 200 60% 70%;
-    --orange-accent: 18 90% 70%;
-    --pink-accent: 340 70% 75%;
+    --cyan-accent: 195 90% 60%;
+    --orange-accent: 25 95% 65%;
+    --pink-accent: 340 80% 70%;
 
-    --destructive: 4 76% 56%;
+    --destructive: 4 80% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 80 50% 65%;
-    --success-foreground: 0 0% 7%;
+    --success: 145 70% 50%;
+    --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 60%;
-    --warning-foreground: 0 0% 7%;
+    --warning: 38 95% 60%;
+    --warning-foreground: 222 47% 11%;
 
-    --info: 60 11% 96%;
-    --info-foreground: 0 0% 7%;
+    --info: 230 100% 68%;
+    --info-foreground: 222 47% 11%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 60 11% 96%;
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 230 100% 68%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 7%;
-    --sidebar-foreground: 0 0% 65%;
-    --sidebar-primary: 60 11% 96%;
-    --sidebar-primary-foreground: 0 0% 7%;
-    --sidebar-accent: 18 80% 70%;
-    --sidebar-accent-foreground: 0 0% 7%;
-    --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 60 11% 96%;
+    --sidebar-background: 222 40% 9%;
+    --sidebar-foreground: 215 20% 70%;
+    --sidebar-primary: 230 100% 68%;
+    --sidebar-primary-foreground: 222 47% 11%;
+    --sidebar-accent: 230 60% 22%;
+    --sidebar-accent-foreground: 230 100% 80%;
+    --sidebar-border: 222 30% 16%;
+    --sidebar-ring: 230 100% 68%;
 
-    --chart-1: 60 11% 96%;
-    --chart-2: 18 80% 70%;
-    --chart-3: 80 50% 65%;
-    --chart-4: 280 50% 75%;
-    --chart-5: 200 60% 70%;
+    --chart-1: 230 100% 68%;
+    --chart-2: 145 70% 50%;
+    --chart-3: 4 80% 60%;
+    --chart-4: 195 90% 60%;
+    --chart-5: 25 95% 65%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(60 11% 96%), hsl(60 11% 80%));
-    --gradient-cyan: linear-gradient(135deg, hsl(200 60% 70%), hsl(280 50% 70%));
-    --gradient-warm: linear-gradient(135deg, hsl(18 80% 70%), hsl(340 70% 75%));
-    --gradient-subtle: linear-gradient(135deg, hsl(18 80% 70% / 0.15), hsl(80 50% 65% / 0.15), hsl(280 50% 75% / 0.15));
+    --gradient-primary: linear-gradient(135deg, hsl(230 100% 60%), hsl(250 90% 65%));
+    --gradient-cyan: linear-gradient(135deg, hsl(195 90% 60%), hsl(230 100% 68%));
+    --gradient-warm: linear-gradient(135deg, hsl(25 95% 65%), hsl(340 80% 70%));
+    --gradient-subtle: linear-gradient(180deg, hsl(222 40% 8%), hsl(222 40% 10%));
     --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.5), 0 4px 12px hsl(0 0% 0% / 0.3);
     --shadow-md: 0 4px 16px -2px hsl(0 0% 0% / 0.6), 0 12px 32px -4px hsl(0 0% 0% / 0.4);
-    --shadow-glow: 0 8px 32px -8px hsl(60 11% 96% / 0.3);
+    --shadow-glow: 0 8px 32px -8px hsl(230 100% 68% / 0.5);
 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
-
 }
 
 @layer base {
