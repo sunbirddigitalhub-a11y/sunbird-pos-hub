@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,146 +8,154 @@
 @layer base {
   :root,
   .light {
-    --background: 220 33% 97%;
-    --foreground: 222 47% 11%;
+    /* Warm off-white background — Medium/Dorm style */
+    --background: 60 11% 96%;
+    --foreground: 0 0% 7%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    --card-foreground: 0 0% 7%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
+    --popover-foreground: 0 0% 7%;
 
-    --primary: 221 83% 53%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 262 83% 58%;
+    /* Primary = pure black for CTAs (like the dark pill in reference) */
+    --primary: 0 0% 8%;
+    --primary-foreground: 60 11% 96%;
+    --primary-glow: 0 0% 20%;
 
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
+    --secondary: 60 9% 92%;
+    --secondary-foreground: 0 0% 7%;
 
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 60 9% 93%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 262 83% 58%;
-    --accent-foreground: 0 0% 100%;
+    /* Pastel peach accent (like the "24" date highlight) */
+    --accent: 18 100% 88%;
+    --accent-foreground: 0 0% 7%;
 
-    --cyan-accent: 189 94% 43%;
-    --orange-accent: 21 90% 53%;
-    --pink-accent: 330 81% 60%;
+    /* Pastel pops from reference image */
+    --cyan-accent: 200 60% 85%;
+    --orange-accent: 18 100% 82%;
+    --pink-accent: 340 70% 88%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 4 76% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    /* Mint/lime — like the completed task chip */
+    --success: 80 55% 78%;
+    --success-foreground: 0 0% 12%;
 
     --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
+    --warning-foreground: 0 0% 7%;
 
-    --info: 221 83% 53%;
+    --info: 0 0% 8%;
     --info-foreground: 0 0% 100%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --border: 60 6% 88%;
+    --input: 60 6% 88%;
+    --ring: 0 0% 8%;
 
     --radius: 1rem;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 215 16% 40%;
-    --sidebar-primary: 221 83% 53%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 221 83% 53%;
-    --sidebar-accent-foreground: 221 83% 53%;
-    --sidebar-border: 214 32% 93%;
-    --sidebar-ring: 221 83% 53%;
+    --sidebar-background: 60 11% 96%;
+    --sidebar-foreground: 0 0% 30%;
+    --sidebar-primary: 0 0% 8%;
+    --sidebar-primary-foreground: 60 11% 96%;
+    --sidebar-accent: 18 100% 88%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 60 6% 88%;
+    --sidebar-ring: 0 0% 8%;
 
-    --chart-1: 221 83% 53%;
-    --chart-2: 262 83% 58%;
-    --chart-3: 189 94% 43%;
-    --chart-4: 21 90% 53%;
-    --chart-5: 142 71% 45%;
+    --chart-1: 0 0% 8%;
+    --chart-2: 18 100% 75%;
+    --chart-3: 80 55% 70%;
+    --chart-4: 280 40% 75%;
+    --chart-5: 200 60% 75%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(221 83% 53%), hsl(262 83% 58%));
-    --gradient-cyan: linear-gradient(135deg, hsl(189 94% 43%), hsl(221 83% 53%));
-    --gradient-warm: linear-gradient(135deg, hsl(21 90% 53%), hsl(330 81% 60%));
-    --gradient-subtle: linear-gradient(135deg, hsl(221 83% 53% / 0.08), hsl(262 83% 58% / 0.08));
-    --shadow-soft: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.05);
-    --shadow-md: 0 4px 16px -2px hsl(222 47% 11% / 0.08), 0 12px 32px -4px hsl(222 47% 11% / 0.06);
-    --shadow-glow: 0 8px 28px -8px hsl(221 83% 53% / 0.45);
+    --gradient-primary: linear-gradient(135deg, hsl(0 0% 8%), hsl(0 0% 25%));
+    --gradient-cyan: linear-gradient(135deg, hsl(200 60% 85%), hsl(280 40% 85%));
+    --gradient-warm: linear-gradient(135deg, hsl(18 100% 88%), hsl(340 70% 88%));
+    --gradient-subtle: linear-gradient(135deg, hsl(18 100% 88% / 0.4), hsl(80 55% 78% / 0.4), hsl(280 40% 85% / 0.4));
+    --shadow-soft: 0 1px 2px hsl(0 0% 0% / 0.04), 0 2px 8px hsl(0 0% 0% / 0.04);
+    --shadow-md: 0 4px 12px -2px hsl(0 0% 0% / 0.06), 0 8px 24px -4px hsl(0 0% 0% / 0.05);
+    --shadow-glow: 0 8px 24px -8px hsl(0 0% 0% / 0.25);
 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* True deep black — editorial dark mode */
+    --background: 0 0% 7%;
+    --foreground: 60 11% 96%;
 
-    --card: 222 33% 11%;
-    --card-foreground: 210 40% 98%;
+    --card: 0 0% 11%;
+    --card-foreground: 60 11% 96%;
 
-    --popover: 222 33% 11%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 0 0% 11%;
+    --popover-foreground: 60 11% 96%;
 
-    --primary: 263 80% 56%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 271 91% 58%;
+    /* Primary = warm off-white pill for CTAs in dark */
+    --primary: 60 11% 96%;
+    --primary-foreground: 0 0% 7%;
+    --primary-glow: 60 11% 80%;
 
-    --secondary: 222 33% 14%;
-    --secondary-foreground: 210 40% 95%;
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 60 11% 96%;
 
-    --muted: 222 33% 14%;
-    --muted-foreground: 215 20% 65%;
+    --muted: 0 0% 14%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 271 91% 58%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 18 80% 70%;
+    --accent-foreground: 0 0% 7%;
 
-    --cyan-accent: 189 94% 50%;
-    --orange-accent: 21 90% 58%;
-    --pink-accent: 330 81% 65%;
+    --cyan-accent: 200 60% 70%;
+    --orange-accent: 18 90% 70%;
+    --pink-accent: 340 70% 75%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 4 76% 56%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
+    --success: 80 50% 65%;
+    --success-foreground: 0 0% 7%;
 
-    --warning: 38 92% 50%;
-    --warning-foreground: 222 47% 11%;
+    --warning: 38 92% 60%;
+    --warning-foreground: 0 0% 7%;
 
-    --info: 217 91% 60%;
-    --info-foreground: 0 0% 100%;
+    --info: 60 11% 96%;
+    --info-foreground: 0 0% 7%;
 
-    --border: 222 33% 18%;
-    --input: 222 33% 18%;
-    --ring: 263 80% 56%;
+    --border: 0 0% 18%;
+    --input: 0 0% 18%;
+    --ring: 60 11% 96%;
 
     --radius: 1rem;
 
-    --sidebar-background: 222 47% 7%;
-    --sidebar-foreground: 215 20% 70%;
-    --sidebar-primary: 263 80% 56%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 80% 56%;
-    --sidebar-accent-foreground: 263 80% 75%;
-    --sidebar-border: 222 33% 14%;
-    --sidebar-ring: 263 80% 56%;
+    --sidebar-background: 0 0% 7%;
+    --sidebar-foreground: 0 0% 65%;
+    --sidebar-primary: 60 11% 96%;
+    --sidebar-primary-foreground: 0 0% 7%;
+    --sidebar-accent: 18 80% 70%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 14%;
+    --sidebar-ring: 60 11% 96%;
 
-    --chart-1: 263 80% 56%;
-    --chart-2: 217 91% 60%;
-    --chart-3: 189 94% 50%;
-    --chart-4: 330 81% 65%;
-    --chart-5: 142 71% 45%;
+    --chart-1: 60 11% 96%;
+    --chart-2: 18 80% 70%;
+    --chart-3: 80 50% 65%;
+    --chart-4: 280 50% 75%;
+    --chart-5: 200 60% 70%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(263 80% 50%), hsl(271 91% 58%));
-    --gradient-cyan: linear-gradient(135deg, hsl(189 94% 50%), hsl(217 91% 60%));
-    --gradient-warm: linear-gradient(135deg, hsl(21 90% 58%), hsl(330 81% 65%));
-    --gradient-subtle: linear-gradient(135deg, hsl(263 80% 56% / 0.15), hsl(271 91% 58% / 0.15));
-    --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.4), 0 4px 12px hsl(0 0% 0% / 0.25);
-    --shadow-md: 0 4px 16px -2px hsl(0 0% 0% / 0.5), 0 12px 32px -4px hsl(0 0% 0% / 0.35);
-    --shadow-glow: 0 8px 32px -8px hsl(263 80% 56% / 0.6);
+    --gradient-primary: linear-gradient(135deg, hsl(60 11% 96%), hsl(60 11% 80%));
+    --gradient-cyan: linear-gradient(135deg, hsl(200 60% 70%), hsl(280 50% 70%));
+    --gradient-warm: linear-gradient(135deg, hsl(18 80% 70%), hsl(340 70% 75%));
+    --gradient-subtle: linear-gradient(135deg, hsl(18 80% 70% / 0.15), hsl(80 50% 65% / 0.15), hsl(280 50% 75% / 0.15));
+    --shadow-soft: 0 1px 3px hsl(0 0% 0% / 0.5), 0 4px 12px hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 16px -2px hsl(0 0% 0% / 0.6), 0 12px 32px -4px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 8px 32px -8px hsl(60 11% 96% / 0.3);
 
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   }
+
 }
 
 @layer base {
@@ -164,6 +173,13 @@
   h1, h2, h3, h4, h5, h6 {
     @apply tracking-tight;
     font-weight: 700;
+  }
+
+  /* Editorial display font for hero/page titles — like the reference "Level 01: Ideation" */
+  .font-display {
+    font-family: 'Fraunces', 'Inter', Georgia, serif;
+    font-optical-sizing: auto;
+    letter-spacing: -0.02em;
   }
 }
 
