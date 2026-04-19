@@ -14,7 +14,16 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ["'Plus Jakarta Sans'", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+        sans: ["Inter", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
+      },
+      backgroundImage: {
+        "gradient-primary": "var(--gradient-primary)",
+        "gradient-subtle": "var(--gradient-subtle)",
+      },
+      boxShadow: {
+        soft: "var(--shadow-soft)",
+        elegant: "var(--shadow-md)",
+        glow: "var(--shadow-glow)",
       },
       colors: {
         border: "hsl(var(--border))",
@@ -41,6 +50,10 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+        },
+        info: {
+          DEFAULT: "hsl(var(--info))",
+          foreground: "hsl(var(--info-foreground))",
         },
         muted: {
           DEFAULT: "hsl(var(--muted))",
