@@ -1,1 +1,4 @@
 project_id = "phpuzxztvayzgetqsxdm"
+
+[functions.reset-gm-password]
+verify_jwt = false
