@@ -1,1 +1,4 @@
 project_id = "phpuzxztvayzgetqsxdm"
+
+[functions.manage-users]
+verify_jwt = true
