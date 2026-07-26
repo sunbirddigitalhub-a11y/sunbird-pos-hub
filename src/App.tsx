@@ -47,6 +47,7 @@ import IndustriesPage from "./pages/website/IndustriesPage";
 import RegisterPage from "./pages/website/RegisterPage";
 import ForgotPasswordPage from "./pages/website/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/website/ResetPasswordPage";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
