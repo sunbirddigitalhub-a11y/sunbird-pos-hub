@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { WebsiteLayout } from "@/components/website/WebsiteLayout";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,9 @@ import { toast } from "@/hooks/use-toast";
 
 const LoginPage = () => {
   const { signIn } = useAuth();
+  const [params] = useSearchParams();
+  const nextParam = params.get("next");
+  const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -19,6 +22,12 @@ const LoginPage = () => {
     const { error } = await signIn(email, password);
     if (error) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
+      setLoading(false);
+      return;
+    }
+    if (safeNext) {
+      window.location.href = safeNext;
+      return;
     }
     setLoading(false);
   };
