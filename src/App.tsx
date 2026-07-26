@@ -47,6 +47,7 @@ import IndustriesPage from "./pages/website/IndustriesPage";
 import RegisterPage from "./pages/website/RegisterPage";
 import ForgotPasswordPage from "./pages/website/ForgotPasswordPage";
 import ResetPasswordPage from "./pages/website/ResetPasswordPage";
+import OAuthConsent from "./pages/OAuthConsent";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,16 @@ function AppRoutes() {
   const { user, role, loading, onboardingCompleted, isGrandmaster } = useAuth();
 
   if (loading) return null;
+
+  // Public routes that must bypass auth/onboarding gates (OAuth consent, etc.)
+  const consentPath = window.location.pathname;
+  if (consentPath === "/.lovable/oauth/consent") {
+    return (
+      <Routes>
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+      </Routes>
+    );
+  }
 
   if (user && !onboardingCompleted && !isGrandmaster) {
     return (
