@@ -56,6 +56,16 @@ function AppRoutes() {
 
   if (loading) return null;
 
+  // Public routes that must bypass auth/onboarding gates (OAuth consent, etc.)
+  const consentPath = window.location.pathname;
+  if (consentPath === "/.lovable/oauth/consent") {
+    return (
+      <Routes>
+        <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+      </Routes>
+    );
+  }
+
   if (user && !onboardingCompleted && !isGrandmaster) {
     return (
       <Routes>
